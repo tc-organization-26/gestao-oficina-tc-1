@@ -1,0 +1,10 @@
+package br.com.fiap.oficina.veiculo.adapter.out.persistence.jpa;
+
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface SpringDataVeiculoRepository
+        extends JpaRepository<VeiculoJpaEntity, UUID> {
+
+    boolean existsByPlaca(String placa);
+}
