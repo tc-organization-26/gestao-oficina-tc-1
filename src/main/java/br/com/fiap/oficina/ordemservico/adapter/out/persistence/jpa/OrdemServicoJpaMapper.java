@@ -31,6 +31,8 @@ public class OrdemServicoJpaMapper {
                     diagnostico.atualizadoEm()));
         }
 
+        
+
         return entity;
     }
 
@@ -48,6 +50,8 @@ public class OrdemServicoJpaMapper {
                 entity.getFinalizadaEm(),
                 entity.getEntregueEm());
     }
+
+
 
     private Diagnostico toDomain(DiagnosticoJpaEntity entity) {
         if (entity == null) {

@@ -14,8 +14,10 @@ import br.com.fiap.oficina.ordemservico.domain.model.OrdemServicoId;
 import br.com.fiap.oficina.shared.domain.DomainException;
 import br.com.fiap.oficina.veiculo.domain.model.VeiculoId;
 
+import java.math.BigDecimal;
+
 public class OrdemServicoApplicationService implements CriarOrdemServicoUseCase, ConsultarOrdemServicoUseCase,
-        IniciarDiagnosticoUseCase, RegistrarDiagnosticoUseCase {
+    IniciarDiagnosticoUseCase, RegistrarDiagnosticoUseCase {
 
     private final OrdemServicoRepositoryPort ordemServicoRepository;
 

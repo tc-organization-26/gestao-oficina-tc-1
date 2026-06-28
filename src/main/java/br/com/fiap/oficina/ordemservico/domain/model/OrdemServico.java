@@ -7,6 +7,9 @@ import br.com.fiap.oficina.veiculo.domain.model.VeiculoId;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class OrdemServico extends Entity<OrdemServicoId> {
 
@@ -54,6 +57,7 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
         this.inicioExecucaoEm = inicioExecucaoEm;
         this.finalizadaEm = finalizadaEm;
         this.entregueEm = entregueEm;
+        
     }
 
     public static OrdemServico criar(ClienteId clienteId, VeiculoId veiculoId, String anotacoes) {
@@ -70,6 +74,8 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
                 null,
                 null);
     }
+
+    
 
     public void iniciarDiagnostico() {
         if (this.status != StatusOrdemServico.RECEBIDA) {

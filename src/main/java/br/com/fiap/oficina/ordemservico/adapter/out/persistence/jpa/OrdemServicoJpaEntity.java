@@ -78,6 +78,7 @@ public class OrdemServicoJpaEntity {
         this.diagnostico = diagnostico;
     }
 
+
     public UUID getId() { return id; }
     public Long getNumero() { return numero; }
     public UUID getClienteId() { return clienteId; }

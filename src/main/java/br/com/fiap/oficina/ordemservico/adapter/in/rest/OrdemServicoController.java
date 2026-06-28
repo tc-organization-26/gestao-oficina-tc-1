@@ -9,9 +9,12 @@ import br.com.fiap.oficina.ordemservico.application.port.in.ConsultarOrdemServic
 import br.com.fiap.oficina.ordemservico.application.port.in.CriarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.IniciarDiagnosticoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.RegistrarDiagnosticoUseCase;
+import br.com.fiap.oficina.ordemservico.application.port.in.AdicionarItemServicoOrcamentoUseCase;
+import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.AdicionarItemServicoOrcamentoRequest;
 import br.com.fiap.oficina.ordemservico.domain.model.OrdemServicoId;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,16 +33,19 @@ public class OrdemServicoController {
     private final ConsultarOrdemServicoUseCase consultarOrdemServicoUseCase;
     private final IniciarDiagnosticoUseCase iniciarDiagnosticoUseCase;
     private final RegistrarDiagnosticoUseCase registrarDiagnosticoUseCase;
+    private final AdicionarItemServicoOrcamentoUseCase adicionarItemServicoOrcamentoUseCase;
 
     public OrdemServicoController(
             CriarOrdemServicoUseCase criarOrdemServicoUseCase,
             ConsultarOrdemServicoUseCase consultarOrdemServicoUseCase,
             IniciarDiagnosticoUseCase iniciarDiagnosticoUseCase,
-            RegistrarDiagnosticoUseCase registrarDiagnosticoUseCase) {
+            RegistrarDiagnosticoUseCase registrarDiagnosticoUseCase,
+            AdicionarItemServicoOrcamentoUseCase adicionarItemServicoOrcamentoUseCase) {
         this.criarOrdemServicoUseCase = criarOrdemServicoUseCase;
         this.consultarOrdemServicoUseCase = consultarOrdemServicoUseCase;
         this.iniciarDiagnosticoUseCase = iniciarDiagnosticoUseCase;
         this.registrarDiagnosticoUseCase = registrarDiagnosticoUseCase;
+        this.adicionarItemServicoOrcamentoUseCase = adicionarItemServicoOrcamentoUseCase;
     }
 
     @PostMapping
@@ -66,4 +72,18 @@ public class OrdemServicoController {
         var command = new RegistrarDiagnosticoCommand(id, request.descricao());
         return CriarOrdemServicoResponse.from(registrarDiagnosticoUseCase.registrarDiagnostico(command));
     }
+
+    @PostMapping("/{ordemId}/orcamento/servicos")
+    public ResponseEntity<Void> adicionarItemServicoAoOrcamento(
+            @PathVariable UUID ordemId,
+            @Valid @RequestBody AdicionarItemServicoOrcamentoRequest request) {
+        var cmd = new br.com.fiap.oficina.ordemservico.application.command.AdicionarItemServicoOrcamentoCommand(
+                ordemId,
+                request.servicoId(),
+                request.quantidade());
+        adicionarItemServicoOrcamentoUseCase.adicionarItemServico(cmd);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    
 }
