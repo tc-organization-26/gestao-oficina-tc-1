@@ -16,6 +16,7 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
     private final VeiculoId veiculoId;
     private StatusOrdemServico status;
     private String anotacoes;
+    private Diagnostico diagnostico;
     private final OffsetDateTime dataRecebimento;
     private OffsetDateTime inicioExecucaoEm;
     private OffsetDateTime finalizadaEm;
@@ -28,6 +29,7 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
             VeiculoId veiculoId,
             StatusOrdemServico status,
             String anotacoes,
+            Diagnostico diagnostico,
             OffsetDateTime dataRecebimento,
             OffsetDateTime inicioExecucaoEm,
             OffsetDateTime finalizadaEm,
@@ -47,6 +49,7 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
         this.veiculoId = veiculoId;
         this.status = status == null ? StatusOrdemServico.RECEBIDA : status;
         this.anotacoes = anotacoes;
+        this.diagnostico = diagnostico;
         this.dataRecebimento = dataRecebimento == null ? OffsetDateTime.now(ZoneOffset.UTC) : dataRecebimento;
         this.inicioExecucaoEm = inicioExecucaoEm;
         this.finalizadaEm = finalizadaEm;
@@ -61,23 +64,51 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
                 veiculoId,
                 StatusOrdemServico.RECEBIDA,
                 anotacoes,
+                null,
                 OffsetDateTime.now(ZoneOffset.UTC),
                 null,
                 null,
                 null);
     }
 
+    public void iniciarDiagnostico() {
+        if (this.status != StatusOrdemServico.RECEBIDA) {
+            throw new DomainException("Apenas ordem de servico recebida pode iniciar diagnostico.");
+        }
+        this.status = StatusOrdemServico.EM_DIAGNOSTICO;
+    }
+
+    public void registrarDiagnostico(Diagnostico diagnostico) {
+        if (this.status != StatusOrdemServico.EM_DIAGNOSTICO) {
+            throw new DomainException("Diagnostico so pode ser registrado em ordem de servico em diagnostico.");
+        }
+        if (diagnostico == null) {
+            throw new DomainException("Diagnostico e obrigatorio.");
+        }
+        this.diagnostico = diagnostico;
+        this.status = StatusOrdemServico.AGUARDANDO_APROVACAO;
+    }
+
     public void iniciarExecucao() {
+        if (this.status != StatusOrdemServico.AGUARDANDO_APROVACAO) {
+            throw new DomainException("Execucao so pode iniciar apos diagnostico e aprovacao do orcamento.");
+        }
         this.status = StatusOrdemServico.EM_EXECUCAO;
         this.inicioExecucaoEm = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
     public void finalizar() {
+        if (this.status != StatusOrdemServico.EM_EXECUCAO) {
+            throw new DomainException("Apenas ordem de servico em execucao pode ser finalizada.");
+        }
         this.status = StatusOrdemServico.FINALIZADA;
         this.finalizadaEm = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
     public void entregar() {
+        if (this.status != StatusOrdemServico.FINALIZADA) {
+            throw new DomainException("Apenas ordem de servico finalizada pode ser entregue.");
+        }
         this.status = StatusOrdemServico.ENTREGUE;
         this.entregueEm = OffsetDateTime.now(ZoneOffset.UTC);
     }
@@ -88,6 +119,7 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
     public VeiculoId veiculoId() { return veiculoId; }
     public StatusOrdemServico status() { return status; }
     public String anotacoes() { return anotacoes; }
+    public Diagnostico diagnostico() { return diagnostico; }
     public OffsetDateTime dataRecebimento() { return dataRecebimento; }
     public OffsetDateTime inicioExecucaoEm() { return inicioExecucaoEm; }
     public OffsetDateTime finalizadaEm() { return finalizadaEm; }

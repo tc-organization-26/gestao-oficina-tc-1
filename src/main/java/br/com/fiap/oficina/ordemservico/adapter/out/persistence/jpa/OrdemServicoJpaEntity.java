@@ -1,8 +1,11 @@
 package br.com.fiap.oficina.ordemservico.adapter.out.persistence.jpa;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import java.time.OffsetDateTime;
@@ -29,6 +32,9 @@ public class OrdemServicoJpaEntity {
 
     @Column(columnDefinition = "text")
     private String anotacoes;
+
+    @OneToOne(mappedBy = "ordemServico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private DiagnosticoJpaEntity diagnostico;
 
     @Column(name = "data_recebimento", nullable = false)
     private OffsetDateTime dataRecebimento;
@@ -68,12 +74,17 @@ public class OrdemServicoJpaEntity {
         this.entregueEm = entregueEm;
     }
 
+    public void setDiagnostico(DiagnosticoJpaEntity diagnostico) {
+        this.diagnostico = diagnostico;
+    }
+
     public UUID getId() { return id; }
     public Long getNumero() { return numero; }
     public UUID getClienteId() { return clienteId; }
     public UUID getVeiculoId() { return veiculoId; }
     public Integer getStatusOrdemServico() { return statusOrdemServico; }
     public String getAnotacoes() { return anotacoes; }
+    public DiagnosticoJpaEntity getDiagnostico() { return diagnostico; }
     public OffsetDateTime getDataRecebimento() { return dataRecebimento; }
     public OffsetDateTime getInicioExecucaoEm() { return inicioExecucaoEm; }
     public OffsetDateTime getFinalizadaEm() { return finalizadaEm; }

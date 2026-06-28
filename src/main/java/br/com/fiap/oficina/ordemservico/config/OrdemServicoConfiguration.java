@@ -4,6 +4,8 @@ import br.com.fiap.oficina.ordemservico.adapter.out.persistence.jpa.OrdemServico
 import br.com.fiap.oficina.ordemservico.adapter.out.persistence.jpa.SpringDataOrdemServicoRepository;
 import br.com.fiap.oficina.ordemservico.application.port.in.ConsultarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.CriarOrdemServicoUseCase;
+import br.com.fiap.oficina.ordemservico.application.port.in.IniciarDiagnosticoUseCase;
+import br.com.fiap.oficina.ordemservico.application.port.in.RegistrarDiagnosticoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.out.OrdemServicoRepositoryPort;
 import br.com.fiap.oficina.ordemservico.application.service.OrdemServicoApplicationService;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +20,16 @@ public class OrdemServicoConfiguration {
 
     @Bean
     public ConsultarOrdemServicoUseCase consultarOrdemServicoUseCase(OrdemServicoRepositoryPort ordemServicoRepositoryPort) {
+        return new OrdemServicoApplicationService(ordemServicoRepositoryPort);
+    }
+
+    @Bean
+    public IniciarDiagnosticoUseCase iniciarDiagnosticoUseCase(OrdemServicoRepositoryPort ordemServicoRepositoryPort) {
+        return new OrdemServicoApplicationService(ordemServicoRepositoryPort);
+    }
+
+    @Bean
+    public RegistrarDiagnosticoUseCase registrarDiagnosticoUseCase(OrdemServicoRepositoryPort ordemServicoRepositoryPort) {
         return new OrdemServicoApplicationService(ordemServicoRepositoryPort);
     }
 

@@ -4,10 +4,12 @@ import br.com.fiap.oficina.cliente.domain.model.ClienteId;
 import br.com.fiap.oficina.shared.domain.DomainException;
 import br.com.fiap.oficina.veiculo.application.command.AtualizarVeiculoCommand;
 import br.com.fiap.oficina.veiculo.application.command.CadastrarVeiculoCommand;
+import br.com.fiap.oficina.veiculo.application.command.ConsultarVeiculosPorClienteCommand;
 import br.com.fiap.oficina.veiculo.application.port.in.AtualizarVeiculoUseCase;
 import br.com.fiap.oficina.veiculo.application.port.in.CadastrarVeiculoUseCase;
 import br.com.fiap.oficina.veiculo.application.port.in.ConsultarTodosVeiculosUseCase;
 import br.com.fiap.oficina.veiculo.application.port.in.ConsultarVeiculoUseCase;
+import br.com.fiap.oficina.veiculo.application.port.in.ConsultarVeiculosPorClienteUseCase;
 import br.com.fiap.oficina.veiculo.application.port.in.ExcluirVeiculoUseCase;
 import br.com.fiap.oficina.veiculo.application.port.out.VeiculoRepositoryPort;
 import br.com.fiap.oficina.veiculo.domain.model.Veiculo;
@@ -20,6 +22,7 @@ public class VeiculoApplicationService implements CadastrarVeiculoUseCase,
         AtualizarVeiculoUseCase,
         ConsultarVeiculoUseCase,
         ConsultarTodosVeiculosUseCase,
+        ConsultarVeiculosPorClienteUseCase,
         ExcluirVeiculoUseCase {
 
     private final VeiculoRepositoryPort veiculoRepository;
@@ -39,8 +42,7 @@ public class VeiculoApplicationService implements CadastrarVeiculoUseCase,
                 VeiculoPlaca.novo(command.placa()),
                 command.marca(),
                 command.modelo(),
-                command.ano()
-        );
+                command.ano());
 
         return veiculoRepository.salvar(veiculo);
     }
@@ -55,8 +57,7 @@ public class VeiculoApplicationService implements CadastrarVeiculoUseCase,
         veiculo.atualizar(
                 command.marca(),
                 command.modelo(),
-                command.ano()
-        );
+                command.ano());
 
         return veiculoRepository.salvar(veiculo);
     }
@@ -76,5 +77,10 @@ public class VeiculoApplicationService implements CadastrarVeiculoUseCase,
     public void excluir(VeiculoId veiculoId) {
         consultarPorId(veiculoId);
         veiculoRepository.excluirPorId(veiculoId);
+    }
+
+    @Override
+    public List<Veiculo> consultarPorCliente(ConsultarVeiculosPorClienteCommand command) {
+        return veiculoRepository.buscarPorClienteId(new ClienteId(command.clienteId()));
     }
 }

@@ -88,6 +88,12 @@ public class EstoqueController {
         return ItemEstoqueResponse.from(atualizarItemEstoqueUseCase.atualizar(command));
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void excluir(@PathVariable UUID id) {
+        excluirItemEstoqueUseCase.excluir(new ItemEstoqueId(id));
+    }
+
     @PostMapping("/{id}/inclusoes")
     public ItemEstoqueResponse incluir(@PathVariable UUID id, @Valid @RequestBody MovimentarEstoqueRequest request) {
         return ItemEstoqueResponse.from(incluirItemEstoqueUseCase.incluir(new IncluirItemEstoqueCommand(id, request.quantidade())));
@@ -96,11 +102,5 @@ public class EstoqueController {
     @PostMapping("/{id}/baixas")
     public ItemEstoqueResponse baixar(@PathVariable UUID id, @Valid @RequestBody MovimentarEstoqueRequest request) {
         return ItemEstoqueResponse.from(baixarItemEstoqueUseCase.baixar(new BaixarItemEstoqueCommand(id, request.quantidade())));
-    }
-
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void excluir(@PathVariable UUID id) {
-        excluirItemEstoqueUseCase.excluir(new ItemEstoqueId(id));
     }
 }

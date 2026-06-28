@@ -95,5 +95,6 @@ class VeiculoApplicationServiceTest {
         @Override public Optional<Veiculo> buscarPorId(VeiculoId veiculoId) { return busca; }
         @Override public List<Veiculo> buscarTodos() { return todos; }
         @Override public void excluirPorId(VeiculoId veiculoId) { this.excluido = veiculoId; }
+        @Override public List<Veiculo> buscarPorClienteId(ClienteId clienteId) { return todos; }
     }
 }

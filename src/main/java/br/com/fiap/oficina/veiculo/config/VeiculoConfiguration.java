@@ -6,6 +6,7 @@ import br.com.fiap.oficina.veiculo.application.port.in.AtualizarVeiculoUseCase;
 import br.com.fiap.oficina.veiculo.application.port.in.CadastrarVeiculoUseCase;
 import br.com.fiap.oficina.veiculo.application.port.in.ConsultarTodosVeiculosUseCase;
 import br.com.fiap.oficina.veiculo.application.port.in.ConsultarVeiculoUseCase;
+import br.com.fiap.oficina.veiculo.application.port.in.ConsultarVeiculosPorClienteUseCase;
 import br.com.fiap.oficina.veiculo.application.port.in.ExcluirVeiculoUseCase;
 import br.com.fiap.oficina.veiculo.application.port.out.VeiculoRepositoryPort;
 import br.com.fiap.oficina.veiculo.application.service.VeiculoApplicationService;
@@ -32,6 +33,12 @@ public class VeiculoConfiguration {
 
     @Bean
     public ConsultarTodosVeiculosUseCase consultarTodosVeiculosUseCase(VeiculoRepositoryPort veiculoRepositoryPort) {
+        return new VeiculoApplicationService(veiculoRepositoryPort);
+    }
+
+    @Bean
+    public ConsultarVeiculosPorClienteUseCase consultarVeiculosPorClienteUseCase(
+            VeiculoRepositoryPort veiculoRepositoryPort) {
         return new VeiculoApplicationService(veiculoRepositoryPort);
     }
 

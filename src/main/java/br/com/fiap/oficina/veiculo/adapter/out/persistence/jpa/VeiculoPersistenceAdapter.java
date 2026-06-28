@@ -56,6 +56,13 @@ public class VeiculoPersistenceAdapter implements VeiculoRepositoryPort {
     public void excluirPorId(VeiculoId veiculoId) {
         repository.deleteById(veiculoId.value());
     }
+    
+    @Override
+    public List<Veiculo> buscarPorClienteId(ClienteId clienteId) {
+        return repository.findByClienteId(clienteId.value()).stream()
+                .map(this::toDomain)
+                .toList();
+    }
 
     private Veiculo toDomain(VeiculoJpaEntity entity) {
         return new Veiculo(

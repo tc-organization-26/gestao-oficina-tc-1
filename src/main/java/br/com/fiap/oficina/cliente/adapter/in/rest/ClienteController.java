@@ -3,6 +3,7 @@ package br.com.fiap.oficina.cliente.adapter.in.rest;
 import br.com.fiap.oficina.cliente.adapter.in.rest.request.AtualizarClienteRequest;
 import br.com.fiap.oficina.cliente.adapter.in.rest.request.CadastrarClienteRequest;
 import br.com.fiap.oficina.cliente.adapter.in.rest.response.ClienteResponse;
+import br.com.fiap.oficina.cliente.adapter.in.rest.response.ConsultarVeiculosDoClienteResponse;
 import br.com.fiap.oficina.cliente.application.command.AtualizarClienteCommand;
 import br.com.fiap.oficina.cliente.application.command.CadastrarClienteCommand;
 import br.com.fiap.oficina.cliente.application.port.in.AtualizarClienteUseCase;
@@ -11,6 +12,8 @@ import br.com.fiap.oficina.cliente.application.port.in.ConsultarClienteUseCase;
 import br.com.fiap.oficina.cliente.application.port.in.ConsultarTodosClientesUseCase;
 import br.com.fiap.oficina.cliente.application.port.in.ExcluirClienteUseCase;
 import br.com.fiap.oficina.cliente.domain.model.ClienteId;
+import br.com.fiap.oficina.veiculo.application.command.ConsultarVeiculosPorClienteCommand;
+import br.com.fiap.oficina.veiculo.application.port.in.ConsultarVeiculosPorClienteUseCase;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -36,18 +39,21 @@ public class ClienteController {
     private final ConsultarClienteUseCase consultarClienteUseCase;
     private final ConsultarTodosClientesUseCase consultarTodosClientesUseCase;
     private final ExcluirClienteUseCase excluirClienteUseCase;
+    private final ConsultarVeiculosPorClienteUseCase consultarVeiculosPorClienteUseCase;
 
     public ClienteController(
             CadastrarClienteUseCase cadastrarClienteUseCase,
             AtualizarClienteUseCase atualizarClienteUseCase,
             ConsultarClienteUseCase consultarClienteUseCase,
             ConsultarTodosClientesUseCase consultarTodosClientesUseCase,
-            ExcluirClienteUseCase excluirClienteUseCase) {
+            ExcluirClienteUseCase excluirClienteUseCase,
+            ConsultarVeiculosPorClienteUseCase consultarVeiculosPorClienteUseCase) {
         this.cadastrarClienteUseCase = cadastrarClienteUseCase;
         this.atualizarClienteUseCase = atualizarClienteUseCase;
         this.consultarClienteUseCase = consultarClienteUseCase;
         this.consultarTodosClientesUseCase = consultarTodosClientesUseCase;
         this.excluirClienteUseCase = excluirClienteUseCase;
+        this.consultarVeiculosPorClienteUseCase = consultarVeiculosPorClienteUseCase;
     }
 
     @PostMapping
@@ -91,5 +97,14 @@ public class ClienteController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void excluir(@PathVariable UUID id) {
         excluirClienteUseCase.excluir(new ClienteId(id));
+    }
+
+    @GetMapping("/{id}/veiculos")
+    public List<ConsultarVeiculosDoClienteResponse> consultarVeiculosDoCliente(@PathVariable UUID id) {
+        var command = new ConsultarVeiculosPorClienteCommand(id);
+
+        return consultarVeiculosPorClienteUseCase.consultarPorCliente(command).stream()
+                .map(ConsultarVeiculosDoClienteResponse::from)
+                .toList();
     }
 }
