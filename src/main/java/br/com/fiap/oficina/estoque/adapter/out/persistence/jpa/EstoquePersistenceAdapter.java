@@ -22,39 +22,19 @@ public class EstoquePersistenceAdapter implements EstoqueRepositoryPort {
 
     @Override
     public ItemEstoque salvar(ItemEstoque itemEstoque) {
-        var entity = new ItemEstoqueJpaEntity(
-                itemEstoque.id().value(),
-                itemEstoque.codigo(),
-                itemEstoque.descricao(),
-                itemEstoque.valorUnitario(),
-                itemEstoque.quantidadeDisponivel(),
-                itemEstoque.ativo(),
-                itemEstoque.criadoEm(),
-                itemEstoque.atualizadoEm());
-        return toDomain(repository.save(entity));
+        var entity = ItemEstoqueMapper.toEntity(itemEstoque);
+        return ItemEstoqueMapper.toDomain(repository.save(entity));
     }
 
     @Override
     public Optional<ItemEstoque> buscarPorId(ItemEstoqueId itemEstoqueId) {
-        return repository.findById(itemEstoqueId.value()).map(this::toDomain);
+        return repository.findById(itemEstoqueId.value()).map(ItemEstoqueMapper::toDomain);
     }
 
     @Override
     public List<ItemEstoque> buscarTodos() {
         return repository.findAll().stream()
-                .map(this::toDomain)
+                .map(ItemEstoqueMapper::toDomain)
                 .toList();
-    }
-
-    private ItemEstoque toDomain(ItemEstoqueJpaEntity entity) {
-        return new ItemEstoque(
-                new ItemEstoqueId(entity.getId()),
-                entity.getCodigo(),
-                entity.getDescricao(),
-                entity.getValorUnitario(),
-                entity.getQuantidadeDisponivel(),
-                entity.isAtivo(),
-                entity.getCriadoEm(),
-                entity.getAtualizadoEm());
     }
 }

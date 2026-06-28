@@ -7,9 +7,6 @@ import br.com.fiap.oficina.veiculo.domain.model.VeiculoId;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 public final class OrdemServico extends Entity<OrdemServicoId> {
 
@@ -20,6 +17,7 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
     private StatusOrdemServico status;
     private String anotacoes;
     private Diagnostico diagnostico;
+    private Orcamento orcamento;
     private final OffsetDateTime dataRecebimento;
     private OffsetDateTime inicioExecucaoEm;
     private OffsetDateTime finalizadaEm;
@@ -57,7 +55,7 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
         this.inicioExecucaoEm = inicioExecucaoEm;
         this.finalizadaEm = finalizadaEm;
         this.entregueEm = entregueEm;
-        
+        this.orcamento = Orcamento.novo(this.id);
     }
 
     public static OrdemServico criar(ClienteId clienteId, VeiculoId veiculoId, String anotacoes) {
@@ -92,6 +90,12 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
             throw new DomainException("Diagnostico e obrigatorio.");
         }
         this.diagnostico = diagnostico;
+    }
+
+    public void finalizarOrcamento() {
+        if (this.status != StatusOrdemServico.EM_DIAGNOSTICO) {
+            throw new DomainException("Orcamento so pode ser finalizado quando ordem esta em EM_DIAGNOSTICO");
+        }
         this.status = StatusOrdemServico.AGUARDANDO_APROVACAO;
     }
 
@@ -126,6 +130,7 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
     public StatusOrdemServico status() { return status; }
     public String anotacoes() { return anotacoes; }
     public Diagnostico diagnostico() { return diagnostico; }
+    public Orcamento orcamento() { return orcamento; }
     public OffsetDateTime dataRecebimento() { return dataRecebimento; }
     public OffsetDateTime inicioExecucaoEm() { return inicioExecucaoEm; }
     public OffsetDateTime finalizadaEm() { return finalizadaEm; }

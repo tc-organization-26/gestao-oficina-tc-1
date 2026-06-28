@@ -23,48 +23,26 @@ public class ClientePersistenceAdapter implements ClienteRepositoryPort {
 
     @Override
     public Cliente salvar(Cliente cliente) {
-        var entity = new ClienteJpaEntity(
-                cliente.id().value(),
-                cliente.nome(),
-                cliente.cpfCnpj().value(),
-                cliente.telefone(),
-                cliente.email(),
-                cliente.ativo(),
-                cliente.criadoEm(),
-                cliente.atualizadoEm());
-
+        var entity = ClienteMapper.toEntity(cliente);
         var entitySalva = repository.save(entity);
-
-        return toDomain(entitySalva);
+        return ClienteMapper.toDomain(entitySalva);
     }
 
     @Override
     public Optional<Cliente> buscarPorId(ClienteId clienteId) {
         return repository.findById(clienteId.value())
-                .map(this::toDomain);
+                .map(ClienteMapper::toDomain);
     }
 
     @Override
     public List<Cliente> buscarTodos() {
         return repository.findAll().stream()
-                .map(this::toDomain)
+                .map(ClienteMapper::toDomain)
                 .toList();
     }
 
     @Override
     public void excluirPorId(ClienteId clienteId) {
         repository.deleteById(clienteId.value());
-    }
-
-    private Cliente toDomain(ClienteJpaEntity entitySalva) {
-        return new Cliente(
-                new ClienteId(entitySalva.getId()),
-                new CpfCnpj(entitySalva.getCpfCnpj()),
-                entitySalva.getNome(),
-                entitySalva.getEmail(),
-                entitySalva.getTelefone(),
-                entitySalva.getAtivo(),
-                entitySalva.getAtualizadoEm(),
-                entitySalva.getCriadoEm());
     }
 }

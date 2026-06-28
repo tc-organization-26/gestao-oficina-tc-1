@@ -2,14 +2,17 @@ package br.com.fiap.oficina.ordemservico.adapter.in.rest;
 
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.CriarOrdemServicoRequest;
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.RegistrarDiagnosticoRequest;
+import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.FecharOrcamentoRequest;
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.response.CriarOrdemServicoResponse;
 import br.com.fiap.oficina.ordemservico.application.command.CriarOrdemServicoCommand;
 import br.com.fiap.oficina.ordemservico.application.command.RegistrarDiagnosticoCommand;
+import br.com.fiap.oficina.ordemservico.application.command.FecharOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.port.in.ConsultarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.CriarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.IniciarDiagnosticoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.RegistrarDiagnosticoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.AdicionarItemServicoOrcamentoUseCase;
+import br.com.fiap.oficina.ordemservico.application.port.in.FecharOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.AdicionarItemServicoOrcamentoRequest;
 import br.com.fiap.oficina.ordemservico.domain.model.OrdemServicoId;
 import jakarta.validation.Valid;
@@ -34,18 +37,21 @@ public class OrdemServicoController {
     private final IniciarDiagnosticoUseCase iniciarDiagnosticoUseCase;
     private final RegistrarDiagnosticoUseCase registrarDiagnosticoUseCase;
     private final AdicionarItemServicoOrcamentoUseCase adicionarItemServicoOrcamentoUseCase;
+    private final FecharOrcamentoUseCase fecharOrcamentoUseCase;
 
     public OrdemServicoController(
             CriarOrdemServicoUseCase criarOrdemServicoUseCase,
             ConsultarOrdemServicoUseCase consultarOrdemServicoUseCase,
             IniciarDiagnosticoUseCase iniciarDiagnosticoUseCase,
             RegistrarDiagnosticoUseCase registrarDiagnosticoUseCase,
-            AdicionarItemServicoOrcamentoUseCase adicionarItemServicoOrcamentoUseCase) {
+            AdicionarItemServicoOrcamentoUseCase adicionarItemServicoOrcamentoUseCase,
+            FecharOrcamentoUseCase fecharOrcamentoUseCase) {
         this.criarOrdemServicoUseCase = criarOrdemServicoUseCase;
         this.consultarOrdemServicoUseCase = consultarOrdemServicoUseCase;
         this.iniciarDiagnosticoUseCase = iniciarDiagnosticoUseCase;
         this.registrarDiagnosticoUseCase = registrarDiagnosticoUseCase;
         this.adicionarItemServicoOrcamentoUseCase = adicionarItemServicoOrcamentoUseCase;
+        this.fecharOrcamentoUseCase = fecharOrcamentoUseCase;
     }
 
     @PostMapping
@@ -85,5 +91,13 @@ public class OrdemServicoController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
-    
+    @PostMapping("/{ordemId}/orcamento/fechar")
+    public ResponseEntity<Void> fecharOrcamento(
+            @PathVariable UUID ordemId,
+            @RequestBody(required = false) FecharOrcamentoRequest request) {
+        var command = new FecharOrcamentoCommand(ordemId);
+        fecharOrcamentoUseCase.fechar(command);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
 }

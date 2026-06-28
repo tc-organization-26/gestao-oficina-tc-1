@@ -22,48 +22,26 @@ public class ServicoPersistenceAdapter implements ServicoRepositoryPort {
 
     @Override
     public Servico salvar(Servico servico) {
-        var entity = new ServicoJpaEntity(
-                servico.id().value(),
-                servico.codigo(),
-                servico.descricao(),
-                servico.valorUnitario(),
-                servico.tempoEstimadoMinutos(),
-                servico.ativo(),
-                servico.criadoEm(),
-                servico.atualizadoEm());
-
+        var entity = ServicoMapper.toEntity(servico);
         var entitySalva = repository.save(entity);
-
-        return toDomain(entitySalva);
+        return ServicoMapper.toDomain(entitySalva);
     }
 
     @Override
     public Optional<Servico> buscarPorId(ServicoId servicoId) {
         return repository.findById(servicoId.value())
-                .map(this::toDomain);
+                .map(ServicoMapper::toDomain);
     }
 
     @Override
     public List<Servico> buscarTodos() {
         return repository.findAll().stream()
-                .map(this::toDomain)
+                .map(ServicoMapper::toDomain)
                 .toList();
     }
 
     @Override
     public void excluirPorId(ServicoId servicoId) {
         repository.deleteById(servicoId.value());
-    }
-
-    private Servico toDomain(ServicoJpaEntity entity) {
-        return new Servico(
-                new ServicoId(entity.getId()),
-                entity.getCodigo(),
-                entity.getDescricao(),
-                entity.getValorUnitario(),
-                entity.getTempoEstimadoMinutos(),
-                entity.isAtivo(),
-                entity.getCriadoEm(),
-                entity.getAtualizadoEm());
     }
 }

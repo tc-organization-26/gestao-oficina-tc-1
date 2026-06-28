@@ -24,31 +24,21 @@ public class VeiculoPersistenceAdapter implements VeiculoRepositoryPort {
 
     @Override
     public Veiculo salvar(Veiculo veiculo) {
-        var entity = new VeiculoJpaEntity(
-                veiculo.id().value(),
-                veiculo.clienteId().value(),
-                veiculo.placa().value(),
-                veiculo.marca(),
-                veiculo.modelo(),
-                veiculo.ano(),
-                veiculo.criadoEm(),
-                veiculo.atualizadoEm());
-
+        var entity = VeiculoMapper.toEntity(veiculo);
         var entitySalva = repository.save(entity);
-
-        return toDomain(entitySalva);
+        return VeiculoMapper.toDomain(entitySalva);
     }
 
     @Override
     public Optional<Veiculo> buscarPorId(VeiculoId veiculoId) {
         return repository.findById(veiculoId.value())
-                .map(this::toDomain);
+                .map(VeiculoMapper::toDomain);
     }
 
     @Override
     public List<Veiculo> buscarTodos() {
         return repository.findAll().stream()
-                .map(this::toDomain)
+                .map(VeiculoMapper::toDomain)
                 .toList();
     }
 
@@ -60,19 +50,7 @@ public class VeiculoPersistenceAdapter implements VeiculoRepositoryPort {
     @Override
     public List<Veiculo> buscarPorClienteId(ClienteId clienteId) {
         return repository.findByClienteId(clienteId.value()).stream()
-                .map(this::toDomain)
+                .map(VeiculoMapper::toDomain)
                 .toList();
-    }
-
-    private Veiculo toDomain(VeiculoJpaEntity entity) {
-        return new Veiculo(
-                new VeiculoId(entity.getId()),
-                new ClienteId(entity.getClienteId()),
-                VeiculoPlaca.novo(entity.getPlaca()),
-                entity.getMarca(),
-                entity.getModelo(),
-                entity.getAno(),
-                entity.getCriadoEm(),
-                entity.getAtualizadoEm());
     }
 }

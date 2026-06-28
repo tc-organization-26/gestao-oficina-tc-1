@@ -11,7 +11,12 @@ import java.util.stream.Collectors;
 public final class OrcamentoMapper {
 
     public static Orcamento toDomain(OrcamentoJpaEntity e) {
-        var orcamento = new Orcamento(e.getId(), new br.com.fiap.oficina.ordemservico.domain.model.OrdemServicoId(e.getOrdemServicoId()));
+        var orcamento = new Orcamento(
+                e.getId(),
+                new br.com.fiap.oficina.ordemservico.domain.model.OrdemServicoId(e.getOrdemServicoId()),
+                e.getStatus(),
+                e.getDataFechamento()
+        );
         var itens = e.getItens().stream()
                 .map(i -> new OrcamentoItemServico(new ServicoId(i.getServicoId()), i.getQuantidade()))
                 .collect(Collectors.toList());
@@ -20,7 +25,12 @@ public final class OrcamentoMapper {
     }
 
     public static OrcamentoJpaEntity toJpa(Orcamento orcamento) {
-        var e = new OrcamentoJpaEntity(orcamento.id().value(), orcamento.ordemServicoId().value());
+        var e = new OrcamentoJpaEntity(
+                orcamento.id().value(),
+                orcamento.ordemServicoId().value(),
+                orcamento.status(),
+                orcamento.dataFechamento()
+        );
         var itens = orcamento.itens().stream()
                 .map(it -> new OrcamentoItemServicoJpaEntity(UUID.randomUUID(), orcamento.id().value(), it.servicoId().value(), it.quantidade()))
                 .collect(Collectors.toList());
@@ -28,3 +38,4 @@ public final class OrcamentoMapper {
         return e;
     }
 }
+

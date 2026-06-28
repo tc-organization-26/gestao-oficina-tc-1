@@ -59,6 +59,8 @@ abstract class AbstractApiIntegrationSupport {
     }
 
     protected void limparBanco() {
+        jdbcTemplate.update("delete from orcamento_item_servico");
+        jdbcTemplate.update("delete from orcamento");
         jdbcTemplate.update("delete from ordem_servico");
         jdbcTemplate.update("delete from veiculo");
         jdbcTemplate.update("delete from cliente");
