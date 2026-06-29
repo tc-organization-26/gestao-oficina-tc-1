@@ -10,5 +10,7 @@ public interface EstoqueRepositoryPort {
     boolean existePorCodigo(String codigo);
     ItemEstoque salvar(ItemEstoque itemEstoque);
     Optional<ItemEstoque> buscarPorId(ItemEstoqueId itemEstoqueId);
+    Optional<ItemEstoque> buscarPorCodigo(String codigo);
     List<ItemEstoque> buscarTodos();
+    List<ItemEstoque> buscarTodosAtivos();
 }

@@ -48,6 +48,9 @@ public class OrdemServicoJpaEntity {
     @Column(name = "entregue_em")
     private OffsetDateTime entregueEm;
 
+    @Column(name = "pago", nullable = false)
+    private boolean pago = false;
+
     protected OrdemServicoJpaEntity() {
     }
 
@@ -61,7 +64,8 @@ public class OrdemServicoJpaEntity {
             OffsetDateTime dataRecebimento,
             OffsetDateTime inicioExecucaoEm,
             OffsetDateTime finalizadaEm,
-            OffsetDateTime entregueEm) {
+            OffsetDateTime entregueEm,
+            boolean pago) {
         this.id = id;
         this.numero = numero;
         this.clienteId = clienteId;
@@ -72,12 +76,12 @@ public class OrdemServicoJpaEntity {
         this.inicioExecucaoEm = inicioExecucaoEm;
         this.finalizadaEm = finalizadaEm;
         this.entregueEm = entregueEm;
+        this.pago = pago;
     }
 
     public void setDiagnostico(DiagnosticoJpaEntity diagnostico) {
         this.diagnostico = diagnostico;
     }
-
 
     public UUID getId() { return id; }
     public Long getNumero() { return numero; }
@@ -90,4 +94,5 @@ public class OrdemServicoJpaEntity {
     public OffsetDateTime getInicioExecucaoEm() { return inicioExecucaoEm; }
     public OffsetDateTime getFinalizadaEm() { return finalizadaEm; }
     public OffsetDateTime getEntregueEm() { return entregueEm; }
+    public boolean isPago() { return pago; }
 }

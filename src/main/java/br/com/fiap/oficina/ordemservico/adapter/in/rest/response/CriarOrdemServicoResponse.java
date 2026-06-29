@@ -15,7 +15,8 @@ public record CriarOrdemServicoResponse(
         StatusOrdemServico status,
         String anotacoes,
     OffsetDateTime dataRecebimento,
-    OrcamentoResponse orcamento
+    OrcamentoResponse orcamento,
+    boolean pago
 ) {
     public static CriarOrdemServicoResponse from(OrdemServico ordemServico) {
         return new CriarOrdemServicoResponse(
@@ -26,7 +27,8 @@ public record CriarOrdemServicoResponse(
                 ordemServico.status(),
                 ordemServico.anotacoes(),
                 ordemServico.dataRecebimento(),
-                ordemServico.orcamento() != null ? OrcamentoResponse.from(ordemServico.orcamento()) : null
+                ordemServico.orcamento() != null ? OrcamentoResponse.from(ordemServico.orcamento()) : null,
+                ordemServico.pago()
         );
     }
 }

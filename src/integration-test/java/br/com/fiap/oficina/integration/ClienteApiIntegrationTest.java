@@ -75,7 +75,7 @@ class ClienteApiIntegrationTest extends AbstractApiIntegrationSupport {
         var consultaDepoisDaExclusao = getMap("/clientes/" + clienteId);
 
         // then
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, consultaDepoisDaExclusao.getStatusCode());
+                assertEquals(422, consultaDepoisDaExclusao.getStatusCode().value());
         assertNotNull(consultaDepoisDaExclusao.getBody());
         assertEquals("Cliente não encontrado.", consultaDepoisDaExclusao.getBody().get("message"));
     }
@@ -117,6 +117,24 @@ class ClienteApiIntegrationTest extends AbstractApiIntegrationSupport {
         assertEquals(true, placas.contains("ABC1D23"));
         assertEquals(true, placas.contains("XYZ9W88"));
     }
+
+        @Test
+        void deveConsultarClientePorDocumento() {
+                var cadastro = postMap("/clientes", Map.of(
+                                "nome", "Maria Documento",
+                                "cpfCnpj", "98765432100",
+                                "email", "maria.documento@email.com",
+                                "telefone", "11911112222"));
+
+                assertEquals(HttpStatus.CREATED, cadastro.getStatusCode());
+
+                var consulta = getMap("/clientes/documento/98765432100");
+
+                assertEquals(HttpStatus.OK, consulta.getStatusCode());
+                assertNotNull(consulta.getBody());
+                assertEquals("98765432100", consulta.getBody().get("cpfCnpj"));
+                assertEquals("Maria Documento", consulta.getBody().get("nome"));
+        }
 
     private String criarCliente() {
         var clienteParaCadastrar = Map.of(

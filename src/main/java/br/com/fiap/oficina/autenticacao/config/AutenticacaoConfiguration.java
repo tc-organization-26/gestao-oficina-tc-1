@@ -6,8 +6,10 @@ import br.com.fiap.oficina.autenticacao.adapter.out.security.PasswordEncoderAdap
 import br.com.fiap.oficina.autenticacao.application.port.in.AutenticarUsuarioUseCase;
 import br.com.fiap.oficina.autenticacao.application.port.out.GerarTokenPort;
 import br.com.fiap.oficina.autenticacao.application.port.out.UsuarioRepositoryPort;
+import br.com.fiap.oficina.autenticacao.application.port.out.ValidarTokenPort;
 import br.com.fiap.oficina.autenticacao.application.port.out.VerificarSenhaPort;
 import br.com.fiap.oficina.autenticacao.application.service.AutenticarUsuarioApplicationService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -32,7 +34,19 @@ public class AutenticacaoConfiguration {
     }
 
     @Bean
-    public GerarTokenPort gerarTokenPort() {
-        return new JwtTokenAdapter();
+    public JwtTokenAdapter jwtTokenAdapter(
+            @Value("${security.jwt.secret}") String secret,
+            @Value("${security.jwt.expiration-seconds}") long expirationSeconds) {
+        return new JwtTokenAdapter(secret, expirationSeconds);
+    }
+
+    @Bean
+    public GerarTokenPort gerarTokenPort(JwtTokenAdapter jwtTokenAdapter) {
+        return jwtTokenAdapter;
+    }
+
+    @Bean
+    public ValidarTokenPort validarTokenPort(JwtTokenAdapter jwtTokenAdapter) {
+        return jwtTokenAdapter;
     }
 }

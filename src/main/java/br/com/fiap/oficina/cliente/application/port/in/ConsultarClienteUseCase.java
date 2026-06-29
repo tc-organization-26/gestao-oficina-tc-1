@@ -6,4 +6,6 @@ import br.com.fiap.oficina.cliente.domain.model.ClienteId;
 public interface ConsultarClienteUseCase {
 
     Cliente consultarPorId(ClienteId clienteId);
+
+    Cliente consultarPorDocumento(String cpfCnpj);
 }

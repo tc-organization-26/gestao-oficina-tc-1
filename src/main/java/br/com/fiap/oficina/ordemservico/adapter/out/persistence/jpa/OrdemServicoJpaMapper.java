@@ -19,7 +19,8 @@ public class OrdemServicoJpaMapper {
                 ordemServico.dataRecebimento(),
                 ordemServico.inicioExecucaoEm(),
                 ordemServico.finalizadaEm(),
-                ordemServico.entregueEm());
+                ordemServico.entregueEm(),
+                ordemServico.pago());
 
         if (ordemServico.diagnostico() != null) {
             var diagnostico = ordemServico.diagnostico();
@@ -48,7 +49,8 @@ public class OrdemServicoJpaMapper {
                 entity.getDataRecebimento(),
                 entity.getInicioExecucaoEm(),
                 entity.getFinalizadaEm(),
-                entity.getEntregueEm());
+                entity.getEntregueEm(),
+                entity.isPago());
     }
 
 

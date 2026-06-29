@@ -92,6 +92,7 @@ class ClienteApplicationServiceTest {
         @Override public boolean existePorCpfCnpj(CpfCnpj cpfCnpj) { return existe; }
         @Override public Cliente salvar(Cliente cliente) { this.salvo = cliente; return cliente; }
         @Override public Optional<Cliente> buscarPorId(ClienteId clienteId) { return busca; }
+        @Override public Optional<Cliente> buscarPorCpfCnpj(CpfCnpj cpfCnpj) { return busca; }
         @Override public List<Cliente> buscarTodos() { return todos; }
         @Override public void excluirPorId(ClienteId clienteId) { this.excluido = clienteId; }
     }

@@ -1,28 +1,66 @@
 package br.com.fiap.oficina.ordemservico.application.service;
 
 import br.com.fiap.oficina.cliente.domain.model.ClienteId;
+import br.com.fiap.oficina.ordemservico.application.command.BaixarEstoqueOrdemCommand;
 import br.com.fiap.oficina.ordemservico.application.command.CriarOrdemServicoCommand;
 import br.com.fiap.oficina.ordemservico.application.command.RegistrarDiagnosticoCommand;
+import br.com.fiap.oficina.ordemservico.application.port.in.AlterarOrcamentoDuranteExecucaoUseCase;
+import br.com.fiap.oficina.ordemservico.application.port.in.BaixarEstoqueOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.ConsultarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.CriarOrdemServicoUseCase;
+import br.com.fiap.oficina.ordemservico.application.port.in.EntregarOrdemServicoUseCase;
+import br.com.fiap.oficina.ordemservico.application.port.in.FinalizarExecucaoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.IniciarDiagnosticoUseCase;
+import br.com.fiap.oficina.ordemservico.application.port.in.IniciarExecucaoUseCase;
+import br.com.fiap.oficina.ordemservico.application.port.in.PedirAjusteOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.RegistrarDiagnosticoUseCase;
+import br.com.fiap.oficina.ordemservico.application.port.in.RegistrarPagamentoUseCase;
+import br.com.fiap.oficina.ordemservico.application.port.out.BaixaEstoquePort;
+import br.com.fiap.oficina.ordemservico.application.port.out.OrcamentoRepositoryPort;
 import br.com.fiap.oficina.ordemservico.application.port.out.OrdemServicoRepositoryPort;
+import br.com.fiap.oficina.ordemservico.domain.event.OrdemServicoFinalizadaEvent;
 import br.com.fiap.oficina.ordemservico.domain.model.Diagnostico;
+import br.com.fiap.oficina.ordemservico.domain.model.OrcamentoId;
 import br.com.fiap.oficina.ordemservico.domain.model.OrdemServico;
 import br.com.fiap.oficina.ordemservico.domain.model.OrdemServicoId;
+import br.com.fiap.oficina.ordemservico.domain.model.StatusOrcamento;
+import br.com.fiap.oficina.ordemservico.domain.model.StatusOrdemServico;
 import br.com.fiap.oficina.shared.domain.DomainException;
 import br.com.fiap.oficina.veiculo.domain.model.VeiculoId;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
 
-public class OrdemServicoApplicationService implements CriarOrdemServicoUseCase, ConsultarOrdemServicoUseCase,
-    IniciarDiagnosticoUseCase, RegistrarDiagnosticoUseCase {
+@Service
+public class OrdemServicoApplicationService implements
+        CriarOrdemServicoUseCase,
+        ConsultarOrdemServicoUseCase,
+        IniciarDiagnosticoUseCase,
+        RegistrarDiagnosticoUseCase,
+        IniciarExecucaoUseCase,
+        FinalizarExecucaoUseCase,
+        RegistrarPagamentoUseCase,
+        EntregarOrdemServicoUseCase,
+        PedirAjusteOrcamentoUseCase,
+        AlterarOrcamentoDuranteExecucaoUseCase,
+        BaixarEstoqueOrdemServicoUseCase {
 
     private final OrdemServicoRepositoryPort ordemServicoRepository;
+    private final OrcamentoRepositoryPort orcamentoRepository;
+    private final BaixaEstoquePort baixaEstoque;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public OrdemServicoApplicationService(OrdemServicoRepositoryPort ordemServicoRepository) {
+    public OrdemServicoApplicationService(
+            OrdemServicoRepositoryPort ordemServicoRepository,
+            OrcamentoRepositoryPort orcamentoRepository,
+            BaixaEstoquePort baixaEstoque,
+            ApplicationEventPublisher eventPublisher) {
         this.ordemServicoRepository = ordemServicoRepository;
+        this.orcamentoRepository = orcamentoRepository;
+        this.baixaEstoque = baixaEstoque;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -40,6 +78,19 @@ public class OrdemServicoApplicationService implements CriarOrdemServicoUseCase,
     }
 
     @Override
+    public List<OrdemServico> consultarHistoricoPorCliente(UUID clienteId) {
+        return ordemServicoRepository.buscarPorClienteOrdenado(clienteId);
+    }
+
+    @Override
+    public List<OrdemServico> consultarOrdens(StatusOrdemServico status) {
+        if (status == null) {
+            return ordemServicoRepository.buscarTodosOrdenado();
+        }
+        return ordemServicoRepository.buscarPorStatusOrdenado(status.ordinal());
+    }
+
+    @Override
     public OrdemServico iniciarDiagnostico(OrdemServicoId ordemServicoId) {
         var ordemServico = buscarOrdemServico(ordemServicoId);
         ordemServico.iniciarDiagnostico();
@@ -51,6 +102,72 @@ public class OrdemServicoApplicationService implements CriarOrdemServicoUseCase,
         var ordemServico = buscarOrdemServico(new OrdemServicoId(command.ordemServicoId()));
         ordemServico.registrarDiagnostico(Diagnostico.registrar(command.descricao()));
         return ordemServicoRepository.salvar(ordemServico);
+    }
+
+    @Override
+    public OrdemServico iniciarExecucao(UUID ordemId) {
+        var ordemServico = buscarOrdemServico(new OrdemServicoId(ordemId));
+        var orcamento = orcamentoRepository.buscarPorId(OrcamentoId.from(ordemId))
+                .orElseThrow(() -> new DomainException("Orcamento nao encontrado para a ordem: " + ordemId));
+        if (orcamento.status() != StatusOrcamento.APROVADO) {
+            throw new DomainException("Orcamento deve estar APROVADO para iniciar execucao. Status atual: " + orcamento.status());
+        }
+        ordemServico.iniciarExecucao();
+        return ordemServicoRepository.salvar(ordemServico);
+    }
+
+    @Override
+    public OrdemServico finalizar(UUID ordemId) {
+        var ordemServico = buscarOrdemServico(new OrdemServicoId(ordemId));
+        ordemServico.finalizar();
+        var saved = ordemServicoRepository.salvar(ordemServico);
+        eventPublisher.publishEvent(new OrdemServicoFinalizadaEvent(ordemServico.id().value(), ordemServico.clienteId().value()));
+        return saved;
+    }
+
+    @Override
+    public OrdemServico registrarPagamento(UUID ordemId) {
+        var ordemServico = buscarOrdemServico(new OrdemServicoId(ordemId));
+        ordemServico.registrarPagamento();
+        return ordemServicoRepository.salvar(ordemServico);
+    }
+
+    @Override
+    public OrdemServico entregar(UUID ordemId) {
+        var ordemServico = buscarOrdemServico(new OrdemServicoId(ordemId));
+        ordemServico.entregar();
+        return ordemServicoRepository.salvar(ordemServico);
+    }
+
+    @Override
+    public OrdemServico pedirAjuste(UUID ordemId) {
+        var ordemServico = buscarOrdemServico(new OrdemServicoId(ordemId));
+        ordemServico.pedirAjuste();
+        var orcamento = orcamentoRepository.buscarPorId(OrcamentoId.from(ordemId))
+                .orElseThrow(() -> new DomainException("Orcamento nao encontrado para a ordem: " + ordemId));
+        orcamento.reabrir();
+        orcamentoRepository.salvar(orcamento);
+        return ordemServicoRepository.salvar(ordemServico);
+    }
+
+    @Override
+    public OrdemServico alterarOrcamento(UUID ordemId) {
+        var ordemServico = buscarOrdemServico(new OrdemServicoId(ordemId));
+        ordemServico.iniciarAlteracaoOrcamento();
+        var orcamento = orcamentoRepository.buscarPorId(OrcamentoId.from(ordemId))
+                .orElseThrow(() -> new DomainException("Orcamento nao encontrado para a ordem: " + ordemId));
+        orcamento.reabrir();
+        orcamentoRepository.salvar(orcamento);
+        return ordemServicoRepository.salvar(ordemServico);
+    }
+
+    @Override
+    public void baixarEstoque(BaixarEstoqueOrdemCommand command) {
+        var ordemServico = buscarOrdemServico(new OrdemServicoId(command.ordemId()));
+        if (ordemServico.status() != StatusOrdemServico.EM_EXECUCAO) {
+            throw new DomainException("Baixa de estoque so pode ser feita durante execucao. Status atual: " + ordemServico.status());
+        }
+        baixaEstoque.baixar(command.itemEstoqueId(), java.math.BigDecimal.valueOf(command.quantidade()));
     }
 
     private OrdemServico buscarOrdemServico(OrdemServicoId ordemServicoId) {

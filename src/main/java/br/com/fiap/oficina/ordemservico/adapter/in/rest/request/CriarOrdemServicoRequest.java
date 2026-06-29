@@ -5,8 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record CriarOrdemServicoRequest(
-        @NotNull(message = "Cliente e obrigatorio.") UUID clienteId,
-        @NotNull(message = "Veiculo e obrigatorio.") UUID veiculoId,
-        String anotacoes
-) {
+	@NotNull UUID clienteId,
+	@NotNull UUID veiculoId,
+	String anotacoes) {
 }

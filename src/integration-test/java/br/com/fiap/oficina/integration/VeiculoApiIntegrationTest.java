@@ -77,7 +77,7 @@ class VeiculoApiIntegrationTest extends AbstractApiIntegrationSupport {
         var consultaDepoisDaExclusao = getMap("/veiculos/" + veiculoId);
 
         // then
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, consultaDepoisDaExclusao.getStatusCode());
+        assertEquals(422, consultaDepoisDaExclusao.getStatusCode().value());
         assertNotNull(consultaDepoisDaExclusao.getBody());
         assertEquals("Veiculo não encontrado.", consultaDepoisDaExclusao.getBody().get("message"));
     }

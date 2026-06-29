@@ -86,6 +86,11 @@ public class ClienteController {
         return ClienteResponse.from(consultarClienteUseCase.consultarPorId(new ClienteId(id)));
     }
 
+    @GetMapping("/documento/{cpfCnpj}")
+    public ClienteResponse consultarPorDocumento(@PathVariable String cpfCnpj) {
+        return ClienteResponse.from(consultarClienteUseCase.consultarPorDocumento(cpfCnpj));
+    }
+
     @GetMapping
     public List<ClienteResponse> consultarTodos() {
         return consultarTodosClientesUseCase.consultarTodos().stream()

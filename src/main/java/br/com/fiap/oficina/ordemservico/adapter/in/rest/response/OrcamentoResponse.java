@@ -10,17 +10,22 @@ import java.util.UUID;
 public record OrcamentoResponse(
         UUID id,
         StatusOrcamento status,
-        List<OrcamentoItemResponse> itens,
+        List<OrcamentoItemServicoResponse> itensServico,
+        List<OrcamentoItemPecaResponse> itensPeca,
         OffsetDateTime dataFechamento
 ) {
     public static OrcamentoResponse from(Orcamento orcamento) {
-        var itens = orcamento.itens().stream()
-                .map(item -> new OrcamentoItemResponse(item.servicoId().value(), item.quantidade()))
+        var itensServico = orcamento.itensServico().stream()
+                .map(item -> new OrcamentoItemServicoResponse(item.servicoId().value(), item.quantidade()))
+                .toList();
+        var itensPeca = orcamento.itensPeca().stream()
+                .map(item -> new OrcamentoItemPecaResponse(item.itemEstoqueId().value(), item.quantidade()))
                 .toList();
         return new OrcamentoResponse(
                 orcamento.id().value(),
                 orcamento.status(),
-                itens,
+                itensServico,
+                itensPeca,
                 orcamento.dataFechamento()
         );
     }

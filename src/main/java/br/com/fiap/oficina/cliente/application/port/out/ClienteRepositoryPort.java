@@ -15,6 +15,8 @@ public interface ClienteRepositoryPort {
 
     Optional<Cliente> buscarPorId(ClienteId clienteId);
 
+    Optional<Cliente> buscarPorCpfCnpj(CpfCnpj cpfCnpj);
+
     List<Cliente> buscarTodos();
 
     void excluirPorId(ClienteId clienteId);

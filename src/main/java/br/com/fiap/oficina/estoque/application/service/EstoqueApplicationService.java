@@ -9,18 +9,24 @@ import br.com.fiap.oficina.estoque.application.port.in.BaixarItemEstoqueUseCase;
 import br.com.fiap.oficina.estoque.application.port.in.CadastrarItemEstoqueUseCase;
 import br.com.fiap.oficina.estoque.application.port.in.ConsultarItemEstoqueUseCase;
 import br.com.fiap.oficina.estoque.application.port.in.ConsultarTodosItensEstoqueUseCase;
+import br.com.fiap.oficina.estoque.application.port.in.ConsultarPorCodigoEstoqueUseCase;
+import br.com.fiap.oficina.estoque.application.port.in.ConsultarEstoqueAtivoUseCase;
 import br.com.fiap.oficina.estoque.application.port.in.ExcluirItemEstoqueUseCase;
 import br.com.fiap.oficina.estoque.application.port.in.IncluirItemEstoqueUseCase;
 import br.com.fiap.oficina.estoque.application.port.out.EstoqueRepositoryPort;
 import br.com.fiap.oficina.estoque.domain.model.ItemEstoque;
 import br.com.fiap.oficina.estoque.domain.model.ItemEstoqueId;
 import br.com.fiap.oficina.shared.domain.DomainException;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class EstoqueApplicationService implements CadastrarItemEstoqueUseCase,
         ConsultarItemEstoqueUseCase,
         ConsultarTodosItensEstoqueUseCase,
+        ConsultarPorCodigoEstoqueUseCase,
+        ConsultarEstoqueAtivoUseCase,
         AtualizarItemEstoqueUseCase,
         IncluirItemEstoqueUseCase,
         BaixarItemEstoqueUseCase,
@@ -50,6 +56,17 @@ public class EstoqueApplicationService implements CadastrarItemEstoqueUseCase,
     @Override
     public List<ItemEstoque> consultarTodos() {
         return estoqueRepository.buscarTodos();
+    }
+
+    @Override
+    public ItemEstoque consultarPorCodigo(String codigo) {
+        return estoqueRepository.buscarPorCodigo(codigo)
+                .orElseThrow(() -> new DomainException("Item de estoque nao encontrado com codigo: " + codigo));
+    }
+
+    @Override
+    public List<ItemEstoque> consultarAtivos() {
+        return estoqueRepository.buscarTodosAtivos();
     }
 
     @Override

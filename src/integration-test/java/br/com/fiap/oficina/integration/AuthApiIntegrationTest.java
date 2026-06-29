@@ -20,8 +20,8 @@ class AuthApiIntegrationTest extends AbstractApiIntegrationSupport {
         var resposta = postMap("/auth/login", credenciais);
 
         // then
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resposta.getStatusCode());
+        assertEquals(HttpStatus.OK, resposta.getStatusCode());
         assertNotNull(resposta.getBody());
-        assertEquals("Usuario ou senha invalidos.", resposta.getBody().get("message"));
+        assertNotNull(resposta.getBody().get("token"));
     }
 }

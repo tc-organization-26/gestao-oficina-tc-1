@@ -13,7 +13,7 @@ public class OrcamentoItemServicoJpaEntity {
     @Id
     private UUID id;
 
-    @Column(name = "orcamento_id")
+    @Column(name = "orcamento_id", insertable = false, updatable = false)
     private UUID orcamentoId;
 
     @Column(name = "servico_id")

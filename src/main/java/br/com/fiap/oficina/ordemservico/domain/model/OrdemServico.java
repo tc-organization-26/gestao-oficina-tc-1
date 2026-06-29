@@ -22,6 +22,7 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
     private OffsetDateTime inicioExecucaoEm;
     private OffsetDateTime finalizadaEm;
     private OffsetDateTime entregueEm;
+    private boolean pago;
 
     public OrdemServico(
             OrdemServicoId id,
@@ -34,7 +35,8 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
             OffsetDateTime dataRecebimento,
             OffsetDateTime inicioExecucaoEm,
             OffsetDateTime finalizadaEm,
-            OffsetDateTime entregueEm) {
+            OffsetDateTime entregueEm,
+            boolean pago) {
         if (id == null) {
             throw new DomainException("Id da ordem de servico e obrigatorio.");
         }
@@ -55,6 +57,7 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
         this.inicioExecucaoEm = inicioExecucaoEm;
         this.finalizadaEm = finalizadaEm;
         this.entregueEm = entregueEm;
+        this.pago = pago;
         this.orcamento = Orcamento.novo(this.id);
     }
 
@@ -70,7 +73,8 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
                 OffsetDateTime.now(ZoneOffset.UTC),
                 null,
                 null,
-                null);
+                null,
+                false);
     }
 
     
@@ -119,8 +123,32 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
         if (this.status != StatusOrdemServico.FINALIZADA) {
             throw new DomainException("Apenas ordem de servico finalizada pode ser entregue.");
         }
+        if (!this.pago) {
+            throw new DomainException("Ordem de servico deve estar paga para ser entregue.");
+        }
         this.status = StatusOrdemServico.ENTREGUE;
         this.entregueEm = OffsetDateTime.now(ZoneOffset.UTC);
+    }
+
+    public void registrarPagamento() {
+        if (this.status != StatusOrdemServico.FINALIZADA) {
+            throw new DomainException("Pagamento so pode ser registrado em ordem finalizada.");
+        }
+        this.pago = true;
+    }
+
+    public void pedirAjuste() {
+        if (this.status != StatusOrdemServico.AGUARDANDO_APROVACAO) {
+            throw new DomainException("Pedido de ajuste so pode ser feito quando aguardando aprovacao.");
+        }
+        this.status = StatusOrdemServico.EM_DIAGNOSTICO;
+    }
+
+    public void iniciarAlteracaoOrcamento() {
+        if (this.status != StatusOrdemServico.EM_EXECUCAO) {
+            throw new DomainException("Alteracao de orcamento so pode ser feita durante execucao.");
+        }
+        this.status = StatusOrdemServico.AGUARDANDO_APROVACAO;
     }
 
     @Override public OrdemServicoId id() { return id; }
@@ -135,4 +163,5 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
     public OffsetDateTime inicioExecucaoEm() { return inicioExecucaoEm; }
     public OffsetDateTime finalizadaEm() { return finalizadaEm; }
     public OffsetDateTime entregueEm() { return entregueEm; }
+    public boolean pago() { return pago; }
 }

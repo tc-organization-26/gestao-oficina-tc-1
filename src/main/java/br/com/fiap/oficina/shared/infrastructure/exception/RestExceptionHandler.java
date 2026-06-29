@@ -16,7 +16,7 @@ public class RestExceptionHandler {
         );
 
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(body);
     }
 

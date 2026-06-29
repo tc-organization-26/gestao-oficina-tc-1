@@ -74,7 +74,7 @@ class ServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         var consultaDepoisDaExclusao = getMap("/servicos/" + servicoId);
 
         // then
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, consultaDepoisDaExclusao.getStatusCode());
+        assertEquals(422, consultaDepoisDaExclusao.getStatusCode().value());
         assertNotNull(consultaDepoisDaExclusao.getBody());
         assertEquals("Servico não encontrado.", consultaDepoisDaExclusao.getBody().get("message"));
     }

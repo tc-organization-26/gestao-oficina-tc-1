@@ -26,8 +26,12 @@ public class OrcamentoJpaEntity {
     private OffsetDateTime dataFechamento;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "orcamento_id")
+    @JoinColumn(name = "orcamento_id", nullable = false)
     private List<OrcamentoItemServicoJpaEntity> itens = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "orcamento_id", nullable = false)
+    private List<OrcamentoItemPecaJpaEntity> itensPeca = new ArrayList<>();
 
     public OrcamentoJpaEntity() {}
 
@@ -53,4 +57,6 @@ public class OrcamentoJpaEntity {
     public void setDataFechamento(OffsetDateTime dataFechamento) { this.dataFechamento = dataFechamento; }
     public List<OrcamentoItemServicoJpaEntity> getItens() { return itens; }
     public void setItens(List<OrcamentoItemServicoJpaEntity> itens) { this.itens = itens; }
+    public List<OrcamentoItemPecaJpaEntity> getItensPeca() { return itensPeca; }
+    public void setItensPeca(List<OrcamentoItemPecaJpaEntity> itensPeca) { this.itensPeca = itensPeca; }
 }

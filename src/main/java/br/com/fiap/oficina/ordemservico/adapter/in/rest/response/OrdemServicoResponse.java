@@ -16,7 +16,8 @@ public record OrdemServicoResponse(
         OffsetDateTime dataRecebimento,
         OffsetDateTime inicioExecucaoEm,
         OffsetDateTime finalizadaEm,
-        OffsetDateTime entregueEm
+        OffsetDateTime entregueEm,
+        boolean pago
 ) {
     public static OrdemServicoResponse from(OrdemServico ordemServico) {
         return new OrdemServicoResponse(
@@ -29,6 +30,7 @@ public record OrdemServicoResponse(
                 ordemServico.dataRecebimento(),
                 ordemServico.inicioExecucaoEm(),
                 ordemServico.finalizadaEm(),
-                ordemServico.entregueEm());
+                ordemServico.entregueEm(),
+                ordemServico.pago());
     }
 }

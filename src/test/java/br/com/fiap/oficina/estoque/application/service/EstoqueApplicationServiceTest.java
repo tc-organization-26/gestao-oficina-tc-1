@@ -114,5 +114,7 @@ class EstoqueApplicationServiceTest {
         @Override public ItemEstoque salvar(ItemEstoque itemEstoque) { this.salvo = itemEstoque; return itemEstoque; }
         @Override public Optional<ItemEstoque> buscarPorId(ItemEstoqueId itemEstoqueId) { return busca; }
         @Override public List<ItemEstoque> buscarTodos() { return todos; }
+        @Override public Optional<ItemEstoque> buscarPorCodigo(String codigo) { return busca; }
+        @Override public List<ItemEstoque> buscarTodosAtivos() { return todos; }
     }
 }

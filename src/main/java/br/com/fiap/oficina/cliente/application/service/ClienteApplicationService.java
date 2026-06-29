@@ -66,6 +66,12 @@ public class ClienteApplicationService implements CadastrarClienteUseCase,
     }
 
     @Override
+    public Cliente consultarPorDocumento(String cpfCnpj) {
+        return clienteRepository.buscarPorCpfCnpj(new CpfCnpj(cpfCnpj))
+                .orElseThrow(() -> new DomainException("Cliente não encontrado."));
+    }
+
+    @Override
     public List<Cliente> consultarTodos() {
         return clienteRepository.buscarTodos();
     }

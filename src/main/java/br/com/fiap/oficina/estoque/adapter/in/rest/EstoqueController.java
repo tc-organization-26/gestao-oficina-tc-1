@@ -13,6 +13,8 @@ import br.com.fiap.oficina.estoque.application.port.in.BaixarItemEstoqueUseCase;
 import br.com.fiap.oficina.estoque.application.port.in.CadastrarItemEstoqueUseCase;
 import br.com.fiap.oficina.estoque.application.port.in.ConsultarItemEstoqueUseCase;
 import br.com.fiap.oficina.estoque.application.port.in.ConsultarTodosItensEstoqueUseCase;
+import br.com.fiap.oficina.estoque.application.port.in.ConsultarPorCodigoEstoqueUseCase;
+import br.com.fiap.oficina.estoque.application.port.in.ConsultarEstoqueAtivoUseCase;
 import br.com.fiap.oficina.estoque.application.port.in.ExcluirItemEstoqueUseCase;
 import br.com.fiap.oficina.estoque.application.port.in.IncluirItemEstoqueUseCase;
 import br.com.fiap.oficina.estoque.domain.model.ItemEstoqueId;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -38,6 +41,8 @@ public class EstoqueController {
     private final CadastrarItemEstoqueUseCase cadastrarItemEstoqueUseCase;
     private final ConsultarItemEstoqueUseCase consultarItemEstoqueUseCase;
     private final ConsultarTodosItensEstoqueUseCase consultarTodosItensEstoqueUseCase;
+    private final ConsultarPorCodigoEstoqueUseCase consultarPorCodigoEstoqueUseCase;
+    private final ConsultarEstoqueAtivoUseCase consultarEstoqueAtivoUseCase;
     private final AtualizarItemEstoqueUseCase atualizarItemEstoqueUseCase;
     private final IncluirItemEstoqueUseCase incluirItemEstoqueUseCase;
     private final BaixarItemEstoqueUseCase baixarItemEstoqueUseCase;
@@ -47,6 +52,8 @@ public class EstoqueController {
             CadastrarItemEstoqueUseCase cadastrarItemEstoqueUseCase,
             ConsultarItemEstoqueUseCase consultarItemEstoqueUseCase,
             ConsultarTodosItensEstoqueUseCase consultarTodosItensEstoqueUseCase,
+            ConsultarPorCodigoEstoqueUseCase consultarPorCodigoEstoqueUseCase,
+            ConsultarEstoqueAtivoUseCase consultarEstoqueAtivoUseCase,
             AtualizarItemEstoqueUseCase atualizarItemEstoqueUseCase,
             IncluirItemEstoqueUseCase incluirItemEstoqueUseCase,
             BaixarItemEstoqueUseCase baixarItemEstoqueUseCase,
@@ -54,6 +61,8 @@ public class EstoqueController {
         this.cadastrarItemEstoqueUseCase = cadastrarItemEstoqueUseCase;
         this.consultarItemEstoqueUseCase = consultarItemEstoqueUseCase;
         this.consultarTodosItensEstoqueUseCase = consultarTodosItensEstoqueUseCase;
+        this.consultarPorCodigoEstoqueUseCase = consultarPorCodigoEstoqueUseCase;
+        this.consultarEstoqueAtivoUseCase = consultarEstoqueAtivoUseCase;
         this.atualizarItemEstoqueUseCase = atualizarItemEstoqueUseCase;
         this.incluirItemEstoqueUseCase = incluirItemEstoqueUseCase;
         this.baixarItemEstoqueUseCase = baixarItemEstoqueUseCase;
@@ -102,5 +111,17 @@ public class EstoqueController {
     @PostMapping("/{id}/baixas")
     public ItemEstoqueResponse baixar(@PathVariable UUID id, @Valid @RequestBody MovimentarEstoqueRequest request) {
         return ItemEstoqueResponse.from(baixarItemEstoqueUseCase.baixar(new BaixarItemEstoqueCommand(id, request.quantidade())));
+    }
+
+    @GetMapping("/codigo/{codigo}")
+    public ItemEstoqueResponse consultarPorCodigo(@PathVariable String codigo) {
+        return ItemEstoqueResponse.from(consultarPorCodigoEstoqueUseCase.consultarPorCodigo(codigo));
+    }
+
+    @GetMapping("/consulta/ativos")
+    public List<ItemEstoqueResponse> consultarAtivos() {
+        return consultarEstoqueAtivoUseCase.consultarAtivos().stream()
+                .map(ItemEstoqueResponse::from)
+                .toList();
     }
 }

@@ -35,6 +35,12 @@ public class ClientePersistenceAdapter implements ClienteRepositoryPort {
     }
 
     @Override
+    public Optional<Cliente> buscarPorCpfCnpj(CpfCnpj cpfCnpj) {
+        return repository.findByCpfCnpj(cpfCnpj.value())
+                .map(ClienteMapper::toDomain);
+    }
+
+    @Override
     public List<Cliente> buscarTodos() {
         return repository.findAll().stream()
                 .map(ClienteMapper::toDomain)
