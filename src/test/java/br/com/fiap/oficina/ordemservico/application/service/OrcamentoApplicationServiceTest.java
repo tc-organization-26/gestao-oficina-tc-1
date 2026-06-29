@@ -45,15 +45,41 @@ class OrcamentoApplicationServiceTest {
 
     @Test
     void adicionarItemPecaFechaOrcamentoQuandoEstoqueDisponivel() {
+        var ordem = novaOrdemEmDiagnostico();
+        var eventos = new ArrayList<>();
         var repository = new FakeOrcamentoRepository(Optional.empty());
-        var service = service(repository, new FakeOrdemServicoRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
+        var ordemRepository = new FakeOrdemServicoRepository(Optional.of(ordem));
+        var service = service(repository, ordemRepository, new FakeVerificadorEstoque(true), eventos);
 
         var orcamento = service.adicionarItemPeca(
-                new AdicionarItemPecaOrcamentoCommand(UUID.randomUUID(), UUID.randomUUID(), 2.0));
+                new AdicionarItemPecaOrcamentoCommand(ordem.id().value(), UUID.randomUUID(), 2.0));
 
         assertEquals(1, orcamento.itensPeca().size());
         assertEquals(StatusOrcamento.FINALIZADO, orcamento.status());
         assertNotNull(orcamento.dataFechamento());
+        assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, ordemRepository.salvo.status());
+        assertEquals(1, eventos.size());
+        assertInstanceOf(OrcamentoFechadoEvent.class, eventos.get(0));
+    }
+
+    @Test
+    void adicionarItemServicoFechaOrcamentoQuandoPecasExistentesEstaoDisponiveis() {
+        var ordem = novaOrdemEmDiagnostico();
+        var pecaId = UUID.randomUUID();
+        var orcamentoExistente = new Orcamento(ordem.id().value(), ordem.id());
+        orcamentoExistente.adicionarItemPeca(new ItemPeca(new br.com.fiap.oficina.estoque.domain.model.ItemEstoqueId(pecaId), 1.0));
+        var eventos = new ArrayList<>();
+        var orcamentoRepository = new FakeOrcamentoRepository(Optional.of(orcamentoExistente));
+        var ordemRepository = new FakeOrdemServicoRepository(Optional.of(ordem));
+        var service = service(orcamentoRepository, ordemRepository, new FakeVerificadorEstoque(true), eventos);
+
+        var orcamento = service.adicionarItemServico(
+                new AdicionarItemServicoOrcamentoCommand(ordem.id().value(), UUID.randomUUID(), 1.0));
+
+        assertEquals(StatusOrcamento.FINALIZADO, orcamento.status());
+        assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, ordemRepository.salvo.status());
+        assertEquals(1, eventos.size());
+        assertInstanceOf(OrcamentoFechadoEvent.class, eventos.get(0));
     }
 
     @Test

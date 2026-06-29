@@ -19,6 +19,7 @@ import br.com.fiap.oficina.ordemservico.domain.model.OrcamentoId;
 import br.com.fiap.oficina.ordemservico.domain.model.OrcamentoItemServico;
 import br.com.fiap.oficina.ordemservico.domain.model.ItemPeca;
 import br.com.fiap.oficina.ordemservico.domain.model.OrdemServico;
+import br.com.fiap.oficina.ordemservico.domain.model.StatusOrcamento;
 import br.com.fiap.oficina.ordemservico.domain.model.OrdemServicoId;
 import br.com.fiap.oficina.estoque.domain.model.ItemEstoqueId;
 import br.com.fiap.oficina.servico.domain.model.ServicoId;
@@ -110,6 +111,27 @@ public class OrcamentoApplicationService implements
         ordemServicoRepository.salvar(ordemServico);
 
         publicarEvento.publicar(new OrcamentoFechadoEvent(ordemServico.id().value(), ordemServico.clienteId().value()));
+    }
+
+    // Fechamento automático do orçamento quando todos os itens de peça e serviço foram adicionados e estão disponíveis em estoque.
+    // Nesse caminho, o service só tem o Orcamento, então ele busca a OrdemServico pelo orcamento.ordemServicoId() e depois delega para o método principal.
+    private Orcamento fecharOrcamentoComSucesso(Orcamento orcamento) {
+        var ordemServico = ordemServicoRepository.buscarPorId(orcamento.ordemServicoId())
+                .orElseThrow(() -> new DomainException("Ordem de servico nao encontrada: " + orcamento.ordemServicoId().value()));
+        return fecharOrcamentoComSucesso(ordemServico, orcamento);
+    }
+
+    private Orcamento fecharOrcamentoComSucesso(OrdemServico ordemServico, Orcamento orcamento) {
+        if (orcamento.status() != StatusOrcamento.FINALIZADO) {
+            orcamento.fechar();
+        }
+        var orcamentoSalvo = orcamentoRepository.salvar(orcamento);
+
+        ordemServico.finalizarOrcamento();
+        ordemServicoRepository.salvar(ordemServico);
+
+        publicarEvento.publicar(new OrcamentoFechadoEvent(ordemServico.id().value(), ordemServico.clienteId().value()));
+        return orcamentoSalvo;
     }
 
     @Override

@@ -3,10 +3,8 @@ package br.com.fiap.oficina.ordemservico.application.service;
 import static org.junit.jupiter.api.Assertions.*;
 
 import br.com.fiap.oficina.cliente.domain.model.ClienteId;
-import br.com.fiap.oficina.ordemservico.application.command.BaixarEstoqueOrdemCommand;
 import br.com.fiap.oficina.ordemservico.application.command.CriarOrdemServicoCommand;
 import br.com.fiap.oficina.ordemservico.application.command.RegistrarDiagnosticoCommand;
-import br.com.fiap.oficina.ordemservico.application.port.out.BaixaEstoquePort;
 import br.com.fiap.oficina.ordemservico.application.port.out.OrcamentoRepositoryPort;
 import br.com.fiap.oficina.ordemservico.application.port.out.OrdemServicoRepositoryPort;
 import br.com.fiap.oficina.ordemservico.domain.event.OrdemServicoFinalizadaEvent;
@@ -18,7 +16,6 @@ import br.com.fiap.oficina.ordemservico.domain.model.StatusOrcamento;
 import br.com.fiap.oficina.ordemservico.domain.model.StatusOrdemServico;
 import br.com.fiap.oficina.shared.domain.DomainException;
 import br.com.fiap.oficina.veiculo.domain.model.VeiculoId;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +27,7 @@ class OrdemServicoApplicationServiceTest {
     @Test
     void criarSalvaOrdemNova() {
         var ordemRepository = new FakeOrdemServicoRepository(Optional.empty());
-        var service = service(ordemRepository, new FakeOrcamentoRepository(Optional.empty()), new FakeBaixaEstoque(), new ArrayList<>());
+        var service = service(ordemRepository, new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
         var clienteId = UUID.randomUUID();
         var veiculoId = UUID.randomUUID();
 
@@ -45,14 +42,14 @@ class OrdemServicoApplicationServiceTest {
     @Test
     void consultarRetornaOrdemDoRepositorio() {
         var ordem = novaOrdem();
-        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.empty()), new FakeBaixaEstoque(), new ArrayList<>());
+        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
 
         assertSame(ordem, service.consultarPorId(ordem.id()));
     }
 
     @Test
     void consultarRejeitaOrdemInexistente() {
-        var service = service(new FakeOrdemServicoRepository(Optional.empty()), new FakeOrcamentoRepository(Optional.empty()), new FakeBaixaEstoque(), new ArrayList<>());
+        var service = service(new FakeOrdemServicoRepository(Optional.empty()), new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
 
         assertThrows(DomainException.class, () -> service.consultarPorId(OrdemServicoId.novo()));
     }
@@ -60,7 +57,7 @@ class OrdemServicoApplicationServiceTest {
     @Test
     void consultarListasDelegamAoRepositorio() {
         var ordem = novaOrdem();
-        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.empty()), new FakeBaixaEstoque(), new ArrayList<>());
+        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
 
         assertEquals(List.of(ordem), service.consultarHistoricoPorCliente(ordem.clienteId().value()));
         assertEquals(List.of(ordem), service.consultarOrdens(StatusOrdemServico.RECEBIDA));
@@ -71,7 +68,7 @@ class OrdemServicoApplicationServiceTest {
     void iniciarDiagnosticoAlteraStatusESalva() {
         var ordem = novaOrdem();
         var repository = new FakeOrdemServicoRepository(Optional.of(ordem));
-        var service = service(repository, new FakeOrcamentoRepository(Optional.empty()), new FakeBaixaEstoque(), new ArrayList<>());
+        var service = service(repository, new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
 
         var atualizada = service.iniciarDiagnostico(ordem.id());
 
@@ -84,7 +81,7 @@ class OrdemServicoApplicationServiceTest {
         var ordem = novaOrdem();
         ordem.iniciarDiagnostico();
         var repository = new FakeOrdemServicoRepository(Optional.of(ordem));
-        var service = service(repository, new FakeOrcamentoRepository(Optional.empty()), new FakeBaixaEstoque(), new ArrayList<>());
+        var service = service(repository, new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
 
         var atualizada = service.registrarDiagnostico(new RegistrarDiagnosticoCommand(ordem.id().value(), "Trocar freios"));
 
@@ -98,7 +95,7 @@ class OrdemServicoApplicationServiceTest {
         var orcamento = new Orcamento(ordem.id().value(), ordem.id());
         orcamento.fechar();
         orcamento.aprovar();
-        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.of(orcamento)), new FakeBaixaEstoque(), new ArrayList<>());
+        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.of(orcamento)), new ArrayList<>());
 
         var atualizada = service.iniciarExecucao(ordem.id().value());
 
@@ -109,7 +106,7 @@ class OrdemServicoApplicationServiceTest {
     void iniciarExecucaoRejeitaOrcamentoNaoAprovado() {
         var ordem = novaOrdemAguardandoAprovacao();
         var orcamento = new Orcamento(ordem.id().value(), ordem.id());
-        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.of(orcamento)), new FakeBaixaEstoque(), new ArrayList<>());
+        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.of(orcamento)), new ArrayList<>());
 
         assertThrows(DomainException.class, () -> service.iniciarExecucao(ordem.id().value()));
     }
@@ -119,7 +116,7 @@ class OrdemServicoApplicationServiceTest {
         var ordem = novaOrdemEmExecucao();
         var eventos = new ArrayList<>();
         var repository = new FakeOrdemServicoRepository(Optional.of(ordem));
-        var service = service(repository, new FakeOrcamentoRepository(Optional.empty()), new FakeBaixaEstoque(), eventos);
+        var service = service(repository, new FakeOrcamentoRepository(Optional.empty()), eventos);
 
         var finalizada = service.finalizar(ordem.id().value());
 
@@ -133,7 +130,7 @@ class OrdemServicoApplicationServiceTest {
     void registrarPagamentoEEntregarSalvamTransicoes() {
         var ordem = novaOrdemFinalizada();
         var repository = new FakeOrdemServicoRepository(Optional.of(ordem));
-        var service = service(repository, new FakeOrcamentoRepository(Optional.empty()), new FakeBaixaEstoque(), new ArrayList<>());
+        var service = service(repository, new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
 
         service.registrarPagamento(ordem.id().value());
         var entregue = service.entregar(ordem.id().value());
@@ -150,7 +147,7 @@ class OrdemServicoApplicationServiceTest {
         orcamento.fechar();
         var ordemRepository = new FakeOrdemServicoRepository(Optional.of(ordem));
         var orcamentoRepository = new FakeOrcamentoRepository(Optional.of(orcamento));
-        var service = service(ordemRepository, orcamentoRepository, new FakeBaixaEstoque(), new ArrayList<>());
+        var service = service(ordemRepository, orcamentoRepository, new ArrayList<>());
 
         var ajustada = service.pedirAjuste(ordem.id().value());
 
@@ -165,7 +162,7 @@ class OrdemServicoApplicationServiceTest {
         orcamento.fechar();
         orcamento.aprovar();
         var orcamentoRepository = new FakeOrcamentoRepository(Optional.of(orcamento));
-        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), orcamentoRepository, new FakeBaixaEstoque(), new ArrayList<>());
+        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), orcamentoRepository, new ArrayList<>());
 
         var alterada = service.alterarOrcamento(ordem.id().value());
 
@@ -173,34 +170,11 @@ class OrdemServicoApplicationServiceTest {
         assertEquals(StatusOrcamento.ABERTO, orcamentoRepository.salvo.status());
     }
 
-    @Test
-    void baixarEstoqueAcionaPortaDuranteExecucao() {
-        var ordem = novaOrdemEmExecucao();
-        var baixaEstoque = new FakeBaixaEstoque();
-        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.empty()), baixaEstoque, new ArrayList<>());
-        var itemEstoqueId = UUID.randomUUID();
-
-        service.baixarEstoque(new BaixarEstoqueOrdemCommand(ordem.id().value(), itemEstoqueId, 2.0));
-
-        assertEquals(itemEstoqueId, baixaEstoque.itemEstoqueId);
-        assertEquals(0, BigDecimal.valueOf(2.0).compareTo(baixaEstoque.quantidade));
-    }
-
-    @Test
-    void baixarEstoqueRejeitaOrdemForaDeExecucao() {
-        var ordem = novaOrdem();
-        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.empty()), new FakeBaixaEstoque(), new ArrayList<>());
-
-        assertThrows(DomainException.class,
-                () -> service.baixarEstoque(new BaixarEstoqueOrdemCommand(ordem.id().value(), UUID.randomUUID(), 1.0)));
-    }
-
     private static OrdemServicoApplicationService service(
             FakeOrdemServicoRepository ordemRepository,
             FakeOrcamentoRepository orcamentoRepository,
-            FakeBaixaEstoque baixaEstoque,
             List<Object> eventos) {
-        return new OrdemServicoApplicationService(ordemRepository, orcamentoRepository, baixaEstoque, eventos::add);
+        return new OrdemServicoApplicationService(ordemRepository, orcamentoRepository, eventos::add);
     }
 
     private static OrdemServico novaOrdem() {
@@ -251,15 +225,5 @@ class OrdemServicoApplicationServiceTest {
 
         @Override public Orcamento salvar(Orcamento orcamento) { this.salvo = orcamento; return orcamento; }
         @Override public Optional<Orcamento> buscarPorId(OrcamentoId orcamentoId) { return busca; }
-    }
-
-    private static class FakeBaixaEstoque implements BaixaEstoquePort {
-        private UUID itemEstoqueId;
-        private BigDecimal quantidade;
-
-        @Override public void baixar(UUID itemEstoqueId, BigDecimal quantidade) {
-            this.itemEstoqueId = itemEstoqueId;
-            this.quantidade = quantidade;
-        }
     }
 }
