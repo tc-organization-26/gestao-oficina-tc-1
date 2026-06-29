@@ -1,15 +1,12 @@
 package br.com.fiap.oficina.ordemservico.config;
 
-import br.com.fiap.oficina.estoque.application.port.in.BaixarItemEstoqueUseCase;
 import br.com.fiap.oficina.estoque.application.port.out.EstoqueRepositoryPort;
 import br.com.fiap.oficina.ordemservico.adapter.out.event.SpringDomainEventPublisherAdapter;
-import br.com.fiap.oficina.ordemservico.adapter.out.persistence.jpa.BaixaEstoqueAdapter;
 import br.com.fiap.oficina.ordemservico.adapter.out.persistence.jpa.EstoqueVerificadorAdapter;
 import br.com.fiap.oficina.ordemservico.adapter.out.persistence.jpa.OrcamentoPersistenceAdapter;
 import br.com.fiap.oficina.ordemservico.adapter.out.persistence.jpa.OrcamentoSpringDataRepository;
 import br.com.fiap.oficina.ordemservico.adapter.out.persistence.jpa.OrdemServicoPersistenceAdapter;
 import br.com.fiap.oficina.ordemservico.adapter.out.persistence.jpa.SpringDataOrdemServicoRepository;
-import br.com.fiap.oficina.ordemservico.application.port.out.BaixaEstoquePort;
 import br.com.fiap.oficina.ordemservico.application.port.out.OrcamentoRepositoryPort;
 import br.com.fiap.oficina.ordemservico.application.port.out.OrdemServicoRepositoryPort;
 import br.com.fiap.oficina.ordemservico.application.port.out.PublicarEventoPort;
@@ -27,12 +24,10 @@ public class OrdemServicoConfiguration {
     public OrdemServicoApplicationService ordemServicoApplicationService(
             OrdemServicoRepositoryPort ordemServicoRepositoryPort,
             OrcamentoRepositoryPort orcamentoRepositoryPort,
-            BaixaEstoquePort baixaEstoquePort,
             PublicarEventoPort publicarEventoPort) {
         return new OrdemServicoApplicationService(
                 ordemServicoRepositoryPort,
                 orcamentoRepositoryPort,
-                baixaEstoquePort,
                 publicarEventoPort);
     }
 
@@ -57,11 +52,6 @@ public class OrdemServicoConfiguration {
     @Bean
     public OrcamentoRepositoryPort orcamentoRepositoryPort(OrcamentoSpringDataRepository springDataRepository) {
         return new OrcamentoPersistenceAdapter(springDataRepository);
-    }
-
-    @Bean
-    public BaixaEstoquePort baixaEstoquePort(BaixarItemEstoqueUseCase baixarItemEstoqueUseCase) {
-        return new BaixaEstoqueAdapter(baixarItemEstoqueUseCase);
     }
 
     @Bean

@@ -2,14 +2,12 @@ package br.com.fiap.oficina.ordemservico.adapter.in.rest;
 
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.AdicionarItemServicoOrcamentoRequest;
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.AdicionarItemPecaOrcamentoRequest;
-import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.BaixarEstoqueOrdemRequest;
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.CriarOrdemServicoRequest;
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.FecharOrcamentoRequest;
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.RegistrarDiagnosticoRequest;
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.response.OrdemServicoResponse;
 import br.com.fiap.oficina.ordemservico.application.command.AdicionarItemServicoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.command.AdicionarItemPecaOrcamentoCommand;
-import br.com.fiap.oficina.ordemservico.application.command.BaixarEstoqueOrdemCommand;
 import br.com.fiap.oficina.ordemservico.application.command.CriarOrdemServicoCommand;
 import br.com.fiap.oficina.ordemservico.application.command.FecharOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.command.RegistrarDiagnosticoCommand;
@@ -17,7 +15,6 @@ import br.com.fiap.oficina.ordemservico.application.port.in.AdicionarItemServico
 import br.com.fiap.oficina.ordemservico.application.port.in.AdicionarItemPecaOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.AlterarOrcamentoDuranteExecucaoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.AprovarOrcamentoUseCase;
-import br.com.fiap.oficina.ordemservico.application.port.in.BaixarEstoqueOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.ConsultarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.CriarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.EntregarOrdemServicoUseCase;
@@ -61,7 +58,6 @@ public class OrdemServicoController {
     private final RecusarOrcamentoUseCase recusarOrcamentoUseCase;
     private final PedirAjusteOrcamentoUseCase pedirAjusteOrcamentoUseCase;
     private final IniciarExecucaoUseCase iniciarExecucaoUseCase;
-    private final BaixarEstoqueOrdemServicoUseCase baixarEstoqueOrdemServicoUseCase;
     private final AlterarOrcamentoDuranteExecucaoUseCase alterarOrcamentoDuranteExecucaoUseCase;
     private final FinalizarExecucaoUseCase finalizarExecucaoUseCase;
     private final RegistrarPagamentoUseCase registrarPagamentoUseCase;
@@ -79,7 +75,6 @@ public class OrdemServicoController {
             RecusarOrcamentoUseCase recusarOrcamentoUseCase,
             PedirAjusteOrcamentoUseCase pedirAjusteOrcamentoUseCase,
             IniciarExecucaoUseCase iniciarExecucaoUseCase,
-            BaixarEstoqueOrdemServicoUseCase baixarEstoqueOrdemServicoUseCase,
             AlterarOrcamentoDuranteExecucaoUseCase alterarOrcamentoDuranteExecucaoUseCase,
             FinalizarExecucaoUseCase finalizarExecucaoUseCase,
             RegistrarPagamentoUseCase registrarPagamentoUseCase,
@@ -95,7 +90,6 @@ public class OrdemServicoController {
         this.recusarOrcamentoUseCase = recusarOrcamentoUseCase;
         this.pedirAjusteOrcamentoUseCase = pedirAjusteOrcamentoUseCase;
         this.iniciarExecucaoUseCase = iniciarExecucaoUseCase;
-        this.baixarEstoqueOrdemServicoUseCase = baixarEstoqueOrdemServicoUseCase;
         this.alterarOrcamentoDuranteExecucaoUseCase = alterarOrcamentoDuranteExecucaoUseCase;
         this.finalizarExecucaoUseCase = finalizarExecucaoUseCase;
         this.registrarPagamentoUseCase = registrarPagamentoUseCase;
@@ -196,15 +190,6 @@ public class OrdemServicoController {
     @PostMapping("/{ordemId}/execucao/inicio")
     public OrdemServicoResponse iniciarExecucao(@PathVariable UUID ordemId) {
         return OrdemServicoResponse.from(iniciarExecucaoUseCase.iniciarExecucao(ordemId));
-    }
-
-    @PostMapping("/{ordemId}/estoque/baixas")
-    public ResponseEntity<Void> baixarEstoque(
-            @PathVariable UUID ordemId,
-            @Valid @RequestBody BaixarEstoqueOrdemRequest request) {
-        baixarEstoqueOrdemServicoUseCase.baixarEstoque(
-                new BaixarEstoqueOrdemCommand(ordemId, request.itemEstoqueId(), request.quantidade()));
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @PostMapping("/{ordemId}/execucao/finalizacao")

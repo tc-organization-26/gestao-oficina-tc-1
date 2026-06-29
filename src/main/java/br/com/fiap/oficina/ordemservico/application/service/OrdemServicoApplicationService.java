@@ -1,11 +1,9 @@
 package br.com.fiap.oficina.ordemservico.application.service;
 
 import br.com.fiap.oficina.cliente.domain.model.ClienteId;
-import br.com.fiap.oficina.ordemservico.application.command.BaixarEstoqueOrdemCommand;
 import br.com.fiap.oficina.ordemservico.application.command.CriarOrdemServicoCommand;
 import br.com.fiap.oficina.ordemservico.application.command.RegistrarDiagnosticoCommand;
 import br.com.fiap.oficina.ordemservico.application.port.in.AlterarOrcamentoDuranteExecucaoUseCase;
-import br.com.fiap.oficina.ordemservico.application.port.in.BaixarEstoqueOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.ConsultarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.CriarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.EntregarOrdemServicoUseCase;
@@ -15,7 +13,6 @@ import br.com.fiap.oficina.ordemservico.application.port.in.IniciarExecucaoUseCa
 import br.com.fiap.oficina.ordemservico.application.port.in.PedirAjusteOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.RegistrarDiagnosticoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.RegistrarPagamentoUseCase;
-import br.com.fiap.oficina.ordemservico.application.port.out.BaixaEstoquePort;
 import br.com.fiap.oficina.ordemservico.application.port.out.OrcamentoRepositoryPort;
 import br.com.fiap.oficina.ordemservico.application.port.out.OrdemServicoRepositoryPort;
 import br.com.fiap.oficina.ordemservico.application.port.out.PublicarEventoPort;
@@ -42,22 +39,18 @@ public class OrdemServicoApplicationService implements
         RegistrarPagamentoUseCase,
         EntregarOrdemServicoUseCase,
         PedirAjusteOrcamentoUseCase,
-        AlterarOrcamentoDuranteExecucaoUseCase,
-        BaixarEstoqueOrdemServicoUseCase {
+        AlterarOrcamentoDuranteExecucaoUseCase {
 
     private final OrdemServicoRepositoryPort ordemServicoRepository;
     private final OrcamentoRepositoryPort orcamentoRepository;
-    private final BaixaEstoquePort baixaEstoque;
     private final PublicarEventoPort publicarEvento;
 
     public OrdemServicoApplicationService(
             OrdemServicoRepositoryPort ordemServicoRepository,
             OrcamentoRepositoryPort orcamentoRepository,
-            BaixaEstoquePort baixaEstoque,
             PublicarEventoPort publicarEvento) {
         this.ordemServicoRepository = ordemServicoRepository;
         this.orcamentoRepository = orcamentoRepository;
-        this.baixaEstoque = baixaEstoque;
         this.publicarEvento = publicarEvento;
     }
 
@@ -157,15 +150,6 @@ public class OrdemServicoApplicationService implements
         orcamento.reabrir();
         orcamentoRepository.salvar(orcamento);
         return ordemServicoRepository.salvar(ordemServico);
-    }
-
-    @Override
-    public void baixarEstoque(BaixarEstoqueOrdemCommand command) {
-        var ordemServico = buscarOrdemServico(new OrdemServicoId(command.ordemId()));
-        if (ordemServico.status() != StatusOrdemServico.EM_EXECUCAO) {
-            throw new DomainException("Baixa de estoque so pode ser feita durante execucao. Status atual: " + ordemServico.status());
-        }
-        baixaEstoque.baixar(command.itemEstoqueId(), java.math.BigDecimal.valueOf(command.quantidade()));
     }
 
     private OrdemServico buscarOrdemServico(OrdemServicoId ordemServicoId) {
