@@ -3,11 +3,9 @@ package br.com.fiap.oficina.ordemservico.adapter.out.persistence.jpa;
 import br.com.fiap.oficina.ordemservico.application.port.out.OrcamentoRepositoryPort;
 import br.com.fiap.oficina.ordemservico.domain.model.Orcamento;
 import br.com.fiap.oficina.ordemservico.domain.model.OrcamentoId;
-import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-@Component
 public class OrcamentoPersistenceAdapter implements OrcamentoRepositoryPort {
 
     private final OrcamentoSpringDataRepository repository;

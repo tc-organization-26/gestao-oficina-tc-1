@@ -1,0 +1,1615 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-06-29T01:09:48.140280+00:00",
+  "__export_source": "chatgpt",
+  "resources": [
+    {
+      "_id": "wrk_oficina_api",
+      "parentId": null,
+      "modified": 1782695388140,
+      "created": 1782695388140,
+      "name": "Oficina API",
+      "description": "Coleção gerada a partir de cURLs da Oficina API",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "env_oficina_api",
+      "parentId": "wrk_oficina_api",
+      "modified": 1782695388140,
+      "created": 1782695388140,
+      "name": "Base Environment",
+      "data": {
+        "BASE_URL": "http://localhost:8081",
+        "TOKEN": "COLE_SEU_JWT_AQUI",
+        "CLIENTE_ID": "00000000-0000-0000-0000-000000000001",
+        "VEICULO_ID": "00000000-0000-0000-0000-000000000002",
+        "SERVICO_ID": "00000000-0000-0000-0000-000000000003",
+        "ITEM_ESTOQUE_ID": "00000000-0000-0000-0000-000000000004",
+        "ORDEM_ID": "00000000-0000-0000-0000-000000000005"
+      },
+      "dataPropertyOrder": {
+        "&": [
+          "BASE_URL",
+          "TOKEN",
+          "CLIENTE_ID",
+          "VEICULO_ID",
+          "SERVICO_ID",
+          "ITEM_ESTOQUE_ID",
+          "ORDEM_ID"
+        ]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 0,
+      "_type": "environment"
+    },
+    {
+      "_id": "fld_auth_5821f6d4",
+      "parentId": "wrk_oficina_api",
+      "modified": 1782695388141,
+      "created": 1782695388141,
+      "name": "AUTH",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 0,
+      "_type": "request_group"
+    },
+    {
+      "_id": "fld_clientes_08574f26",
+      "parentId": "wrk_oficina_api",
+      "modified": 1782695388141,
+      "created": 1782695388141,
+      "name": "CLIENTES",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 0,
+      "_type": "request_group"
+    },
+    {
+      "_id": "fld_veiculos_aae2228d",
+      "parentId": "wrk_oficina_api",
+      "modified": 1782695388141,
+      "created": 1782695388141,
+      "name": "VEICULOS",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 0,
+      "_type": "request_group"
+    },
+    {
+      "_id": "fld_servicos_750364ee",
+      "parentId": "wrk_oficina_api",
+      "modified": 1782695388141,
+      "created": 1782695388141,
+      "name": "SERVICOS",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 0,
+      "_type": "request_group"
+    },
+    {
+      "_id": "fld_estoque_3dd0f7a1",
+      "parentId": "wrk_oficina_api",
+      "modified": 1782695388141,
+      "created": 1782695388141,
+      "name": "ESTOQUE",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 0,
+      "_type": "request_group"
+    },
+    {
+      "_id": "fld_ordens_de_servico_ca5ab3e4",
+      "parentId": "wrk_oficina_api",
+      "modified": 1782695388141,
+      "created": 1782695388141,
+      "name": "ORDENS DE SERVICO",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 0,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_login_79c8d8c2",
+      "parentId": "fld_auth_5821f6d4",
+      "modified": 1782695388142,
+      "created": 1782695388142,
+      "url": "{{ _.BASE_URL }}/auth/login",
+      "name": "Login",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"login\": \"admin\",\n  \"senha\": \"123456\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_criar_cliente_fc746268",
+      "parentId": "fld_clientes_08574f26",
+      "modified": 1782695388142,
+      "created": 1782695388142,
+      "url": "{{ _.BASE_URL }}/clientes",
+      "name": "Criar cliente",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Maria Silva\",\n  \"cpfCnpj\": \"12345678901\",\n  \"email\": \"maria@email.com\",\n  \"telefone\": \"11999999999\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_atualizar_cliente_ac907b33",
+      "parentId": "fld_clientes_08574f26",
+      "modified": 1782695388142,
+      "created": 1782695388142,
+      "url": "{{ _.BASE_URL }}/clientes/{{ _.CLIENTE_ID }}",
+      "name": "Atualizar cliente",
+      "description": "",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Maria Atualizada\",\n  \"email\": \"maria.atualizada@email.com\",\n  \"telefone\": \"11888888888\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_buscar_cliente_por_id_592cd41a",
+      "parentId": "fld_clientes_08574f26",
+      "modified": 1782695388142,
+      "created": 1782695388142,
+      "url": "{{ _.BASE_URL }}/clientes/{{ _.CLIENTE_ID }}",
+      "name": "Buscar cliente por ID",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_buscar_cliente_por_documento_09c2a3ab",
+      "parentId": "fld_clientes_08574f26",
+      "modified": 1782695388142,
+      "created": 1782695388142,
+      "url": "{{ _.BASE_URL }}/clientes/documento/12345678901",
+      "name": "Buscar cliente por documento",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_listar_clientes_e592aa7b",
+      "parentId": "fld_clientes_08574f26",
+      "modified": 1782695388143,
+      "created": 1782695388143,
+      "url": "{{ _.BASE_URL }}/clientes",
+      "name": "Listar clientes",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_deletar_cliente_eaf81e68",
+      "parentId": "fld_clientes_08574f26",
+      "modified": 1782695388143,
+      "created": 1782695388143,
+      "url": "{{ _.BASE_URL }}/clientes/{{ _.CLIENTE_ID }}",
+      "name": "Deletar cliente",
+      "description": "",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_listar_veículos_do_cliente_3d575088",
+      "parentId": "fld_clientes_08574f26",
+      "modified": 1782695388143,
+      "created": 1782695388143,
+      "url": "{{ _.BASE_URL }}/clientes/{{ _.CLIENTE_ID }}/veiculos",
+      "name": "Listar veículos do cliente",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_criar_veículo_eecbc4bd",
+      "parentId": "fld_veiculos_aae2228d",
+      "modified": 1782695388143,
+      "created": 1782695388143,
+      "url": "{{ _.BASE_URL }}/veiculos",
+      "name": "Criar veículo",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"clienteId\": \"{{ _.CLIENTE_ID }}\",\n  \"placa\": \"ABC1D23\",\n  \"marca\": \"Toyota\",\n  \"modelo\": \"Corolla\",\n  \"ano\": 2020\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_atualizar_veículo_62a2f79c",
+      "parentId": "fld_veiculos_aae2228d",
+      "modified": 1782695388143,
+      "created": 1782695388143,
+      "url": "{{ _.BASE_URL }}/veiculos/{{ _.VEICULO_ID }}",
+      "name": "Atualizar veículo",
+      "description": "",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"marca\": \"Honda\",\n  \"modelo\": \"Civic\",\n  \"ano\": 2021\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_buscar_veículo_por_id_a734be8a",
+      "parentId": "fld_veiculos_aae2228d",
+      "modified": 1782695388143,
+      "created": 1782695388143,
+      "url": "{{ _.BASE_URL }}/veiculos/{{ _.VEICULO_ID }}",
+      "name": "Buscar veículo por ID",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_listar_veículos_69e6777f",
+      "parentId": "fld_veiculos_aae2228d",
+      "modified": 1782695388143,
+      "created": 1782695388143,
+      "url": "{{ _.BASE_URL }}/veiculos",
+      "name": "Listar veículos",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_deletar_veículo_3e3c1727",
+      "parentId": "fld_veiculos_aae2228d",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/veiculos/{{ _.VEICULO_ID }}",
+      "name": "Deletar veículo",
+      "description": "",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_criar_serviço_679bf304",
+      "parentId": "fld_servicos_750364ee",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/servicos",
+      "name": "Criar serviço",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"codigo\": \"REV-001\",\n  \"descricao\": \"Revisao geral\",\n  \"valorUnitario\": 150.0,\n  \"tempoEstimadoMinutos\": 60\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_atualizar_serviço_bf8b30eb",
+      "parentId": "fld_servicos_750364ee",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/servicos/{{ _.SERVICO_ID }}",
+      "name": "Atualizar serviço",
+      "description": "",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"descricao\": \"Revisao completa\",\n  \"valorUnitario\": 180.0,\n  \"tempoEstimadoMinutos\": 90\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_buscar_serviço_por_id_6f1f18cf",
+      "parentId": "fld_servicos_750364ee",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/servicos/{{ _.SERVICO_ID }}",
+      "name": "Buscar serviço por ID",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_listar_serviços_6ba115cc",
+      "parentId": "fld_servicos_750364ee",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/servicos",
+      "name": "Listar serviços",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_deletar_serviço_b386d87b",
+      "parentId": "fld_servicos_750364ee",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/servicos/{{ _.SERVICO_ID }}",
+      "name": "Deletar serviço",
+      "description": "",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_criar_item_de_estoque_ba634132",
+      "parentId": "fld_estoque_3dd0f7a1",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/estoque",
+      "name": "Criar item de estoque",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"codigo\": \"FILTRO-001\",\n  \"descricao\": \"Filtro de oleo\",\n  \"valorUnitario\": 25.0,\n  \"quantidadeInicial\": 10.0\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_buscar_item_de_estoque_por_id_8f46cc55",
+      "parentId": "fld_estoque_3dd0f7a1",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/estoque/{{ _.ITEM_ESTOQUE_ID }}",
+      "name": "Buscar item de estoque por ID",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_listar_estoque_520e1649",
+      "parentId": "fld_estoque_3dd0f7a1",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/estoque",
+      "name": "Listar estoque",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_atualizar_item_de_estoque_e0d20843",
+      "parentId": "fld_estoque_3dd0f7a1",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/estoque/{{ _.ITEM_ESTOQUE_ID }}",
+      "name": "Atualizar item de estoque",
+      "description": "",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"descricao\": \"Filtro de oleo premium\",\n  \"valorUnitario\": 30.0\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_deletar_item_de_estoque_9d7ad440",
+      "parentId": "fld_estoque_3dd0f7a1",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/estoque/{{ _.ITEM_ESTOQUE_ID }}",
+      "name": "Deletar item de estoque",
+      "description": "",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_incluir_estoque_3524f63a",
+      "parentId": "fld_estoque_3dd0f7a1",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/estoque/{{ _.ITEM_ESTOQUE_ID }}/inclusoes",
+      "name": "Incluir estoque",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"quantidade\": 5.0\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_baixar_estoque_2fd01958",
+      "parentId": "fld_estoque_3dd0f7a1",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/estoque/{{ _.ITEM_ESTOQUE_ID }}/baixas",
+      "name": "Baixar estoque",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"quantidade\": 2.0\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_buscar_estoque_por_código_000e45fa",
+      "parentId": "fld_estoque_3dd0f7a1",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/estoque/codigo/FILTRO-001",
+      "name": "Buscar estoque por código",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_consultar_ativos_90894405",
+      "parentId": "fld_estoque_3dd0f7a1",
+      "modified": 1782695388144,
+      "created": 1782695388144,
+      "url": "{{ _.BASE_URL }}/estoque/consulta/ativos",
+      "name": "Consultar ativos",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_criar_ordem_de_serviço_945e179f",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico",
+      "name": "Criar ordem de serviço",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"clienteId\": \"{{ _.CLIENTE_ID }}\",\n  \"veiculoId\": \"{{ _.VEICULO_ID }}\",\n  \"anotacoes\": \"Cliente relatou barulho ao frear\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_buscar_ordem_por_id_7aaa9967",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}",
+      "name": "Buscar ordem por ID",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_listar_ordens_c23a4864",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico",
+      "name": "Listar ordens",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_listar_ordens_por_status_recebida_dd6d64a9",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico?status=RECEBIDA",
+      "name": "Listar ordens por status RECEBIDA",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_histórico_de_atendimentos_do_cliente_940a3169",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/clientes/{{ _.CLIENTE_ID }}/historico-atendimentos",
+      "name": "Histórico de atendimentos do cliente",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_acompanhamento_da_ordem_77b49602",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/acompanhamento",
+      "name": "Acompanhamento da ordem",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_iniciar_diagnóstico_99a1b0e6",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/diagnostico/inicio",
+      "name": "Iniciar diagnóstico",
+      "description": "",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_registrar_diagnóstico_a75a6894",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/diagnostico",
+      "name": "Registrar diagnóstico",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"descricao\": \"Motor com desgaste nas buchas\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_adicionar_serviço_ao_orçamento_f98651b0",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/servicos",
+      "name": "Adicionar serviço ao orçamento",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"servicoId\": \"{{ _.SERVICO_ID }}\",\n  \"quantidade\": 1.0\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_adicionar_peça_ao_orçamento_59d6f526",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/pecas",
+      "name": "Adicionar peça ao orçamento",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"itemEstoqueId\": \"{{ _.ITEM_ESTOQUE_ID }}\",\n  \"quantidade\": 1.0\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_fechar_orçamento_3ef11bea",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/fechar",
+      "name": "Fechar orçamento",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_aprovar_orçamento_d9490592",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/aprovacao",
+      "name": "Aprovar orçamento",
+      "description": "",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_recusar_orçamento_c78207ec",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/recusa",
+      "name": "Recusar orçamento",
+      "description": "",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_solicitar_ajustes_no_orçamento_460edeba",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/ajustes",
+      "name": "Solicitar ajustes no orçamento",
+      "description": "",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_registrar_alterações_no_orçamento_366bfe7e",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/alteracoes",
+      "name": "Registrar alterações no orçamento",
+      "description": "",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_iniciar_execução_c21af6ee",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/execucao/inicio",
+      "name": "Iniciar execução",
+      "description": "",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_baixar_peça_da_os_no_estoque_86a375b4",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388145,
+      "created": 1782695388145,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/estoque/baixas",
+      "name": "Baixar peça da OS no estoque",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"itemEstoqueId\": \"{{ _.ITEM_ESTOQUE_ID }}\",\n  \"quantidade\": 1.0\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_finalizar_execução_b858e8b2",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388146,
+      "created": 1782695388146,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/execucao/finalizacao",
+      "name": "Finalizar execução",
+      "description": "",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_registrar_pagamento_88609fbe",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388146,
+      "created": 1782695388146,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/pagamento",
+      "name": "Registrar pagamento",
+      "description": "",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_registrar_entrega_a321fefd",
+      "parentId": "fld_ordens_de_servico_ca5ab3e4",
+      "modified": 1782695388146,
+      "created": 1782695388146,
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/entrega",
+      "name": "Registrar entrega",
+      "description": "",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.TOKEN }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 0,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    }
+  ]
+}

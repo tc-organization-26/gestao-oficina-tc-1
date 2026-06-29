@@ -17,6 +17,7 @@ public record OrdemServicoResponse(
         OffsetDateTime inicioExecucaoEm,
         OffsetDateTime finalizadaEm,
         OffsetDateTime entregueEm,
+        OrcamentoResponse orcamento,
         boolean pago
 ) {
     public static OrdemServicoResponse from(OrdemServico ordemServico) {
@@ -31,6 +32,7 @@ public record OrdemServicoResponse(
                 ordemServico.inicioExecucaoEm(),
                 ordemServico.finalizadaEm(),
                 ordemServico.entregueEm(),
+                ordemServico.orcamento() != null ? OrcamentoResponse.from(ordemServico.orcamento()) : null,
                 ordemServico.pago());
     }
 }

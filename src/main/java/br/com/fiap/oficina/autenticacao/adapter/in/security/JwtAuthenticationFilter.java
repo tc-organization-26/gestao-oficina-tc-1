@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.autenticacao.adapter.in.security;
 
-import br.com.fiap.oficina.autenticacao.application.port.out.ValidarTokenPort;
+import br.com.fiap.oficina.autenticacao.application.port.in.ValidarTokenUseCase;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,10 +18,10 @@ import java.util.List;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final ValidarTokenPort validarTokenPort;
+    private final ValidarTokenUseCase validarTokenUseCase;
 
-    public JwtAuthenticationFilter(ValidarTokenPort validarTokenPort) {
-        this.validarTokenPort = validarTokenPort;
+    public JwtAuthenticationFilter(ValidarTokenUseCase validarTokenUseCase) {
+        this.validarTokenUseCase = validarTokenUseCase;
     }
 
     @Override
@@ -31,7 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             var token = authHeader.substring(7);
-            var tokenAutenticado = validarTokenPort.validar(token);
+            var tokenAutenticado = validarTokenUseCase.validar(token);
 
             if (tokenAutenticado.isPresent()) {
                 var autenticado = tokenAutenticado.get();

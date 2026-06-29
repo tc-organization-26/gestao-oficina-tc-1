@@ -6,7 +6,7 @@ import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.BaixarEstoqueOrd
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.CriarOrdemServicoRequest;
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.FecharOrcamentoRequest;
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.RegistrarDiagnosticoRequest;
-import br.com.fiap.oficina.ordemservico.adapter.in.rest.response.CriarOrdemServicoResponse;
+import br.com.fiap.oficina.ordemservico.adapter.in.rest.response.OrdemServicoResponse;
 import br.com.fiap.oficina.ordemservico.application.command.AdicionarItemServicoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.command.AdicionarItemPecaOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.command.BaixarEstoqueOrdemCommand;
@@ -104,47 +104,47 @@ public class OrdemServicoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CriarOrdemServicoResponse criar(@Valid @RequestBody CriarOrdemServicoRequest request) {
+    public OrdemServicoResponse criar(@Valid @RequestBody CriarOrdemServicoRequest request) {
         var command = new CriarOrdemServicoCommand(request.clienteId(), request.veiculoId(), request.anotacoes());
-        return CriarOrdemServicoResponse.from(criarOrdemServicoUseCase.criar(command));
+        return OrdemServicoResponse.from(criarOrdemServicoUseCase.criar(command));
     }
 
     @GetMapping("/{id}")
-    public CriarOrdemServicoResponse consultarPorId(@PathVariable UUID id) {
-        return CriarOrdemServicoResponse.from(consultarOrdemServicoUseCase.consultarPorId(new OrdemServicoId(id)));
+    public OrdemServicoResponse consultarPorId(@PathVariable UUID id) {
+        return OrdemServicoResponse.from(consultarOrdemServicoUseCase.consultarPorId(new OrdemServicoId(id)));
     }
 
     @GetMapping
-    public List<CriarOrdemServicoResponse> consultarOrdens(
+    public List<OrdemServicoResponse> consultarOrdens(
             @RequestParam(required = false) StatusOrdemServico status) {
         return consultarOrdemServicoUseCase.consultarOrdens(status).stream()
-                .map(CriarOrdemServicoResponse::from)
+                .map(OrdemServicoResponse::from)
                 .toList();
     }
 
     @GetMapping("/clientes/{clienteId}/historico-atendimentos")
-    public List<CriarOrdemServicoResponse> historicoAtendimentos(@PathVariable UUID clienteId) {
+    public List<OrdemServicoResponse> historicoAtendimentos(@PathVariable UUID clienteId) {
         return consultarOrdemServicoUseCase.consultarHistoricoPorCliente(clienteId).stream()
-                .map(CriarOrdemServicoResponse::from)
+                .map(OrdemServicoResponse::from)
                 .toList();
     }
 
     @GetMapping("/{id}/acompanhamento")
-    public CriarOrdemServicoResponse acompanhamento(@PathVariable UUID id) {
-        return CriarOrdemServicoResponse.from(consultarOrdemServicoUseCase.consultarPorId(new OrdemServicoId(id)));
+    public OrdemServicoResponse acompanhamento(@PathVariable UUID id) {
+        return OrdemServicoResponse.from(consultarOrdemServicoUseCase.consultarPorId(new OrdemServicoId(id)));
     }
 
     @PostMapping("/{id}/diagnostico/inicio")
-    public CriarOrdemServicoResponse iniciarDiagnostico(@PathVariable UUID id) {
-        return CriarOrdemServicoResponse.from(iniciarDiagnosticoUseCase.iniciarDiagnostico(new OrdemServicoId(id)));
+    public OrdemServicoResponse iniciarDiagnostico(@PathVariable UUID id) {
+        return OrdemServicoResponse.from(iniciarDiagnosticoUseCase.iniciarDiagnostico(new OrdemServicoId(id)));
     }
 
     @PostMapping("/{id}/diagnostico")
-    public CriarOrdemServicoResponse registrarDiagnostico(
+    public OrdemServicoResponse registrarDiagnostico(
             @PathVariable UUID id,
             @Valid @RequestBody RegistrarDiagnosticoRequest request) {
         var command = new RegistrarDiagnosticoCommand(id, request.descricao());
-        return CriarOrdemServicoResponse.from(registrarDiagnosticoUseCase.registrarDiagnostico(command));
+        return OrdemServicoResponse.from(registrarDiagnosticoUseCase.registrarDiagnostico(command));
     }
 
     @PostMapping("/{ordemId}/orcamento/servicos")
@@ -174,28 +174,28 @@ public class OrdemServicoController {
     }
 
     @PostMapping("/{ordemId}/orcamento/aprovacao")
-    public CriarOrdemServicoResponse aprovarOrcamento(@PathVariable UUID ordemId) {
-        return CriarOrdemServicoResponse.from(aprovarOrcamentoUseCase.aprovar(ordemId));
+    public OrdemServicoResponse aprovarOrcamento(@PathVariable UUID ordemId) {
+        return OrdemServicoResponse.from(aprovarOrcamentoUseCase.aprovar(ordemId));
     }
 
     @PostMapping("/{ordemId}/orcamento/recusa")
-    public CriarOrdemServicoResponse recusarOrcamento(@PathVariable UUID ordemId) {
-        return CriarOrdemServicoResponse.from(recusarOrcamentoUseCase.recusar(ordemId));
+    public OrdemServicoResponse recusarOrcamento(@PathVariable UUID ordemId) {
+        return OrdemServicoResponse.from(recusarOrcamentoUseCase.recusar(ordemId));
     }
 
     @PostMapping("/{ordemId}/orcamento/ajustes")
-    public CriarOrdemServicoResponse pedirAjuste(@PathVariable UUID ordemId) {
-        return CriarOrdemServicoResponse.from(pedirAjusteOrcamentoUseCase.pedirAjuste(ordemId));
+    public OrdemServicoResponse pedirAjuste(@PathVariable UUID ordemId) {
+        return OrdemServicoResponse.from(pedirAjusteOrcamentoUseCase.pedirAjuste(ordemId));
     }
 
     @PostMapping("/{ordemId}/orcamento/alteracoes")
-    public CriarOrdemServicoResponse alterarOrcamento(@PathVariable UUID ordemId) {
-        return CriarOrdemServicoResponse.from(alterarOrcamentoDuranteExecucaoUseCase.alterarOrcamento(ordemId));
+    public OrdemServicoResponse alterarOrcamento(@PathVariable UUID ordemId) {
+        return OrdemServicoResponse.from(alterarOrcamentoDuranteExecucaoUseCase.alterarOrcamento(ordemId));
     }
 
     @PostMapping("/{ordemId}/execucao/inicio")
-    public CriarOrdemServicoResponse iniciarExecucao(@PathVariable UUID ordemId) {
-        return CriarOrdemServicoResponse.from(iniciarExecucaoUseCase.iniciarExecucao(ordemId));
+    public OrdemServicoResponse iniciarExecucao(@PathVariable UUID ordemId) {
+        return OrdemServicoResponse.from(iniciarExecucaoUseCase.iniciarExecucao(ordemId));
     }
 
     @PostMapping("/{ordemId}/estoque/baixas")
@@ -208,18 +208,17 @@ public class OrdemServicoController {
     }
 
     @PostMapping("/{ordemId}/execucao/finalizacao")
-    public CriarOrdemServicoResponse finalizarExecucao(@PathVariable UUID ordemId) {
-        return CriarOrdemServicoResponse.from(finalizarExecucaoUseCase.finalizar(ordemId));
+    public OrdemServicoResponse finalizarExecucao(@PathVariable UUID ordemId) {
+        return OrdemServicoResponse.from(finalizarExecucaoUseCase.finalizar(ordemId));
     }
 
     @PostMapping("/{ordemId}/pagamento")
-    public CriarOrdemServicoResponse registrarPagamento(@PathVariable UUID ordemId) {
-        return CriarOrdemServicoResponse.from(registrarPagamentoUseCase.registrarPagamento(ordemId));
+    public OrdemServicoResponse registrarPagamento(@PathVariable UUID ordemId) {
+        return OrdemServicoResponse.from(registrarPagamentoUseCase.registrarPagamento(ordemId));
     }
 
     @PostMapping("/{ordemId}/entrega")
-    public CriarOrdemServicoResponse entregar(@PathVariable UUID ordemId) {
-        return CriarOrdemServicoResponse.from(entregarOrdemServicoUseCase.entregar(ordemId));
+    public OrdemServicoResponse entregar(@PathVariable UUID ordemId) {
+        return OrdemServicoResponse.from(entregarOrdemServicoUseCase.entregar(ordemId));
     }
 }
-

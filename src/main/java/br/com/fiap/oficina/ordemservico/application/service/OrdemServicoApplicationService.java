@@ -18,6 +18,7 @@ import br.com.fiap.oficina.ordemservico.application.port.in.RegistrarPagamentoUs
 import br.com.fiap.oficina.ordemservico.application.port.out.BaixaEstoquePort;
 import br.com.fiap.oficina.ordemservico.application.port.out.OrcamentoRepositoryPort;
 import br.com.fiap.oficina.ordemservico.application.port.out.OrdemServicoRepositoryPort;
+import br.com.fiap.oficina.ordemservico.application.port.out.PublicarEventoPort;
 import br.com.fiap.oficina.ordemservico.domain.event.OrdemServicoFinalizadaEvent;
 import br.com.fiap.oficina.ordemservico.domain.model.Diagnostico;
 import br.com.fiap.oficina.ordemservico.domain.model.OrcamentoId;
@@ -27,13 +28,10 @@ import br.com.fiap.oficina.ordemservico.domain.model.StatusOrcamento;
 import br.com.fiap.oficina.ordemservico.domain.model.StatusOrdemServico;
 import br.com.fiap.oficina.shared.domain.DomainException;
 import br.com.fiap.oficina.veiculo.domain.model.VeiculoId;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
-@Service
 public class OrdemServicoApplicationService implements
         CriarOrdemServicoUseCase,
         ConsultarOrdemServicoUseCase,
@@ -50,17 +48,17 @@ public class OrdemServicoApplicationService implements
     private final OrdemServicoRepositoryPort ordemServicoRepository;
     private final OrcamentoRepositoryPort orcamentoRepository;
     private final BaixaEstoquePort baixaEstoque;
-    private final ApplicationEventPublisher eventPublisher;
+    private final PublicarEventoPort publicarEvento;
 
     public OrdemServicoApplicationService(
             OrdemServicoRepositoryPort ordemServicoRepository,
             OrcamentoRepositoryPort orcamentoRepository,
             BaixaEstoquePort baixaEstoque,
-            ApplicationEventPublisher eventPublisher) {
+            PublicarEventoPort publicarEvento) {
         this.ordemServicoRepository = ordemServicoRepository;
         this.orcamentoRepository = orcamentoRepository;
         this.baixaEstoque = baixaEstoque;
-        this.eventPublisher = eventPublisher;
+        this.publicarEvento = publicarEvento;
     }
 
     @Override
@@ -121,7 +119,7 @@ public class OrdemServicoApplicationService implements
         var ordemServico = buscarOrdemServico(new OrdemServicoId(ordemId));
         ordemServico.finalizar();
         var saved = ordemServicoRepository.salvar(ordemServico);
-        eventPublisher.publishEvent(new OrdemServicoFinalizadaEvent(ordemServico.id().value(), ordemServico.clienteId().value()));
+        publicarEvento.publicar(new OrdemServicoFinalizadaEvent(ordemServico.id().value(), ordemServico.clienteId().value()));
         return saved;
     }
 

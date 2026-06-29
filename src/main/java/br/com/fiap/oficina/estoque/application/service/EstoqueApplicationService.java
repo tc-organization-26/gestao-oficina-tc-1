@@ -17,11 +17,9 @@ import br.com.fiap.oficina.estoque.application.port.out.EstoqueRepositoryPort;
 import br.com.fiap.oficina.estoque.domain.model.ItemEstoque;
 import br.com.fiap.oficina.estoque.domain.model.ItemEstoqueId;
 import br.com.fiap.oficina.shared.domain.DomainException;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 public class EstoqueApplicationService implements CadastrarItemEstoqueUseCase,
         ConsultarItemEstoqueUseCase,
         ConsultarTodosItensEstoqueUseCase,

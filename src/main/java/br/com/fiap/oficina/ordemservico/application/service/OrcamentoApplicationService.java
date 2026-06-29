@@ -10,6 +10,7 @@ import br.com.fiap.oficina.ordemservico.application.port.in.FecharOrcamentoUseCa
 import br.com.fiap.oficina.ordemservico.application.port.in.RecusarOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.out.OrcamentoRepositoryPort;
 import br.com.fiap.oficina.ordemservico.application.port.out.OrdemServicoRepositoryPort;
+import br.com.fiap.oficina.ordemservico.application.port.out.PublicarEventoPort;
 import br.com.fiap.oficina.ordemservico.application.port.out.VerificadorEstoquePort;
 import br.com.fiap.oficina.ordemservico.domain.event.FaltaPecaEstoqueEvent;
 import br.com.fiap.oficina.ordemservico.domain.event.OrcamentoFechadoEvent;
@@ -22,12 +23,9 @@ import br.com.fiap.oficina.ordemservico.domain.model.OrdemServicoId;
 import br.com.fiap.oficina.estoque.domain.model.ItemEstoqueId;
 import br.com.fiap.oficina.servico.domain.model.ServicoId;
 import br.com.fiap.oficina.shared.domain.DomainException;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-@Service
 public class OrcamentoApplicationService implements
     AdicionarItemPecaOrcamentoUseCase,
         AdicionarItemServicoOrcamentoUseCase,
@@ -38,17 +36,17 @@ public class OrcamentoApplicationService implements
     private final OrcamentoRepositoryPort orcamentoRepository;
     private final OrdemServicoRepositoryPort ordemServicoRepository;
     private final VerificadorEstoquePort verificadorEstoque;
-    private final ApplicationEventPublisher eventPublisher;
+    private final PublicarEventoPort publicarEvento;
 
     public OrcamentoApplicationService(
             OrcamentoRepositoryPort orcamentoRepository,
             OrdemServicoRepositoryPort ordemServicoRepository,
             VerificadorEstoquePort verificadorEstoque,
-            ApplicationEventPublisher eventPublisher) {
+            PublicarEventoPort publicarEvento) {
         this.orcamentoRepository = orcamentoRepository;
         this.ordemServicoRepository = ordemServicoRepository;
         this.verificadorEstoque = verificadorEstoque;
-        this.eventPublisher = eventPublisher;
+        this.publicarEvento = publicarEvento;
     }
 
     @Override
@@ -86,7 +84,7 @@ public class OrcamentoApplicationService implements
             }
         } else {
             orcamento.marcarParaVerificacaoEstoque();
-            eventPublisher.publishEvent(new FaltaPecaEstoqueEvent(
+            publicarEvento.publicar(new FaltaPecaEstoqueEvent(
                     command.orcamentoId(),
                     command.itemEstoqueId(),
                     command.quantidade()));
@@ -111,7 +109,7 @@ public class OrcamentoApplicationService implements
         ordemServico.finalizarOrcamento();
         ordemServicoRepository.salvar(ordemServico);
 
-        eventPublisher.publishEvent(new OrcamentoFechadoEvent(ordemServico.id().value(), ordemServico.clienteId().value()));
+        publicarEvento.publicar(new OrcamentoFechadoEvent(ordemServico.id().value(), ordemServico.clienteId().value()));
     }
 
     @Override

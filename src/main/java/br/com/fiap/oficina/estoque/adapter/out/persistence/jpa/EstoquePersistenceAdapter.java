@@ -3,12 +3,10 @@ package br.com.fiap.oficina.estoque.adapter.out.persistence.jpa;
 import br.com.fiap.oficina.estoque.application.port.out.EstoqueRepositoryPort;
 import br.com.fiap.oficina.estoque.domain.model.ItemEstoque;
 import br.com.fiap.oficina.estoque.domain.model.ItemEstoqueId;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
-@Component
 public class EstoquePersistenceAdapter implements EstoqueRepositoryPort {
 
     private final SpringDataEstoqueRepository repository;

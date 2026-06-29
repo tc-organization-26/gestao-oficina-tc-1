@@ -1,31 +1,40 @@
 package br.com.fiap.oficina.autenticacao.config;
 
-import br.com.fiap.oficina.autenticacao.adapter.out.persistence.jpa.UsuarioPersistenceAdapter;
+import br.com.fiap.oficina.autenticacao.adapter.out.usuario.UsuarioFicticioAdapter;
 import br.com.fiap.oficina.autenticacao.adapter.out.security.JwtTokenAdapter;
 import br.com.fiap.oficina.autenticacao.adapter.out.security.PasswordEncoderAdapter;
 import br.com.fiap.oficina.autenticacao.application.port.in.AutenticarUsuarioUseCase;
+import br.com.fiap.oficina.autenticacao.application.port.in.ValidarTokenUseCase;
+import br.com.fiap.oficina.autenticacao.application.port.out.BuscarUsuarioPort;
 import br.com.fiap.oficina.autenticacao.application.port.out.GerarTokenPort;
-import br.com.fiap.oficina.autenticacao.application.port.out.UsuarioRepositoryPort;
 import br.com.fiap.oficina.autenticacao.application.port.out.ValidarTokenPort;
 import br.com.fiap.oficina.autenticacao.application.port.out.VerificarSenhaPort;
 import br.com.fiap.oficina.autenticacao.application.service.AutenticarUsuarioApplicationService;
+import br.com.fiap.oficina.autenticacao.application.service.ValidarTokenApplicationService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
 public class AutenticacaoConfiguration {
     @Bean
     public AutenticarUsuarioUseCase autenticarUsuarioUseCase(
-            UsuarioRepositoryPort usuarioRepositoryPort,
+            BuscarUsuarioPort buscarUsuarioPort,
             VerificarSenhaPort verificarSenhaPort,
             GerarTokenPort gerarTokenPort) {
-        return new AutenticarUsuarioApplicationService(usuarioRepositoryPort, verificarSenhaPort, gerarTokenPort);
+        return new AutenticarUsuarioApplicationService(buscarUsuarioPort, verificarSenhaPort, gerarTokenPort);
     }
 
     @Bean
-    public UsuarioRepositoryPort usuarioRepositoryPort() {
-        return new UsuarioPersistenceAdapter();
+    public BuscarUsuarioPort buscarUsuarioPort() {
+        var adminSenhaHash = new BCryptPasswordEncoder().encode("ad@456");
+        return new UsuarioFicticioAdapter(adminSenhaHash);
+    }
+
+    @Bean
+    public ValidarTokenUseCase validarTokenUseCase(ValidarTokenPort validarTokenPort) {
+        return new ValidarTokenApplicationService(validarTokenPort);
     }
 
     @Bean
