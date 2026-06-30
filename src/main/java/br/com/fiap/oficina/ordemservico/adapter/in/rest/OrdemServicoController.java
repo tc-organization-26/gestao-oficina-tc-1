@@ -13,7 +13,6 @@ import br.com.fiap.oficina.ordemservico.application.command.FecharOrcamentoComma
 import br.com.fiap.oficina.ordemservico.application.command.RegistrarDiagnosticoCommand;
 import br.com.fiap.oficina.ordemservico.application.port.in.AdicionarItemServicoOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.AdicionarItemPecaOrcamentoUseCase;
-import br.com.fiap.oficina.ordemservico.application.port.in.AlterarOrcamentoDuranteExecucaoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.AprovarOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.ConsultarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.CriarOrdemServicoUseCase;
@@ -58,7 +57,6 @@ public class OrdemServicoController {
     private final RecusarOrcamentoUseCase recusarOrcamentoUseCase;
     private final PedirAjusteOrcamentoUseCase pedirAjusteOrcamentoUseCase;
     private final IniciarExecucaoUseCase iniciarExecucaoUseCase;
-    private final AlterarOrcamentoDuranteExecucaoUseCase alterarOrcamentoDuranteExecucaoUseCase;
     private final FinalizarExecucaoUseCase finalizarExecucaoUseCase;
     private final RegistrarPagamentoUseCase registrarPagamentoUseCase;
     private final EntregarOrdemServicoUseCase entregarOrdemServicoUseCase;
@@ -75,7 +73,6 @@ public class OrdemServicoController {
             RecusarOrcamentoUseCase recusarOrcamentoUseCase,
             PedirAjusteOrcamentoUseCase pedirAjusteOrcamentoUseCase,
             IniciarExecucaoUseCase iniciarExecucaoUseCase,
-            AlterarOrcamentoDuranteExecucaoUseCase alterarOrcamentoDuranteExecucaoUseCase,
             FinalizarExecucaoUseCase finalizarExecucaoUseCase,
             RegistrarPagamentoUseCase registrarPagamentoUseCase,
             EntregarOrdemServicoUseCase entregarOrdemServicoUseCase) {
@@ -90,7 +87,6 @@ public class OrdemServicoController {
         this.recusarOrcamentoUseCase = recusarOrcamentoUseCase;
         this.pedirAjusteOrcamentoUseCase = pedirAjusteOrcamentoUseCase;
         this.iniciarExecucaoUseCase = iniciarExecucaoUseCase;
-        this.alterarOrcamentoDuranteExecucaoUseCase = alterarOrcamentoDuranteExecucaoUseCase;
         this.finalizarExecucaoUseCase = finalizarExecucaoUseCase;
         this.registrarPagamentoUseCase = registrarPagamentoUseCase;
         this.entregarOrdemServicoUseCase = entregarOrdemServicoUseCase;
@@ -134,18 +130,19 @@ public class OrdemServicoController {
     }
 
     @PostMapping("/{id}/diagnostico")
-    public OrdemServicoResponse registrarDiagnostico(
+    public ResponseEntity<Void> registrarDiagnostico(
             @PathVariable UUID id,
             @Valid @RequestBody RegistrarDiagnosticoRequest request) {
         var command = new RegistrarDiagnosticoCommand(id, request.descricao());
-        return OrdemServicoResponse.from(registrarDiagnosticoUseCase.registrarDiagnostico(command));
+        registrarDiagnosticoUseCase.registrarDiagnostico(command);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @PostMapping("/{ordemId}/orcamento/servicos")
     public ResponseEntity<Void> adicionarItemServicoAoOrcamento(
             @PathVariable UUID ordemId,
             @Valid @RequestBody AdicionarItemServicoOrcamentoRequest request) {
-        var cmd = new AdicionarItemServicoOrcamentoCommand(ordemId, request.servicoId(), request.quantidade());
+        var cmd = new AdicionarItemServicoOrcamentoCommand(ordemId, request.codigo(), request.quantidade());
         adicionarItemServicoOrcamentoUseCase.adicionarItemServico(cmd);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
@@ -154,7 +151,7 @@ public class OrdemServicoController {
     public ResponseEntity<Void> adicionarItemPecaAoOrcamento(
             @PathVariable UUID ordemId,
             @Valid @RequestBody AdicionarItemPecaOrcamentoRequest request) {
-        var cmd = new AdicionarItemPecaOrcamentoCommand(ordemId, request.itemEstoqueId(), request.quantidade());
+        var cmd = new AdicionarItemPecaOrcamentoCommand(ordemId, request.codigo(), request.quantidade());
         adicionarItemPecaOrcamentoUseCase.adicionarItemPeca(cmd);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
@@ -182,10 +179,6 @@ public class OrdemServicoController {
         return OrdemServicoResponse.from(pedirAjusteOrcamentoUseCase.pedirAjuste(ordemId));
     }
 
-    @PostMapping("/{ordemId}/orcamento/alteracoes")
-    public OrdemServicoResponse alterarOrcamento(@PathVariable UUID ordemId) {
-        return OrdemServicoResponse.from(alterarOrcamentoDuranteExecucaoUseCase.alterarOrcamento(ordemId));
-    }
 
     @PostMapping("/{ordemId}/execucao/inicio")
     public OrdemServicoResponse iniciarExecucao(@PathVariable UUID ordemId) {

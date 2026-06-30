@@ -53,7 +53,7 @@ class OrcamentoTest {
         var orcamento = Orcamento.novo(OrdemServicoId.novo());
 
         orcamento.fechar();
-        assertEquals(StatusOrcamento.FINALIZADO, orcamento.status());
+        assertEquals(StatusOrcamento.ENVIADO, orcamento.status());
         assertNotNull(orcamento.dataFechamento());
 
         orcamento.aprovar();

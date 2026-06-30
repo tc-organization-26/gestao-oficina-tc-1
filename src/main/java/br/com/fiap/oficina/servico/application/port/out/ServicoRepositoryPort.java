@@ -14,6 +14,8 @@ public interface ServicoRepositoryPort {
 
     Optional<Servico> buscarPorId(ServicoId servicoId);
 
+    Optional<Servico> buscarPorCodigo(String codigo);
+
     List<Servico> buscarTodos();
 
     void excluirPorId(ServicoId servicoId);

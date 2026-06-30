@@ -37,6 +37,43 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
             OffsetDateTime finalizadaEm,
             OffsetDateTime entregueEm,
             boolean pago) {
+        this(id, numero, clienteId, veiculoId, status, anotacoes, diagnostico,
+                dataRecebimento, inicioExecucaoEm, finalizadaEm, entregueEm, pago, null, true);
+    }
+
+    public OrdemServico(
+            OrdemServicoId id,
+            Long numero,
+            ClienteId clienteId,
+            VeiculoId veiculoId,
+            StatusOrdemServico status,
+            String anotacoes,
+            Diagnostico diagnostico,
+            OffsetDateTime dataRecebimento,
+            OffsetDateTime inicioExecucaoEm,
+            OffsetDateTime finalizadaEm,
+            OffsetDateTime entregueEm,
+            boolean pago,
+            Orcamento orcamento) {
+        this(id, numero, clienteId, veiculoId, status, anotacoes, diagnostico,
+                dataRecebimento, inicioExecucaoEm, finalizadaEm, entregueEm, pago, orcamento, false);
+    }
+
+    private OrdemServico(
+            OrdemServicoId id,
+            Long numero,
+            ClienteId clienteId,
+            VeiculoId veiculoId,
+            StatusOrdemServico status,
+            String anotacoes,
+            Diagnostico diagnostico,
+            OffsetDateTime dataRecebimento,
+            OffsetDateTime inicioExecucaoEm,
+            OffsetDateTime finalizadaEm,
+            OffsetDateTime entregueEm,
+            boolean pago,
+            Orcamento orcamento,
+            boolean criarOrcamentoQuandoNulo) {
         if (id == null) {
             throw new DomainException("Id da ordem de servico e obrigatorio.");
         }
@@ -58,7 +95,7 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
         this.finalizadaEm = finalizadaEm;
         this.entregueEm = entregueEm;
         this.pago = pago;
-        this.orcamento = Orcamento.novo(this.id);
+        this.orcamento = orcamento != null ? orcamento : (criarOrcamentoQuandoNulo ? Orcamento.novo(this.id) : null);
     }
 
     public static OrdemServico criar(ClienteId clienteId, VeiculoId veiculoId, String anotacoes) {
@@ -76,8 +113,6 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
                 null,
                 false);
     }
-
-    
 
     public void iniciarDiagnostico() {
         if (this.status != StatusOrdemServico.RECEBIDA) {
@@ -138,17 +173,10 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
     }
 
     public void pedirAjuste() {
-        if (this.status != StatusOrdemServico.AGUARDANDO_APROVACAO) {
-            throw new DomainException("Pedido de ajuste so pode ser feito quando aguardando aprovacao.");
+        if (this.status != StatusOrdemServico.AGUARDANDO_APROVACAO && this.status != StatusOrdemServico.EM_EXECUCAO) {
+            throw new DomainException("Pedido de ajuste so pode ser feito quando aguardando aprovacao ou em execucao.");
         }
         this.status = StatusOrdemServico.EM_DIAGNOSTICO;
-    }
-
-    public void iniciarAlteracaoOrcamento() {
-        if (this.status != StatusOrdemServico.EM_EXECUCAO) {
-            throw new DomainException("Alteracao de orcamento so pode ser feita durante execucao.");
-        }
-        this.status = StatusOrdemServico.AGUARDANDO_APROVACAO;
     }
 
     @Override public OrdemServicoId id() { return id; }

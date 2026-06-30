@@ -23,6 +23,8 @@ class OrdemServicoTest {
         assertEquals(StatusOrdemServico.RECEBIDA, ordem.status());
         assertFalse(ordem.pago());
         assertNotNull(ordem.orcamento());
+        assertEquals(ordem.id(), ordem.orcamento().ordemServicoId());
+        assertNotEquals(ordem.id().value(), ordem.orcamento().id().value());
     }
 
     @Test
@@ -88,11 +90,32 @@ class OrdemServicoTest {
 
         ordem.finalizarOrcamento();
         ordem.iniciarExecucao();
-        ordem.iniciarAlteracaoOrcamento();
-        assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, ordem.status());
+        ordem.pedirAjuste();
+        assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, ordem.status());
     }
 
+
+    @Test
+    void reconstruirSemOrcamentoNaoCriaOrcamentoNovo() {
+        var ordem = new OrdemServico(
+                OrdemServicoId.novo(),
+                null,
+                new ClienteId(UUID.randomUUID()),
+                new VeiculoId(UUID.randomUUID()),
+                StatusOrdemServico.RECEBIDA,
+                "Revisao",
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                null);
+
+        assertNull(ordem.orcamento());
+    }
     private static OrdemServico novaOrdem() {
         return OrdemServico.criar(new ClienteId(UUID.randomUUID()), new VeiculoId(UUID.randomUUID()), "Revisao");
     }
 }
+

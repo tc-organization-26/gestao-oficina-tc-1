@@ -1434,7 +1434,7 @@
       "parentId": "fld_ordens_de_servico_ca5ab3e4",
       "modified": 1782695388145,
       "created": 1782695388145,
-      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/alteracoes",
+      "url": "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/ajustes",
       "name": "Registrar alterações no orçamento",
       "description": "",
       "method": "POST",

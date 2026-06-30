@@ -34,6 +34,12 @@ public class ServicoPersistenceAdapter implements ServicoRepositoryPort {
     }
 
     @Override
+    public Optional<Servico> buscarPorCodigo(String codigo) {
+        return repository.findByCodigo(codigo)
+                .map(ServicoMapper::toDomain);
+    }
+
+    @Override
     public List<Servico> buscarTodos() {
         return repository.findAll().stream()
                 .map(ServicoMapper::toDomain)

@@ -60,7 +60,7 @@ curl --request POST "$BASE_URL/ordens-servico/$ORDEM_ID/orcamento/fechar" --head
 curl --request POST "$BASE_URL/ordens-servico/$ORDEM_ID/orcamento/aprovacao" --header "Authorization: Bearer $TOKEN"
 curl --request POST "$BASE_URL/ordens-servico/$ORDEM_ID/orcamento/recusa" --header "Authorization: Bearer $TOKEN"
 curl --request POST "$BASE_URL/ordens-servico/$ORDEM_ID/orcamento/ajustes" --header "Authorization: Bearer $TOKEN"
-curl --request POST "$BASE_URL/ordens-servico/$ORDEM_ID/orcamento/alteracoes" --header "Authorization: Bearer $TOKEN"
+curl --request POST "$BASE_URL/ordens-servico/$ORDEM_ID/orcamento/ajustes" --header "Authorization: Bearer $TOKEN"
 curl --request POST "$BASE_URL/ordens-servico/$ORDEM_ID/execucao/inicio" --header "Authorization: Bearer $TOKEN"
 curl --request POST "$BASE_URL/ordens-servico/$ORDEM_ID/estoque/baixas" --header "Authorization: Bearer $TOKEN" --header "Content-Type: application/json" --data "{\"itemEstoqueId\":\"$ITEM_ESTOQUE_ID\",\"quantidade\":1.0}"
 curl --request POST "$BASE_URL/ordens-servico/$ORDEM_ID/execucao/finalizacao" --header "Authorization: Bearer $TOKEN"

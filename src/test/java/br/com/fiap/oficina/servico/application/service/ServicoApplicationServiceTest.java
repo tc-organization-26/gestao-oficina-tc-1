@@ -92,6 +92,7 @@ class ServicoApplicationServiceTest {
         @Override public boolean existePorCodigo(String codigo) { return existe; }
         @Override public Servico salvar(Servico servico) { this.salvo = servico; return servico; }
         @Override public Optional<Servico> buscarPorId(ServicoId servicoId) { return busca; }
+        @Override public Optional<Servico> buscarPorCodigo(String codigo) { return busca; }
         @Override public List<Servico> buscarTodos() { return todos; }
         @Override public void excluirPorId(ServicoId servicoId) { this.excluido = servicoId; }
     }

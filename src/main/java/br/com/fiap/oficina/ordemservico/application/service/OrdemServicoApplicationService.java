@@ -3,7 +3,6 @@ package br.com.fiap.oficina.ordemservico.application.service;
 import br.com.fiap.oficina.cliente.domain.model.ClienteId;
 import br.com.fiap.oficina.ordemservico.application.command.CriarOrdemServicoCommand;
 import br.com.fiap.oficina.ordemservico.application.command.RegistrarDiagnosticoCommand;
-import br.com.fiap.oficina.ordemservico.application.port.in.AlterarOrcamentoDuranteExecucaoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.ConsultarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.CriarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.port.in.EntregarOrdemServicoUseCase;
@@ -18,7 +17,6 @@ import br.com.fiap.oficina.ordemservico.application.port.out.OrdemServicoReposit
 import br.com.fiap.oficina.ordemservico.application.port.out.PublicarEventoPort;
 import br.com.fiap.oficina.ordemservico.domain.event.OrdemServicoFinalizadaEvent;
 import br.com.fiap.oficina.ordemservico.domain.model.Diagnostico;
-import br.com.fiap.oficina.ordemservico.domain.model.OrcamentoId;
 import br.com.fiap.oficina.ordemservico.domain.model.OrdemServico;
 import br.com.fiap.oficina.ordemservico.domain.model.OrdemServicoId;
 import br.com.fiap.oficina.ordemservico.domain.model.StatusOrcamento;
@@ -38,8 +36,7 @@ public class OrdemServicoApplicationService implements
         FinalizarExecucaoUseCase,
         RegistrarPagamentoUseCase,
         EntregarOrdemServicoUseCase,
-        PedirAjusteOrcamentoUseCase,
-        AlterarOrcamentoDuranteExecucaoUseCase {
+        PedirAjusteOrcamentoUseCase {
 
     private final OrdemServicoRepositoryPort ordemServicoRepository;
     private final OrcamentoRepositoryPort orcamentoRepository;
@@ -60,7 +57,9 @@ public class OrdemServicoApplicationService implements
                 new ClienteId(command.clienteId()),
                 new VeiculoId(command.veiculoId()),
                 command.anotacoes());
-        return ordemServicoRepository.salvar(ordemServico);
+        var ordemSalva = ordemServicoRepository.salvar(ordemServico);
+        orcamentoRepository.salvar(ordemServico.orcamento());
+        return ordemServicoRepository.buscarPorId(ordemSalva.id()).orElse(ordemSalva);
     }
 
     @Override
@@ -97,8 +96,9 @@ public class OrdemServicoApplicationService implements
 
     @Override
     public OrdemServico iniciarExecucao(UUID ordemId) {
-        var ordemServico = buscarOrdemServico(new OrdemServicoId(ordemId));
-        var orcamento = orcamentoRepository.buscarPorId(OrcamentoId.from(ordemId))
+        var ordemServicoId = new OrdemServicoId(ordemId);
+        var ordemServico = buscarOrdemServico(ordemServicoId);
+        var orcamento = orcamentoRepository.buscarPorOrdemServicoId(ordemServicoId)
                 .orElseThrow(() -> new DomainException("Orcamento nao encontrado para a ordem: " + ordemId));
         if (orcamento.status() != StatusOrcamento.APROVADO) {
             throw new DomainException("Orcamento deve estar APROVADO para iniciar execucao. Status atual: " + orcamento.status());
@@ -132,20 +132,10 @@ public class OrdemServicoApplicationService implements
 
     @Override
     public OrdemServico pedirAjuste(UUID ordemId) {
-        var ordemServico = buscarOrdemServico(new OrdemServicoId(ordemId));
+        var ordemServicoId = new OrdemServicoId(ordemId);
+        var ordemServico = buscarOrdemServico(ordemServicoId);
         ordemServico.pedirAjuste();
-        var orcamento = orcamentoRepository.buscarPorId(OrcamentoId.from(ordemId))
-                .orElseThrow(() -> new DomainException("Orcamento nao encontrado para a ordem: " + ordemId));
-        orcamento.reabrir();
-        orcamentoRepository.salvar(orcamento);
-        return ordemServicoRepository.salvar(ordemServico);
-    }
-
-    @Override
-    public OrdemServico alterarOrcamento(UUID ordemId) {
-        var ordemServico = buscarOrdemServico(new OrdemServicoId(ordemId));
-        ordemServico.iniciarAlteracaoOrcamento();
-        var orcamento = orcamentoRepository.buscarPorId(OrcamentoId.from(ordemId))
+        var orcamento = orcamentoRepository.buscarPorOrdemServicoId(ordemServicoId)
                 .orElseThrow(() -> new DomainException("Orcamento nao encontrado para a ordem: " + ordemId));
         orcamento.reabrir();
         orcamentoRepository.salvar(orcamento);

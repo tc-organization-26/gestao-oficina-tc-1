@@ -37,6 +37,9 @@ class OrdemServicoApplicationServiceTest {
         assertEquals(new ClienteId(clienteId), ordem.clienteId());
         assertEquals(new VeiculoId(veiculoId), ordem.veiculoId());
         assertSame(ordem, ordemRepository.salvo);
+        assertNotNull(ordem.orcamento());
+        assertEquals(ordem.id(), ordem.orcamento().ordemServicoId());
+        assertNotEquals(ordem.id().value(), ordem.orcamento().id().value());
     }
 
     @Test
@@ -92,7 +95,7 @@ class OrdemServicoApplicationServiceTest {
     @Test
     void iniciarExecucaoExigeOrcamentoAprovado() {
         var ordem = novaOrdemAguardandoAprovacao();
-        var orcamento = new Orcamento(ordem.id().value(), ordem.id());
+        var orcamento = Orcamento.novo(ordem.id());
         orcamento.fechar();
         orcamento.aprovar();
         var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.of(orcamento)), new ArrayList<>());
@@ -105,7 +108,7 @@ class OrdemServicoApplicationServiceTest {
     @Test
     void iniciarExecucaoRejeitaOrcamentoNaoAprovado() {
         var ordem = novaOrdemAguardandoAprovacao();
-        var orcamento = new Orcamento(ordem.id().value(), ordem.id());
+        var orcamento = Orcamento.novo(ordem.id());
         var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.of(orcamento)), new ArrayList<>());
 
         assertThrows(DomainException.class, () -> service.iniciarExecucao(ordem.id().value()));
@@ -143,7 +146,7 @@ class OrdemServicoApplicationServiceTest {
     @Test
     void pedirAjusteReabreOrcamentoESalvaOrdem() {
         var ordem = novaOrdemAguardandoAprovacao();
-        var orcamento = new Orcamento(ordem.id().value(), ordem.id());
+        var orcamento = Orcamento.novo(ordem.id());
         orcamento.fechar();
         var ordemRepository = new FakeOrdemServicoRepository(Optional.of(ordem));
         var orcamentoRepository = new FakeOrcamentoRepository(Optional.of(orcamento));
@@ -156,18 +159,20 @@ class OrdemServicoApplicationServiceTest {
     }
 
     @Test
-    void alterarOrcamentoReabreOrcamentoDuranteExecucao() {
+    void pedirAjusteReabreOrcamentoDuranteExecucao() {
         var ordem = novaOrdemEmExecucao();
-        var orcamento = new Orcamento(ordem.id().value(), ordem.id());
+        var orcamento = Orcamento.novo(ordem.id());
         orcamento.fechar();
         orcamento.aprovar();
         var orcamentoRepository = new FakeOrcamentoRepository(Optional.of(orcamento));
-        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), orcamentoRepository, new ArrayList<>());
+        var eventos = new ArrayList<>();
+        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), orcamentoRepository, eventos);
 
-        var alterada = service.alterarOrcamento(ordem.id().value());
+        var ajustada = service.pedirAjuste(ordem.id().value());
 
-        assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, alterada.status());
+        assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, ajustada.status());
         assertEquals(StatusOrcamento.ABERTO, orcamentoRepository.salvo.status());
+        assertTrue(eventos.isEmpty());
     }
 
     private static OrdemServicoApplicationService service(
@@ -224,6 +229,8 @@ class OrdemServicoApplicationServiceTest {
         }
 
         @Override public Orcamento salvar(Orcamento orcamento) { this.salvo = orcamento; return orcamento; }
-        @Override public Optional<Orcamento> buscarPorId(OrcamentoId orcamentoId) { return busca; }
+        @Override public Optional<Orcamento> buscarPorId(OrcamentoId orcamentoId) { return busca.filter(orcamento -> orcamento.id().equals(orcamentoId)); }
+        @Override public Optional<Orcamento> buscarPorOrdemServicoId(OrdemServicoId ordemServicoId) { return busca.filter(orcamento -> orcamento.ordemServicoId().equals(ordemServicoId)); }
     }
 }
+

@@ -2,6 +2,7 @@ package br.com.fiap.oficina.ordemservico.adapter.out.persistence.jpa;
 
 import br.com.fiap.oficina.cliente.domain.model.ClienteId;
 import br.com.fiap.oficina.ordemservico.domain.model.Diagnostico;
+import br.com.fiap.oficina.ordemservico.domain.model.Orcamento;
 import br.com.fiap.oficina.ordemservico.domain.model.OrdemServico;
 import br.com.fiap.oficina.ordemservico.domain.model.OrdemServicoId;
 import br.com.fiap.oficina.ordemservico.domain.model.StatusOrdemServico;
@@ -38,6 +39,10 @@ public class OrdemServicoJpaMapper {
     }
 
     public OrdemServico toDomain(OrdemServicoJpaEntity entity) {
+        return toDomain(entity, null);
+    }
+
+    public OrdemServico toDomain(OrdemServicoJpaEntity entity, Orcamento orcamento) {
         return new OrdemServico(
                 new OrdemServicoId(entity.getId()),
                 entity.getNumero(),
@@ -50,7 +55,8 @@ public class OrdemServicoJpaMapper {
                 entity.getInicioExecucaoEm(),
                 entity.getFinalizadaEm(),
                 entity.getEntregueEm(),
-                entity.isPago());
+                entity.isPago(),
+                orcamento);
     }
 
 

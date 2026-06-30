@@ -13,6 +13,7 @@ import br.com.fiap.oficina.ordemservico.application.port.out.PublicarEventoPort;
 import br.com.fiap.oficina.ordemservico.application.port.out.VerificadorEstoquePort;
 import br.com.fiap.oficina.ordemservico.application.service.OrcamentoApplicationService;
 import br.com.fiap.oficina.ordemservico.application.service.OrdemServicoApplicationService;
+import br.com.fiap.oficina.servico.application.port.out.ServicoRepositoryPort;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,18 +36,24 @@ public class OrdemServicoConfiguration {
     public OrcamentoApplicationService orcamentoApplicationService(
             OrcamentoRepositoryPort orcamentoRepositoryPort,
             OrdemServicoRepositoryPort ordemServicoRepositoryPort,
+            ServicoRepositoryPort servicoRepositoryPort,
+            EstoqueRepositoryPort estoqueRepositoryPort,
             VerificadorEstoquePort verificadorEstoquePort,
             PublicarEventoPort publicarEventoPort) {
         return new OrcamentoApplicationService(
                 orcamentoRepositoryPort,
                 ordemServicoRepositoryPort,
+                servicoRepositoryPort,
+                estoqueRepositoryPort,
                 verificadorEstoquePort,
                 publicarEventoPort);
     }
 
     @Bean
-    public OrdemServicoRepositoryPort ordemServicoRepositoryPort(SpringDataOrdemServicoRepository springDataRepository) {
-        return new OrdemServicoPersistenceAdapter(springDataRepository);
+    public OrdemServicoRepositoryPort ordemServicoRepositoryPort(
+            SpringDataOrdemServicoRepository springDataRepository,
+            OrcamentoSpringDataRepository orcamentoSpringDataRepository) {
+        return new OrdemServicoPersistenceAdapter(springDataRepository, orcamentoSpringDataRepository);
     }
 
     @Bean
