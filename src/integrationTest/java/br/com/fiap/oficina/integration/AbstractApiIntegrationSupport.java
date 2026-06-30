@@ -1,7 +1,5 @@
 package br.com.fiap.oficina.integration;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -10,8 +8,10 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.HashMap;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -28,19 +28,12 @@ abstract class AbstractApiIntegrationSupport {
     private int port;
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
+    protected JdbcTemplate jdbcTemplate;
 
     private String token;
 
-    @BeforeEach
-    void beforeEach() {
-        limparBanco();
+    protected void resetToken() {
         token = null;
-    }
-
-    @AfterEach
-    void afterEach() {
-        limparBanco();
     }
 
     protected ResponseEntity<Map> postMap(String path, Object body) {
@@ -81,20 +74,40 @@ abstract class AbstractApiIntegrationSupport {
         return headers;
     }
 
-    protected void limparBanco() {
-        jdbcTemplate.update("delete from movimentacao_estoque");
-        jdbcTemplate.update("delete from orcamento_item_peca");
-        jdbcTemplate.update("delete from orcamento_item_servico");
-        jdbcTemplate.update("delete from orcamento");
-        jdbcTemplate.update("delete from diagnostico");
-        jdbcTemplate.update("delete from ordem_servico");
-        jdbcTemplate.update("delete from veiculo");
-        jdbcTemplate.update("delete from cliente");
-        jdbcTemplate.update("delete from servico");
-        jdbcTemplate.update("delete from item_estoque");
+    protected void limparOrdens(Collection<String> ordemIds) {
+        ordemIds.forEach(ordemId -> {
+            var id = UUID.fromString(ordemId);
+            jdbcTemplate.update("delete from orcamento_item_peca where orcamento_id in (select id from orcamento where ordem_servico_id = ?)", id);
+            jdbcTemplate.update("delete from orcamento_item_servico where orcamento_id in (select id from orcamento where ordem_servico_id = ?)", id);
+            jdbcTemplate.update("delete from orcamento where ordem_servico_id = ?", id);
+            jdbcTemplate.update("delete from diagnostico where ordem_servico_id = ?", id);
+            jdbcTemplate.update("delete from ordem_servico where id = ?", id);
+        });
+    }
+
+    protected void limparVeiculos(Collection<String> veiculoIds) {
+        veiculoIds.forEach(veiculoId -> jdbcTemplate.update("delete from veiculo where id = ?", UUID.fromString(veiculoId)));
+    }
+
+    protected void limparClientes(Collection<String> clienteIds) {
+        clienteIds.forEach(clienteId -> jdbcTemplate.update("delete from cliente where id = ?", UUID.fromString(clienteId)));
+    }
+
+    protected void limparServicos(Collection<String> servicoIds) {
+        servicoIds.forEach(servicoId -> jdbcTemplate.update("delete from servico where id = ?", UUID.fromString(servicoId)));
+    }
+
+    protected void limparItensEstoque(Collection<String> itemEstoqueIds) {
+        itemEstoqueIds.forEach(itemId -> {
+            var id = UUID.fromString(itemId);
+            jdbcTemplate.update("delete from movimentacao_estoque where item_estoque_id = ?", id);
+            jdbcTemplate.update("delete from orcamento_item_peca where item_estoque_id = ?", id);
+            jdbcTemplate.update("delete from item_estoque where id = ?", id);
+        });
     }
 
     private String url(String path) {
         return "http://localhost:" + port + path;
     }
 }
+

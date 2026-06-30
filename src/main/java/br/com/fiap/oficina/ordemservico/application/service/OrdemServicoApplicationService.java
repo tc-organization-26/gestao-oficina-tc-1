@@ -24,6 +24,7 @@ import br.com.fiap.oficina.ordemservico.domain.model.StatusOrdemServico;
 import br.com.fiap.oficina.shared.domain.DomainException;
 import br.com.fiap.oficina.veiculo.domain.model.VeiculoId;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -78,6 +79,21 @@ public class OrdemServicoApplicationService implements
             return ordemServicoRepository.buscarTodosOrdenado();
         }
         return ordemServicoRepository.buscarPorStatusOrdenado(status.ordinal());
+    }
+
+    @Override
+    public String consultarTempoMedioExecucao() {
+        var tempos = ordemServicoRepository.buscarTodosOrdenado().stream()
+                .filter(ordem -> ordem.dataRecebimento() != null && ordem.finalizadaEm() != null)
+                .map(ordem -> Duration.between(ordem.dataRecebimento(), ordem.finalizadaEm()).toSeconds())
+                .toList();
+        if (tempos.isEmpty()) {
+            return "0:00";
+        }
+        var mediaSegundos = Math.round(tempos.stream().mapToLong(Long::longValue).average().orElse(0));
+        var horas = mediaSegundos / 3600;
+        var minutos = (mediaSegundos % 3600) / 60;
+        return "%d:%02d".formatted(horas, minutos);
     }
 
     @Override

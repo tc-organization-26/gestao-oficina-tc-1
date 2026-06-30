@@ -25,4 +25,5 @@ class OrdemServicoResponseTest {
         assertNotNull(response.diagnostico());
         assertEquals("Trocar freios", response.diagnostico().descricao());
     }
+
 }

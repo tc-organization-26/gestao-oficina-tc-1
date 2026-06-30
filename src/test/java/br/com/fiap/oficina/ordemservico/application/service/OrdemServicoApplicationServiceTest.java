@@ -16,6 +16,7 @@ import br.com.fiap.oficina.ordemservico.domain.model.StatusOrcamento;
 import br.com.fiap.oficina.ordemservico.domain.model.StatusOrdemServico;
 import br.com.fiap.oficina.shared.domain.DomainException;
 import br.com.fiap.oficina.veiculo.domain.model.VeiculoId;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -65,6 +66,35 @@ class OrdemServicoApplicationServiceTest {
         assertEquals(List.of(ordem), service.consultarPorCliente(ordem.clienteId().value()));
         assertEquals(List.of(ordem), service.consultarOrdens(StatusOrdemServico.RECEBIDA));
         assertEquals(List.of(ordem), service.consultarOrdens(null));
+    }
+
+    @Test
+    void consultarTempoMedioExecucaoCalculaMediaEntreRecebimentoEFinalizacao() {
+        var recebidaEm = OffsetDateTime.parse("2026-06-30T08:00:00Z");
+        var ordemFinalizada = new OrdemServico(
+                OrdemServicoId.novo(),
+                null,
+                new ClienteId(UUID.randomUUID()),
+                new VeiculoId(UUID.randomUUID()),
+                StatusOrdemServico.FINALIZADA,
+                "Revisao",
+                null,
+                recebidaEm,
+                null,
+                recebidaEm.plusHours(2),
+                null,
+                false,
+                null);
+        var service = service(new FakeOrdemServicoRepository(Optional.of(ordemFinalizada)), new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
+
+        assertEquals("2:00", service.consultarTempoMedioExecucao());
+    }
+
+    @Test
+    void consultarTempoMedioExecucaoRetornaZeroQuandoNaoHaFinalizadas() {
+        var service = service(new FakeOrdemServicoRepository(Optional.of(novaOrdem())), new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
+
+        assertEquals("0:00", service.consultarTempoMedioExecucao());
     }
 
     @Test

@@ -6,6 +6,7 @@ import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.CriarOrdemServic
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.FecharOrcamentoRequest;
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.request.RegistrarDiagnosticoRequest;
 import br.com.fiap.oficina.ordemservico.adapter.in.rest.response.OrdemServicoResponse;
+import br.com.fiap.oficina.ordemservico.adapter.in.rest.response.TempoMedioExecucaoResponse;
 import br.com.fiap.oficina.ordemservico.application.command.AdicionarItemServicoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.command.AdicionarItemPecaOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.command.CriarOrdemServicoCommand;
@@ -97,6 +98,11 @@ public class OrdemServicoController {
     public OrdemServicoResponse criar(@Valid @RequestBody CriarOrdemServicoRequest request) {
         var command = new CriarOrdemServicoCommand(request.clienteId(), request.veiculoId(), request.anotacoes());
         return OrdemServicoResponse.from(criarOrdemServicoUseCase.criar(command));
+    }
+
+    @GetMapping("/tempo-medio-execucao")
+    public TempoMedioExecucaoResponse tempoMedioExecucao() {
+        return new TempoMedioExecucaoResponse(consultarOrdemServicoUseCase.consultarTempoMedioExecucao());
     }
 
     @GetMapping("/{id}")

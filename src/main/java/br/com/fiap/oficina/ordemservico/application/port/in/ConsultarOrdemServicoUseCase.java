@@ -11,4 +11,5 @@ public interface ConsultarOrdemServicoUseCase {
     OrdemServico consultarPorId(OrdemServicoId ordemServicoId);
     List<OrdemServico> consultarPorCliente(UUID clienteId);
     List<OrdemServico> consultarOrdens(StatusOrdemServico status);
+    String consultarTempoMedioExecucao();
 }

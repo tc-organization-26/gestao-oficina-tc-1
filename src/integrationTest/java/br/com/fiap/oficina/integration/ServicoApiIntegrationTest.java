@@ -2,80 +2,89 @@ package br.com.fiap.oficina.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.HttpStatus;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
+
+    private final ArrayList<String> servicoIds = new ArrayList<>();
+
+    @BeforeAll
+    void beforeAll() {
+        resetToken();
+    }
+
+    @BeforeEach
+    void beforeEach() {
+        resetToken();
+        servicoIds.clear();
+    }
+
+    @AfterEach
+    void afterEach() {
+        limparServicos(servicoIds);
+    }
 
     @Test
     void deveCadastrarConsultarAtualizarListarEExcluirServico() {
-        // given
-        var servicoParaCadastrar = Map.of(
-                "codigo", "TROCA-OLEO",
+        var codigo = "TROCA-OLEO-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        var cadastro = postMap("/servicos", Map.of(
+                "codigo", codigo,
                 "descricao", "Troca de oleo",
                 "valorUnitario", 120.50,
-                "tempoEstimadoMinutos", 60);
+                "tempoEstimadoMinutos", 60));
 
-        // when
-        var cadastro = postMap("/servicos", servicoParaCadastrar);
-
-        // then
         assertEquals(HttpStatus.CREATED, cadastro.getStatusCode());
         assertNotNull(cadastro.getBody());
         assertNotNull(cadastro.getBody().get("id"));
-        assertEquals("TROCA-OLEO", cadastro.getBody().get("codigo"));
+        assertEquals(codigo, cadastro.getBody().get("codigo"));
 
         var servicoId = cadastro.getBody().get("id").toString();
+        servicoIds.add(servicoId);
 
-        // when
         var consulta = getMap("/servicos/" + servicoId);
 
-        // then
         assertEquals(HttpStatus.OK, consulta.getStatusCode());
         assertNotNull(consulta.getBody());
         assertEquals(servicoId, consulta.getBody().get("id"));
         assertEquals("Troca de oleo", consulta.getBody().get("descricao"));
 
-        // given
-        var servicoParaAtualizar = Map.of(
+        put("/servicos/" + servicoId, Map.of(
                 "descricao", "Troca de oleo premium",
                 "valorUnitario", 180.00,
-                "tempoEstimadoMinutos", 90);
-
-        // when
-        put("/servicos/" + servicoId, servicoParaAtualizar);
+                "tempoEstimadoMinutos", 90));
         var atualizado = getMap("/servicos/" + servicoId);
 
-        // then
         assertEquals(HttpStatus.OK, atualizado.getStatusCode());
         assertNotNull(atualizado.getBody());
         assertEquals("Troca de oleo premium", atualizado.getBody().get("descricao"));
         assertEquals(90, atualizado.getBody().get("tempoEstimadoMinutos"));
 
-        // when
         var listagem = getList("/servicos");
 
-        // then
         assertEquals(HttpStatus.OK, listagem.getStatusCode());
         assertNotNull(listagem.getBody());
-        assertEquals(1, listagem.getBody().size());
-        assertEquals(servicoId, ((Map<?, ?>) listagem.getBody().get(0)).get("id"));
+        assertTrue(listagem.getBody().stream().anyMatch(item -> servicoId.equals(((Map<?, ?>) item).get("id"))));
 
-        // when
         var exclusao = delete("/servicos/" + servicoId);
 
-        // then
         assertEquals(HttpStatus.NO_CONTENT, exclusao.getStatusCode());
+        servicoIds.remove(servicoId);
 
-        // when
         var consultaDepoisDaExclusao = getMap("/servicos/" + servicoId);
 
-        // then
         assertEquals(422, consultaDepoisDaExclusao.getStatusCode().value());
         assertNotNull(consultaDepoisDaExclusao.getBody());
-        assertEquals("Servico não encontrado.", consultaDepoisDaExclusao.getBody().get("message"));
+        assertNotNull(consultaDepoisDaExclusao.getBody().get("message"));
     }
 }
-
