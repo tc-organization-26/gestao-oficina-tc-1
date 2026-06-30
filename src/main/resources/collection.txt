@@ -50,7 +50,7 @@ curl --request POST "$BASE_URL/ordens-servico" --header "Authorization: Bearer $
 curl --request GET "$BASE_URL/ordens-servico/$ORDEM_ID" --header "Authorization: Bearer $TOKEN"
 curl --request GET "$BASE_URL/ordens-servico" --header "Authorization: Bearer $TOKEN"
 curl --request GET "$BASE_URL/ordens-servico?status=RECEBIDA" --header "Authorization: Bearer $TOKEN"
-curl --request GET "$BASE_URL/ordens-servico/clientes/$CLIENTE_ID/historico-atendimentos" --header "Authorization: Bearer $TOKEN"
+curl --request GET "$BASE_URL/ordens-servico?clienteId=$CLIENTE_ID" --header "Authorization: Bearer $TOKEN"
 curl --request GET "$BASE_URL/ordens-servico/$ORDEM_ID/acompanhamento" --header "Authorization: Bearer $TOKEN"
 curl --request POST "$BASE_URL/ordens-servico/$ORDEM_ID/diagnostico/inicio" --header "Authorization: Bearer $TOKEN"
 curl --request POST "$BASE_URL/ordens-servico/$ORDEM_ID/diagnostico" --header "Authorization: Bearer $TOKEN" --header "Content-Type: application/json" --data "{\"descricao\":\"Motor com desgaste nas buchas\"}"

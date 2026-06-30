@@ -128,7 +128,11 @@ public final class OrdemServico extends Entity<OrdemServicoId> {
         if (diagnostico == null) {
             throw new DomainException("Diagnostico e obrigatorio.");
         }
-        this.diagnostico = diagnostico;
+        if (this.diagnostico == null) {
+            this.diagnostico = diagnostico;
+            return;
+        }
+        this.diagnostico.atualizarDescricao(diagnostico.descricao());
     }
 
     public void finalizarOrcamento() {

@@ -68,6 +68,19 @@ class OrdemServicoTest {
         assertThrows(DomainException.class, ordem::entregar);
     }
 
+
+    @Test
+    void registrarDiagnosticoNovamenteMantemMesmoId() {
+        var ordem = novaOrdem();
+        ordem.iniciarDiagnostico();
+        ordem.registrarDiagnostico(Diagnostico.registrar("Descricao inicial"));
+        var diagnosticoId = ordem.diagnostico().id();
+
+        ordem.registrarDiagnostico(Diagnostico.registrar("Descricao revisada"));
+
+        assertEquals(diagnosticoId, ordem.diagnostico().id());
+        assertEquals("Descricao revisada", ordem.diagnostico().descricao());
+    }
     @Test
     void exigePagamentoAntesDaEntrega() {
         var ordem = novaOrdem();

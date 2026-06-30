@@ -62,7 +62,7 @@ class OrdemServicoApplicationServiceTest {
         var ordem = novaOrdem();
         var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
 
-        assertEquals(List.of(ordem), service.consultarHistoricoPorCliente(ordem.clienteId().value()));
+        assertEquals(List.of(ordem), service.consultarPorCliente(ordem.clienteId().value()));
         assertEquals(List.of(ordem), service.consultarOrdens(StatusOrdemServico.RECEBIDA));
         assertEquals(List.of(ordem), service.consultarOrdens(null));
     }
@@ -89,6 +89,22 @@ class OrdemServicoApplicationServiceTest {
         var atualizada = service.registrarDiagnostico(new RegistrarDiagnosticoCommand(ordem.id().value(), "Trocar freios"));
 
         assertEquals("Trocar freios", atualizada.diagnostico().descricao());
+        assertSame(ordem, repository.salvo);
+    }
+
+    @Test
+    void registrarDiagnosticoNovamenteMantemIdExistente() {
+        var ordem = novaOrdem();
+        ordem.iniciarDiagnostico();
+        ordem.registrarDiagnostico(br.com.fiap.oficina.ordemservico.domain.model.Diagnostico.registrar("Descricao inicial"));
+        var diagnosticoId = ordem.diagnostico().id();
+        var repository = new FakeOrdemServicoRepository(Optional.of(ordem));
+        var service = service(repository, new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
+
+        var atualizada = service.registrarDiagnostico(new RegistrarDiagnosticoCommand(ordem.id().value(), "Descricao revisada"));
+
+        assertEquals(diagnosticoId, atualizada.diagnostico().id());
+        assertEquals("Descricao revisada", atualizada.diagnostico().descricao());
         assertSame(ordem, repository.salvo);
     }
 

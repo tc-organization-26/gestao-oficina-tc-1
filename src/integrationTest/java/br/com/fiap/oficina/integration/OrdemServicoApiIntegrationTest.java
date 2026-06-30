@@ -163,7 +163,7 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
     }
 
     @Test
-    void deveListarHistoricoDeAtendimentosDoCliente() {
+    void deveListarOrdensDeServicoPorCliente() {
         var clienteId = criarCliente();
         var veiculoId1 = criarVeiculo(clienteId);
         var veiculoId2 = criarVeiculo(clienteId);
@@ -171,7 +171,7 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         var ordemId1 = criarOrdem(clienteId, veiculoId1);
         var ordemId2 = criarOrdem(clienteId, veiculoId2);
 
-        var historico = getList("/ordens-servico/clientes/" + clienteId + "/historico-atendimentos");
+        var historico = getList("/ordens-servico?clienteId=" + clienteId);
 
         assertEquals(HttpStatus.OK, historico.getStatusCode());
         assertNotNull(historico.getBody());

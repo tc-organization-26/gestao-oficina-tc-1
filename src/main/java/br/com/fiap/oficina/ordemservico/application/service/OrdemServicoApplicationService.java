@@ -68,7 +68,7 @@ public class OrdemServicoApplicationService implements
     }
 
     @Override
-    public List<OrdemServico> consultarHistoricoPorCliente(UUID clienteId) {
+    public List<OrdemServico> consultarPorCliente(UUID clienteId) {
         return ordemServicoRepository.buscarPorClienteOrdenado(clienteId);
     }
 

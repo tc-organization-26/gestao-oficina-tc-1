@@ -106,15 +106,13 @@ public class OrdemServicoController {
 
     @GetMapping
     public List<OrdemServicoResponse> consultarOrdens(
-            @RequestParam(required = false) StatusOrdemServico status) {
-        return consultarOrdemServicoUseCase.consultarOrdens(status).stream()
-                .map(OrdemServicoResponse::from)
-                .toList();
-    }
-
-    @GetMapping("/clientes/{clienteId}/historico-atendimentos")
-    public List<OrdemServicoResponse> historicoAtendimentos(@PathVariable UUID clienteId) {
-        return consultarOrdemServicoUseCase.consultarHistoricoPorCliente(clienteId).stream()
+            @RequestParam(required = false) StatusOrdemServico status,
+            @RequestParam(required = false) UUID clienteId) {
+        var ordens = clienteId != null
+                ? consultarOrdemServicoUseCase.consultarPorCliente(clienteId)
+                : consultarOrdemServicoUseCase.consultarOrdens(status);
+        return ordens.stream()
+                .filter(ordem -> status == null || ordem.status() == status)
                 .map(OrdemServicoResponse::from)
                 .toList();
     }

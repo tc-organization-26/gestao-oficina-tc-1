@@ -9,6 +9,6 @@ import java.util.UUID;
 
 public interface ConsultarOrdemServicoUseCase {
     OrdemServico consultarPorId(OrdemServicoId ordemServicoId);
-    List<OrdemServico> consultarHistoricoPorCliente(UUID clienteId);
+    List<OrdemServico> consultarPorCliente(UUID clienteId);
     List<OrdemServico> consultarOrdens(StatusOrdemServico status);
 }
