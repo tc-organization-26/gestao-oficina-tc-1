@@ -108,9 +108,9 @@ public class EstoqueController {
         return ItemEstoqueResponse.from(incluirItemEstoqueUseCase.incluir(new IncluirItemEstoqueCommand(id, request.quantidade())));
     }
 
-    @PostMapping("/{id}/baixas")
-    public ItemEstoqueResponse baixar(@PathVariable UUID id, @Valid @RequestBody MovimentarEstoqueRequest request) {
-        return ItemEstoqueResponse.from(baixarItemEstoqueUseCase.baixar(new BaixarItemEstoqueCommand(id, request.quantidade())));
+    @PostMapping("/{codigo}/baixas")
+    public ItemEstoqueResponse baixar(@PathVariable String codigo, @Valid @RequestBody MovimentarEstoqueRequest request) {
+        return ItemEstoqueResponse.from(baixarItemEstoqueUseCase.baixar(new BaixarItemEstoqueCommand(codigo, request.quantidade())));
     }
 
     @GetMapping("/codigo/{codigo}")

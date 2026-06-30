@@ -64,7 +64,7 @@ class EstoqueApiIntegrationTest extends AbstractApiIntegrationSupport {
         assertEquals(HttpStatus.OK, itemComInclusao.getStatusCode());
         assertEquals(15.0, ((Number) itemComInclusao.getBody().get("quantidadeDisponivel")).doubleValue());
 
-        var itemComBaixa = postMap("/estoque/" + itemId + "/baixas", Map.of("quantidade", 3.000));
+        var itemComBaixa = postMap("/estoque/" + codigo + "/baixas", Map.of("quantidade", 3.000));
         assertEquals(HttpStatus.OK, itemComBaixa.getStatusCode());
         assertEquals(12.0, ((Number) itemComBaixa.getBody().get("quantidadeDisponivel")).doubleValue());
 

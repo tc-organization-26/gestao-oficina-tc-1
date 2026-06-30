@@ -63,7 +63,7 @@ class EstoqueApplicationServiceTest {
         var item = ItemEstoque.criar("OLEO", "Oleo", BigDecimal.TEN, BigDecimal.valueOf(5));
         var service = new EstoqueApplicationService(new FakeRepository(false, Optional.of(item)));
 
-        var atualizado = service.baixar(new BaixarItemEstoqueCommand(item.id().value(), BigDecimal.valueOf(2)));
+        var atualizado = service.baixar(new BaixarItemEstoqueCommand(item.codigo(), BigDecimal.valueOf(2)));
 
         assertEquals(0, BigDecimal.valueOf(3).compareTo(atualizado.quantidadeDisponivel()));
     }

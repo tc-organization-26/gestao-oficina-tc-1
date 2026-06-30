@@ -239,14 +239,14 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
 
     @Test
     void deveBaixarEstoqueDuranteExecucao() {
-        var itemEstoqueId = criarItemEstoque();
+        var itemEstoqueCodigo = criarItemEstoqueCodigo();
         var ordemId = prepararAteEmExecucao();
 
-        var baixa = postMap("/estoque/" + itemEstoqueId + "/baixas",
+        var baixa = postMap("/estoque/" + itemEstoqueCodigo + "/baixas",
                 Map.of("quantidade", 2.0));
         assertEquals(HttpStatus.OK, baixa.getStatusCode());
 
-        var itemAtualizado = getMap("/estoque/" + itemEstoqueId);
+        var itemAtualizado = getMap("/estoque/codigo/" + itemEstoqueCodigo);
         assertEquals(8.0, ((Number) itemAtualizado.getBody().get("quantidadeDisponivel")).doubleValue());
     }
 
@@ -309,7 +309,7 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         var clienteId = criarCliente();
         var veiculoId = criarVeiculo(clienteId);
         var servicoId = criarServico();
-        var itemEstoqueId = criarItemEstoque();
+        var itemEstoqueCodigo = criarItemEstoqueCodigo();
 
         // 1. Criar ordem
         var criacao = postMap("/ordens-servico", Map.of(
@@ -350,7 +350,7 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
 
         // 9. Baixar estoque durante execuÃ§Ã£o
         assertEquals(HttpStatus.OK,
-                postMap("/estoque/" + itemEstoqueId + "/baixas",
+                postMap("/estoque/" + itemEstoqueCodigo + "/baixas",
                         Map.of("quantidade", 1.0)).getStatusCode());
 
         // 10. Finalizar execuÃ§Ã£o

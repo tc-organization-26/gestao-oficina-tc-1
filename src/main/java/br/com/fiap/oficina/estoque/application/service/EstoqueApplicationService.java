@@ -83,7 +83,7 @@ public class EstoqueApplicationService implements CadastrarItemEstoqueUseCase,
 
     @Override
     public ItemEstoque baixar(BaixarItemEstoqueCommand command) {
-        var item = consultarPorId(new ItemEstoqueId(command.itemEstoqueId()));
+        var item = consultarPorCodigo(command.codigo());
         item.baixar(command.quantidade());
         return estoqueRepository.salvar(item);
     }
