@@ -34,6 +34,16 @@ class VeiculoApplicationServiceTest {
         assertThrows(DomainException.class,
                 () -> service.cadastrar(new CadastrarVeiculoCommand(UUID.randomUUID(), "ABC1D23", "Toyota", "Corolla", 2020)));
     }
+    @Test
+    void cadastrarConsultaDuplicidadeComPlacaNormalizada() {
+        var repository = new FakeRepository(false, Optional.empty());
+        var service = new VeiculoApplicationService(repository);
+
+        var veiculo = service.cadastrar(new CadastrarVeiculoCommand(UUID.randomUUID(), "abc-1d23", "Toyota", "Corolla", 2020));
+
+        assertEquals("ABC1D23", repository.placaConsultada);
+        assertEquals("ABC1D23", veiculo.placa().value());
+    }
 
     @Test
     void atualizarBuscaAlteraESalva() {
@@ -79,6 +89,7 @@ class VeiculoApplicationServiceTest {
         private final List<Veiculo> todos;
         private Veiculo salvo;
         private VeiculoId excluido;
+        private String placaConsultada;
 
         FakeRepository(boolean existe, Optional<Veiculo> busca) {
             this(existe, busca, List.of());
@@ -90,7 +101,7 @@ class VeiculoApplicationServiceTest {
             this.todos = todos;
         }
 
-        @Override public boolean existePorPlaca(String placa) { return existe; }
+        @Override public boolean existePorPlaca(String placa) { this.placaConsultada = placa; return existe; }
         @Override public Veiculo salvar(Veiculo veiculo) { this.salvo = veiculo; return veiculo; }
         @Override public Optional<Veiculo> buscarPorId(VeiculoId veiculoId) { return busca; }
         @Override public List<Veiculo> buscarTodos() { return todos; }

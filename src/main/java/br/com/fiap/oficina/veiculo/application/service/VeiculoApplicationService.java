@@ -33,20 +33,21 @@ public class VeiculoApplicationService implements CadastrarVeiculoUseCase,
 
     @Override
     public Veiculo cadastrar(CadastrarVeiculoCommand command) {
-        if (veiculoRepository.existePorPlaca(command.placa())) {
+        var placa = VeiculoPlaca.novo(command.placa());
+
+        if (veiculoRepository.existePorPlaca(placa.value())) {
             throw new DomainException("Placa já cadastrada.");
         }
 
         var veiculo = Veiculo.criar(
                 new ClienteId(command.clienteId()),
-                VeiculoPlaca.novo(command.placa()),
+                placa,
                 command.marca(),
                 command.modelo(),
                 command.ano());
 
         return veiculoRepository.salvar(veiculo);
     }
-
     @Override
     public Veiculo atualizar(AtualizarVeiculoCommand command) {
         VeiculoId veiculoId = new VeiculoId(command.veiculoId());
