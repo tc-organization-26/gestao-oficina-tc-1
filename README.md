@@ -106,6 +106,8 @@ A ordem de servico percorre os seguintes status:
 
 ## Arquitetura da aplicacao
 
+![alt text](hex.jpg)
+
 O projeto foi implementado como um monolito modular com arquitetura hexagonal, tambem conhecida como ports and adapters.
 
 Embora o desafio permita arquitetura em camadas para o MVP, a arquitetura hexagonal foi escolhida para deixar o dominio mais protegido e independente dos detalhes de infraestrutura. Assim, as regras centrais da oficina nao ficam acopladas diretamente a controllers REST, JPA, banco de dados ou configuracoes do Spring.
