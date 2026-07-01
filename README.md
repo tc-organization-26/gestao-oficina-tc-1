@@ -4,6 +4,12 @@ API REST para gestao integrada de atendimento e execucao de servicos em uma ofic
 
 O sistema resolve um problema comum em oficinas de medio porte: processos espalhados em anotacoes manuais e planilhas, com perda de historico, falhas no controle de estoque, dificuldade de acompanhar status das ordens de servico e pouca rastreabilidade de orcamentos e aprovacoes.
 
+## Link do vídeo de apresentação
+https://youtu.be/JMrTZXY2hYE
+
+## Link do Miro
+https://miro.com/app/board/uXjVHFKgYIc=/?share_link_id=451822825670
+
 ## Contexto do desafio
 
 A oficina precisa de um sistema back-end para organizar o fluxo de atendimento, diagnostico, orcamento, execucao e entrega dos veiculos. O objetivo desta primeira versao e oferecer uma base funcional, segura e documentada para que clientes, atendentes, mecanicos e gestores acompanhem o ciclo completo de uma ordem de servico.
