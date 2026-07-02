@@ -69,7 +69,7 @@ A ordem de servico percorre os seguintes status:
 - `Finalizada`: servicos concluidos e veiculo pronto para retirada.
 - `Entregue`: pagamento e retirada realizados, encerrando o atendimento.
 
-## Vantagens do sistema
+## Valor gerado pelo sistema para a oficina
 
 - Historico de atendimentos completo e centralizado.
 - Menor risco de perda de dados de cliente, veiculo, servicos, pecas, datas e status.
@@ -150,89 +150,28 @@ A escolha faz sentido para este projeto porque:
 - E facil de executar com Docker, sem exigir instalacao local do banco.
 - E uma opcao solida para evoluir do MVP para ambientes mais proximos de producao.
 
-## Variaveis de ambiente
 
-As credenciais nao ficam versionadas no repositorio. O projeto usa um arquivo `.env` local, ignorado pelo Git.
-
-O arquivo versionado e apenas o `.env.example`, que serve como modelo:
-
-```env
-POSTGRES_DB=oficina_db_2
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=troque_aqui
-
-SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/oficina_db_2
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=troque_aqui
-
-JWT_SECRET=troque_por_uma_chave_segura_com_32_bytes_ou_mais
-JWT_EXPIRATION_SECONDS=3600
-```
-
-Na maquina local, crie o `.env` a partir desse exemplo e altere as senhas.
-
-No Windows PowerShell:
-
-```powershell
-copy .env.example .env
-```
-
-No Linux ou macOS:
-
-```bash
-cp .env.example .env
-```
-
-A senha definida em `POSTGRES_PASSWORD` deve ser a mesma definida em `SPRING_DATASOURCE_PASSWORD`, pois uma configura o usuario do banco e a outra e usada pela aplicacao para conectar nesse banco.
-
-## Como executar com Docker
+# Como executar o projeto
 
 ### Pre-requisitos
 
 - Docker Desktop instalado e em execucao.
-- Git instalado, caso esteja clonando o projeto em outra maquina.
+- Git instalado.
 
-Nao e necessario instalar Java, Maven ou PostgreSQL localmente para executar via Docker.
+Nao é necessario instalar Java, Maven ou PostgreSQL localmente para executar via Docker.
 
-### Executando em segundo plano
-
-```powershell
-docker compose up --build -d
-```
-
-### Ver logs da aplicacao
-
-```powershell
-docker compose logs -f app
-```
-
-### Ver logs do banco
-
-```powershell
-docker compose logs -f postgres
-```
-
-### Parar os containers
-
-```powershell
-docker compose down
-```
-
-### Parar e apagar os dados do banco
-
-Use este comando apenas quando quiser limpar o banco local completamente:
-
-```powershell
-docker compose down -v
-```
-
-## Como executar o projeto
-
-Clone o repositorio:
+Clone o repositório:
 
 ```bash
-git clone URL_DO_REPOSITORIO
-cd proj-tc-1-fiap
+git clone https://github.com/tc-organization-26/gestao-oficina-tc-1.git
+cd gestao-oficina-tc-1/
+```
+
+No Windows PowerShell:
+
+```powershell
+git clone https://github.com/tc-organization-26/gestao-oficina-tc-1.git
+cd .\gestao-oficina-tc-1\
 ```
 
 Crie o arquivo `.env`:
@@ -247,13 +186,32 @@ No Windows PowerShell:
 copy .env.example .env
 ```
 
-Edite o `.env` e configure uma senha local para o banco e uma chave JWT segura.
+Edite o `.env` a partir desse exemplo e altere as senhas.
 
-Depois execute:
+```env
+POSTGRES_DB=oficina_db_2
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=troque_aqui
+
+SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/oficina_db_2
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=troque_aqui
+
+JWT_SECRET=troque_por_uma_chave_segura_com_32_bytes_ou_mais
+JWT_EXPIRATION_SECONDS=3600
+```
+
+A senha definida em `POSTGRES_PASSWORD` deve ser a mesma definida em `SPRING_DATASOURCE_PASSWORD`, pois uma configura o usuario do banco e a outra e usada pela aplicacao para conectar nesse banco.
+
+Depois execute o container:
 
 ```bash
 docker compose up --build
 ```
+
+Você pode executar os chamadas para os endpoints pelo swagger, no endereço http://localhost:8081/swagger-ui/index.html.
+
+Ou, caso prefira, pode utilizar o Insomnia e importar a collection no projeto em src\main\resources\oficina-api-insomnia.har 
 
 ## Possiveis problemas
 
