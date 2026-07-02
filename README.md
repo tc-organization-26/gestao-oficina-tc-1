@@ -153,12 +153,14 @@ A escolha faz sentido para este projeto porque:
 
 # Como executar o projeto
 
-### Pre-requisitos
+## Pre-requisitos
 
 - Docker Desktop instalado e em execucao.
 - Git instalado.
 
 Nao é necessario instalar Java, Maven ou PostgreSQL localmente para executar via Docker.
+
+## Passo a passo
 
 Clone o repositório:
 
