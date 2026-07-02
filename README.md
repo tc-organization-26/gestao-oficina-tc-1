@@ -217,7 +217,7 @@ docker compose up --build
 
 Você pode executar os chamadas para os endpoints pelo swagger, no endereço http://localhost:8081/swagger-ui/index.html.
 
-Ou, caso prefira, pode utilizar o Insomnia e importar a collection no projeto em src\main\resources\oficina-api-insomnia.har 
+Ou, caso prefira, pode utilizar o Insomnia e importar a collection no projeto em https://github.com/tc-organization-26/gestao-oficina-tc-1/tree/master/src/main/resources/oficina-api-insomnia.har 
 
 ## Possiveis problemas
 
