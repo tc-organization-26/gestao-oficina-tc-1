@@ -164,6 +164,8 @@ Nao é necessario instalar Java, Maven ou PostgreSQL localmente para executar vi
 
 Clone o repositório:
 
+No Bash:
+
 ```bash
 git clone https://github.com/tc-organization-26/gestao-oficina-tc-1.git
 cd gestao-oficina-tc-1/
@@ -177,6 +179,8 @@ cd .\gestao-oficina-tc-1\
 ```
 
 Crie o arquivo `.env`:
+
+No Bash:
 
 ```bash
 cp .env.example .env
