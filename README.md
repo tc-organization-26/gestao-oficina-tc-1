@@ -237,6 +237,75 @@ docker version
 
 O comando deve mostrar informacoes de `Client` e `Server`.
 
+### Docker Compose nao reconhecido
+
+Se aparecer erro parecido com:
+
+```text
+docker: 'compose' is not a docker command
+```
+
+Verifique se o Docker Desktop esta atualizado. Em instalacoes mais antigas, o comando pode ser:
+
+```bash
+docker-compose up --build
+```
+
+Se esse comando funcionar, voce pode usa-lo no lugar de `docker compose up --build`.
+
+### Arquivo `.env` nao encontrado
+
+Se a aplicacao ou o Docker indicar que variaveis como `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` ou `JWT_SECRET` nao foram encontradas, confirme se o arquivo `.env` foi criado na raiz do projeto.
+
+No Windows PowerShell:
+
+```powershell
+copy .env.example .env
+```
+
+No Bash:
+
+```bash
+cp .env.example .env
+```
+
+Depois edite o arquivo e preencha as senhas antes de executar o Docker Compose novamente.
+
+### Senha do banco diferente da senha da aplicacao
+
+Se aparecer erro de autenticacao no PostgreSQL, como:
+
+```text
+password authentication failed for user "postgres"
+```
+
+Confira se os valores abaixo no `.env` estao iguais:
+
+```env
+POSTGRES_PASSWORD=troque_aqui
+SPRING_DATASOURCE_PASSWORD=troque_aqui
+```
+
+Depois reinicie os containers:
+
+```bash
+docker compose down
+docker compose up --build
+```
+
+### Banco inicializado com credenciais antigas
+
+Se voce alterou `POSTGRES_DB`, `POSTGRES_USER` ou `POSTGRES_PASSWORD` depois da primeira execucao, o volume do PostgreSQL pode continuar usando as credenciais antigas.
+
+Para recriar o banco local do zero, execute:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+Atencao: esse comando remove os dados locais gravados no volume do banco.
+
 ### Porta 5432 em uso
 
 Se ja existir um PostgreSQL local usando a porta `5432`, altere no `docker-compose.yml`:
@@ -247,6 +316,8 @@ ports:
 ```
 
 A aplicacao continuara acessando o banco internamente por `postgres:5432`. A mudanca afeta apenas o acesso ao banco pela maquina host.
+
+Se preferir, tambem e possivel parar o PostgreSQL local antes de subir o projeto.
 
 ### Porta 8081 em uso
 
@@ -263,6 +334,123 @@ Nesse caso, acesse a API por:
 http://localhost:8082
 ```
 
+O Swagger ficara disponivel em:
+
+```text
+http://localhost:8082/swagger-ui/index.html
+```
+
+### Aplicacao inicia antes do banco estar pronto
+
+Em algumas maquinas, o container da aplicacao pode tentar conectar no PostgreSQL antes do banco terminar a inicializacao. Se aparecer erro de conexao recusada ou indisponivel, aguarde alguns segundos e rode novamente:
+
+```bash
+docker compose up --build
+```
+
+Para acompanhar os logs, use:
+
+```bash
+docker compose logs -f
+```
+
+### Erro nas migrations do Flyway
+
+Se aparecer erro relacionado ao Flyway, como falha ao aplicar uma migration, pode ser que o banco local esteja com uma versao antiga do schema.
+
+Em ambiente local de desenvolvimento, a forma mais simples de resolver e recriar o volume:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+Atencao: isso apaga os dados locais do banco.
+
+### JWT secret muito curto
+
+Se a aplicacao falhar ao gerar ou validar token, confira o valor de `JWT_SECRET` no `.env`. Use uma chave longa, com pelo menos 32 caracteres.
+
+Exemplo:
+
+```env
+JWT_SECRET=minha_chave_super_secreta_com_mais_de_32_caracteres
+```
+
+### Endpoints retornando 401 Unauthorized
+
+Alguns endpoints exigem autenticacao. Primeiro faca login em:
+
+```text
+POST /auth/login
+```
+
+Depois envie o token retornado no header:
+
+```text
+Authorization: Bearer seu_token_aqui
+```
+
+No Swagger, clique em `Authorize` e informe o token antes de testar os endpoints protegidos.
+
+### Build falha ao baixar dependencias Maven
+
+Se o build falhar com erro de download de dependencias, verifique a conexao com a internet e tente novamente:
+
+```bash
+docker compose build --no-cache
+docker compose up
+```
+
+Se estiver usando rede corporativa, proxy ou VPN, pode ser necessario configurar o acesso do Docker/Maven a internet.
+
+### Permissao negada no Maven Wrapper
+
+Em Linux/macOS, se aparecer erro de permissao ao rodar o Maven Wrapper:
+
+```text
+permission denied: ./mvnw
+```
+
+Execute:
+
+```bash
+chmod +x mvnw
+./mvnw clean package
+```
+
+### Java em versao incorreta no build sem Docker
+
+Ao executar sem Docker, o projeto exige Java 21. Se aparecer erro como `release version 21 not supported`, verifique a versao ativa:
+
+```bash
+java -version
+```
+
+Instale ou selecione o Java 21 antes de executar:
+
+```bash
+./mvnw clean package
+```
+
+No Windows, tambem confira se a variavel `JAVA_HOME` aponta para uma instalacao do JDK 21.
+
+### Swagger nao abre
+
+Se `http://localhost:8081/swagger-ui/index.html` nao abrir, confirme se os containers estao rodando:
+
+```bash
+docker compose ps
+```
+
+Depois verifique os logs da aplicacao:
+
+```bash
+docker compose logs -f app
+```
+
+Se voce alterou a porta da API no `docker-compose.yml`, use a nova porta no navegador.
+
 ## Build sem Docker
 
 Tambem e possivel compilar com Maven Wrapper:
@@ -278,4 +466,3 @@ Ou em Linux/macOS:
 ```
 
 Para executar fora do Docker, sera necessario ter Java 21, PostgreSQL disponivel e as variaveis de ambiente configuradas na maquina.
-
