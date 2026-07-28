@@ -1,8 +1,8 @@
 ﻿# Oficina API
 
-API REST para gestao integrada de atendimento e execucao de servicos em uma oficina mecanica, desenvolvida como MVP do Tech Challenge FIAP - Fase 1.
+API REST para gestão integrada de atendimento e execução de serviços em uma oficina mecânica, desenvolvida como MVP do Tech Challenge FIAP - Fase 1.
 
-O sistema resolve um problema comum em oficinas de medio porte: processos espalhados em anotacoes manuais e planilhas, com perda de historico, falhas no controle de estoque, dificuldade de acompanhar status das ordens de servico e pouca rastreabilidade de orcamentos e aprovacoes.
+O sistema resolve um problema comum em oficinas de médio porte: processos espalhados em anotações manuais e planilhas, com perda de histórico, falhas no controle de estoque, dificuldade de acompanhar status das ordens de serviço e pouca rastreabilidade de orçamentos e aprovações.
 
 ## Link do vídeo de apresentação
 https://youtu.be/JMrTZXY2hYE
@@ -12,89 +12,89 @@ https://miro.com/app/board/uXjVHFKgYIc=/?share_link_id=451822825670
 
 ## Contexto do desafio
 
-A oficina precisa de um sistema back-end para organizar o fluxo de atendimento, diagnostico, orcamento, execucao e entrega dos veiculos. O objetivo desta primeira versao e oferecer uma base funcional, segura e documentada para que clientes, atendentes, mecanicos e gestores acompanhem o ciclo completo de uma ordem de servico.
+A oficina precisa de um sistema back-end para organizar o fluxo de atendimento, diagnóstico, orçamento, execução e entrega dos veículos. O objetivo desta primeira versão é oferecer uma base funcional, segura e documentada para que clientes, atendentes, mecânicos e gestores acompanhem o ciclo completo de uma ordem de serviço.
 
 O MVP contempla:
 
-- Gestao de clientes.
-- Gestao de veiculos.
-- Gestao de servicos.
-- Gestao de pecas e insumos com controle de estoque.
-- Criacao e acompanhamento de ordens de servico.
-- Orcamentos com servicos e pecas.
-- Aprovacao, recusa e ajustes de orcamento.
+- Gestão de clientes.
+- Gestão de veículos.
+- Gestão de serviços.
+- Gestão de peças e insumos com controle de estoque.
+- Criação e acompanhamento de ordens de serviço.
+- Orçamentos com serviços e peças.
+- Aprovação, recusa e ajustes de orçamento.
 - Acompanhamento do status da OS.
-- Autenticacao com JWT para APIs administrativas.
-- Documentacao da API com Swagger.
-- Execucao local com Docker e Docker Compose.
+- Autenticação com JWT para APIs administrativas.
+- Documentação da API com Swagger.
+- Execução local com Docker e Docker Compose.
 
 ## Storytelling do fluxo principal
 
-O fluxo do sistema comeca quando o cliente entra em contato com a oficina solicitando atendimento.
+O fluxo do sistema começa quando o cliente entra em contato com a oficina solicitando atendimento.
 
-O atendente localiza o cliente no sistema usando CPF ou CNPJ. Se o cliente ja existir, o sistema exibe seus dados, os veiculos vinculados e o historico de atendimentos. Se o cliente ainda nao existir, o atendente realiza o cadastro.
+O atendente localiza o cliente no sistema usando CPF ou CNPJ. Se o cliente já existir, o sistema exibe seus dados, os veículos vinculados e o histórico de atendimentos. Se o cliente ainda não existir, o atendente realiza o cadastro.
 
-Em seguida, o atendente verifica se o veiculo ja esta registrado no cadastro do cliente. Se estiver, ele seleciona o veiculo. Caso contrario, cadastra o veiculo e o associa ao cliente.
+Em seguida, o atendente verifica se o veículo já está registrado no cadastro do cliente. Se estiver, ele seleciona o veículo. Caso contrário, cadastra o veículo e o associa ao cliente.
 
-Com cliente e veiculo identificados, o atendente registra os servicos solicitados. O sistema cria uma ordem de servico com codigo unico, cliente, veiculo, servicos solicitados, data de abertura, observacoes tecnicas e status inicial `Recebida`.
+Com cliente e veículo identificados, o atendente registra os serviços solicitados. O sistema cria uma ordem de serviço com código único, cliente, veículo, serviços solicitados, data de abertura, observações técnicas e status inicial `Recebida`.
 
-O mecanico acessa o sistema, visualiza as ordens de servico e inicia a avaliacao do veiculo. Nesse momento, o sistema altera o status da OS para `Em diagnostico`.
+O mecânico acessa o sistema, visualiza as ordens de serviço e inicia a avaliação do veículo. Nesse momento, o sistema altera o status da OS para `Em diagnóstico`.
 
-Durante a avaliacao, o mecanico registra o diagnostico, os servicos necessarios, observacoes tecnicas e as pecas que serao utilizadas. O sistema consulta o estoque para verificar a disponibilidade dessas pecas.
+Durante a avaliação, o mecânico registra o diagnóstico, os serviços necessários, observações técnicas e as peças que serão utilizadas. O sistema consulta o estoque para verificar a disponibilidade dessas peças.
 
-Se as pecas estiverem disponiveis, elas passam a compor o orcamento. Se alguma peca nao estiver disponivel, o sistema registra a necessidade para que o gestor decida se a peca sera comprada ou substituida por outra.
+Se as peças estiverem disponíveis, elas passam a compor o orçamento. Se alguma peça não estiver disponível, o sistema registra a necessidade para que o gestor decida se a peça será comprada ou substituída por outra.
 
-Quando as pecas e servicos necessarios estao definidos, o orcamento da OS e fechado. A OS passa para o status `Aguardando aprovacao`, e o orcamento fica disponivel para envio e avaliacao do cliente.
+Quando as peças e serviços necessários estão definidos, o orçamento da OS é fechado. A OS passa para o status `Aguardando aprovação`, e o orçamento fica disponível para envio e avaliação do cliente.
 
-Se o cliente concordar com o orcamento, ele aprova. Se nao concordar, pode recusar ou solicitar ajustes. Caso sejam necessarios ajustes, o orcamento e atualizado e volta para aprovacao.
+Se o cliente concordar com o orçamento, ele aprova. Se não concordar, pode recusar ou solicitar ajustes. Caso sejam necessários ajustes, o orçamento é atualizado e volta para aprovação.
 
-Com o orcamento aprovado, o mecanico inicia a execucao dos servicos. A OS passa para o status `Em execucao`. Conforme pecas sao retiradas do estoque, o sistema registra a baixa para manter o controle atualizado.
+Com o orçamento aprovado, o mecânico inicia a execução dos serviços. A OS passa para o status `Em execução`. Conforme peças são retiradas do estoque, o sistema registra a baixa para manter o controle atualizado.
 
-Durante a execucao, o cliente pode consultar o status da OS sem precisar entrar em contato com a oficina. Atendente e gestor tambem conseguem acompanhar o andamento em tempo real.
+Durante a execução, o cliente pode consultar o status da OS sem precisar entrar em contato com a oficina. Atendente e gestor também conseguem acompanhar o andamento em tempo real.
 
-Se durante a execucao o mecanico identificar necessidade de alterar o orcamento, ele registra a alteracao no sistema. O orcamento e atualizado e a OS retorna para o status `Aguardando aprovacao`.
+Se durante a execução o mecânico identificar necessidade de alterar o orçamento, ele registra a alteração no sistema. O orçamento é atualizado e a OS retorna para o status `Aguardando aprovação`.
 
-Quando os servicos sao concluidos, a OS passa para `Finalizada`. O sistema informa que o veiculo esta pronto para retirada e permite notificar o cliente.
+Quando os serviços são concluídos, a OS passa para `Finalizada`. O sistema informa que o veículo está pronto para retirada e permite notificar o cliente.
 
-No momento da retirada, o cliente realiza o pagamento, retira o veiculo e a OS e alterada para `Entregue`, finalizando o atendimento.
+No momento da retirada, o cliente realiza o pagamento, retira o veículo e a OS é alterada para `Entregue`, finalizando o atendimento.
 
-## Status da ordem de servico
+## Status da ordem de serviço
 
-A ordem de servico percorre os seguintes status:
+A ordem de serviço percorre os seguintes status:
 
-- `Recebida`: OS criada apos o atendimento inicial.
-- `Em diagnostico`: mecanico iniciou a avaliacao do veiculo.
-- `Aguardando aprovacao`: orcamento fechado ou ajustado, aguardando decisao do cliente.
-- `Em execucao`: orcamento aprovado e servicos em andamento.
-- `Finalizada`: servicos concluidos e veiculo pronto para retirada.
+- `Recebida`: OS criada após o atendimento inicial.
+- `Em diagnóstico`: mecânico iniciou a avaliação do veículo.
+- `Aguardando aprovação`: orçamento fechado ou ajustado, aguardando decisão do cliente.
+- `Em execução`: orçamento aprovado e serviços em andamento.
+- `Finalizada`: serviços concluídos e veículo pronto para retirada.
 - `Entregue`: pagamento e retirada realizados, encerrando o atendimento.
 
 ## Valor gerado pelo sistema para a oficina
 
-- Historico de atendimentos completo e centralizado.
-- Menor risco de perda de dados de cliente, veiculo, servicos, pecas, datas e status.
-- Melhor controle do fluxo de orcamentos e aprovacoes.
+- Histórico de atendimentos completo e centralizado.
+- Menor risco de perda de dados de cliente, veículo, serviços, peças, datas e status.
+- Melhor controle do fluxo de orçamentos e aprovações.
 - Acompanhamento do status da OS por cliente, atendente e gestor.
-- Controle de estoque mais confiavel.
-- Registro das pecas utilizadas em cada atendimento.
-- Monitoramento do tempo medio de execucao dos servicos.
-- Mais previsibilidade para a gestao da oficina.
+- Controle de estoque mais confiável.
+- Registro das peças utilizadas em cada atendimento.
+- Monitoramento do tempo médio de execução dos serviços.
+- Mais previsibilidade para a gestão da oficina.
 
 ## Principais recursos da API
 
-- `POST /auth/login`: autenticacao e geracao de token JWT.
+- `POST /auth/login`: autenticação e geração de token JWT.
 - `/clientes`: CRUD de clientes e consulta por documento.
-- `/clientes/{id}/veiculos`: consulta de veiculos vinculados ao cliente.
-- `/veiculos`: CRUD de veiculos.
-- `/servicos`: CRUD de servicos oferecidos pela oficina.
-- `/estoque`: CRUD de pecas e insumos, inclusoes, baixas e consultas de disponibilidade.
-- `/ordens-servico`: criacao, listagem, detalhamento e acompanhamento de ordens de servico.
-- `/ordens-servico/{id}/diagnostico`: registro de diagnostico.
-- `/ordens-servico/{id}/orcamento`: fluxo de composicao, fechamento, aprovacao, recusa e ajustes de orcamento.
-- `/ordens-servico/{id}/execucao`: inicio e finalizacao da execucao.
+- `/clientes/{id}/veiculos`: consulta de veículos vinculados ao cliente.
+- `/veiculos`: CRUD de veículos.
+- `/servicos`: CRUD de serviços oferecidos pela oficina.
+- `/estoque`: CRUD de peças e insumos, inclusões, baixas e consultas de disponibilidade.
+- `/ordens-servico`: criação, listagem, detalhamento e acompanhamento de ordens de serviço.
+- `/ordens-servico/{id}/diagnostico`: registro de diagnóstico.
+- `/ordens-servico/{id}/orcamento`: fluxo de composição, fechamento, aprovação, recusa e ajustes de orçamento.
+- `/ordens-servico/{id}/execucao`: início e finalização da execução.
 - `/ordens-servico/{id}/pagamento`: registro de pagamento.
-- `/ordens-servico/{id}/entrega`: entrega do veiculo e encerramento da OS.
-- `/swagger-ui/index.html`: documentacao interativa da API.
+- `/ordens-servico/{id}/entrega`: entrega do veículo e encerramento da OS.
+- `/swagger-ui/index.html`: documentação interativa da API.
 
 ## Tecnologias utilizadas
 
@@ -110,55 +110,55 @@ A ordem de servico percorre os seguintes status:
 - Docker e Docker Compose
 - Springdoc OpenAPI / Swagger
 
-## Arquitetura da aplicacao
+## Arquitetura da aplicação
 
 ![alt text](hex.jpg)
 
-O projeto foi implementado como um monolito modular com arquitetura hexagonal, tambem conhecida como ports and adapters.
+O projeto foi implementado como um monolito modular com arquitetura hexagonal, também conhecida como ports and adapters.
 
-Embora o desafio permita arquitetura em camadas para o MVP, a arquitetura hexagonal foi escolhida para deixar o dominio mais protegido e independente dos detalhes de infraestrutura. Assim, as regras centrais da oficina nao ficam acopladas diretamente a controllers REST, JPA, banco de dados ou configuracoes do Spring.
+Embora o desafio permita arquitetura em camadas para o MVP, a arquitetura hexagonal foi escolhida para deixar o domínio mais protegido e independente dos detalhes de infraestrutura. Assim, as regras centrais da oficina não ficam acopladas diretamente a controllers REST, JPA, banco de dados ou configurações do Spring.
 
-Essa decisao traz beneficios importantes:
+Essa decisão traz benefícios importantes:
 
-- O dominio fica mais claro e proximo da linguagem do negocio.
-- Os casos de uso ficam isolados dos detalhes de entrada e saida.
+- O domínio fica mais claro e próximo da linguagem do negócio.
+- Os casos de uso ficam isolados dos detalhes de entrada e saída.
 - Controllers REST atuam como adaptadores de entrada.
-- Repositorios JPA atuam como adaptadores de saida.
-- Fica mais facil testar regras de negocio sem depender de HTTP ou banco real.
+- Repositórios JPA atuam como adaptadores de saída.
+- Fica mais fácil testar regras de negócio sem depender de HTTP ou banco real.
 - O sistema fica mais preparado para evoluir sem grandes reescritas.
 
-A organizacao dos pacotes segue essa separacao:
+A organização dos pacotes segue essa separação:
 
-- `domain`: modelos, eventos e regras de negocio.
-- `application`: comandos, portas de entrada, portas de saida e servicos de aplicacao.
+- `domain`: modelos, eventos e regras de negócio.
+- `application`: comandos, portas de entrada, portas de saída e serviços de aplicação.
 - `adapter/in/rest`: controllers, requests e responses da API REST.
-- `adapter/out/persistence`: entidades JPA, repositories e adapters de persistencia.
-- `adapter/out/context`: integracoes entre contextos internos da aplicacao.
-- `shared`: recursos compartilhados, como excecoes e tratamento global de erros.
+- `adapter/out/persistence`: entidades JPA, repositories e adapters de persistência.
+- `adapter/out/context`: integrações entre contextos internos da aplicação.
+- `shared`: recursos compartilhados, como exceções e tratamento global de erros.
 
 ## Por que PostgreSQL
 
-O PostgreSQL foi escolhido por ser um banco relacional robusto, maduro e adequado para sistemas transacionais como o de uma oficina mecanica.
+O PostgreSQL foi escolhido por ser um banco relacional robusto, maduro e adequado para sistemas transacionais como o de uma oficina mecânica.
 
 A escolha faz sentido para este projeto porque:
 
-- O dominio possui entidades fortemente relacionadas, como cliente, veiculo, OS, servicos, pecas e orcamentos.
+- O domínio possui entidades fortemente relacionadas, como cliente, veículo, OS, serviços, peças e orçamentos.
 - O banco oferece integridade referencial para proteger esses relacionamentos.
-- Transacoes ajudam a manter consistencia em operacoes como aprovar orcamento, baixar estoque e atualizar status da OS.
+- Transações ajudam a manter consistência em operações como aprovar orçamento, baixar estoque e atualizar status da OS.
 - Possui excelente suporte no ecossistema Spring Data JPA e Hibernate.
-- Funciona bem com Flyway para versionamento e evolucao controlada do schema.
-- E facil de executar com Docker, sem exigir instalacao local do banco.
-- E uma opcao solida para evoluir do MVP para ambientes mais proximos de producao.
+- Funciona bem com Flyway para versionamento e evolução controlada do schema.
+- É fácil de executar com Docker, sem exigir instalação local do banco.
+- É uma opção sólida para evoluir do MVP para ambientes mais próximos de produção.
 
 
 # Como executar o projeto
 
-## Pre-requisitos
+## Pré-requisitos
 
-- Docker Desktop instalado e em execucao.
+- Docker Desktop instalado e em execução.
 - Git instalado.
 
-Nao é necessario instalar Java, Maven ou PostgreSQL localmente para executar via Docker.
+Não é necessário instalar Java, Maven ou PostgreSQL localmente para executar via Docker.
 
 ## Passo a passo
 
@@ -207,7 +207,7 @@ JWT_SECRET=troque_por_uma_chave_segura_com_32_bytes_ou_mais
 JWT_EXPIRATION_SECONDS=3600
 ```
 
-A senha definida em `POSTGRES_PASSWORD` deve ser a mesma definida em `SPRING_DATASOURCE_PASSWORD`, pois uma configura o usuario do banco e a outra e usada pela aplicacao para conectar nesse banco.
+A senha definida em `POSTGRES_PASSWORD` deve ser a mesma definida em `SPRING_DATASOURCE_PASSWORD`, pois uma configura o usuário do banco e a outra é usada pela aplicação para conectar nesse banco.
 
 Depois execute o container:
 
@@ -215,13 +215,13 @@ Depois execute o container:
 docker compose up --build
 ```
 
-Você pode executar os chamadas para os endpoints pelo swagger, no endereço http://localhost:8081/swagger-ui/index.html.
+Você pode executar as chamadas para os endpoints pelo Swagger, no endereço http://localhost:8081/swagger-ui/index.html.
 
 Ou, caso prefira, pode utilizar o Insomnia e importar a collection no projeto em https://github.com/tc-organization-26/gestao-oficina-tc-1/tree/master/src/main/resources/oficina-api-insomnia.har 
 
-## Possiveis problemas
+## Possíveis problemas
 
-### Docker Desktop nao esta rodando
+### Docker Desktop não está rodando
 
 Se aparecer erro parecido com:
 
@@ -235,9 +235,9 @@ Abra o Docker Desktop e aguarde ele inicializar. Depois teste:
 docker version
 ```
 
-O comando deve mostrar informacoes de `Client` e `Server`.
+O comando deve mostrar informações de `Client` e `Server`.
 
-### Docker Compose nao reconhecido
+### Docker Compose não reconhecido
 
 Se aparecer erro parecido com:
 
@@ -245,17 +245,17 @@ Se aparecer erro parecido com:
 docker: 'compose' is not a docker command
 ```
 
-Verifique se o Docker Desktop esta atualizado. Em instalacoes mais antigas, o comando pode ser:
+Verifique se o Docker Desktop está atualizado. Em instalações mais antigas, o comando pode ser:
 
 ```bash
 docker-compose up --build
 ```
 
-Se esse comando funcionar, voce pode usa-lo no lugar de `docker compose up --build`.
+Se esse comando funcionar, você pode usá-lo no lugar de `docker compose up --build`.
 
-### Arquivo `.env` nao encontrado
+### Arquivo `.env` não encontrado
 
-Se a aplicacao ou o Docker indicar que variaveis como `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` ou `JWT_SECRET` nao foram encontradas, confirme se o arquivo `.env` foi criado na raiz do projeto.
+Se a aplicação ou o Docker indicar que variáveis como `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` ou `JWT_SECRET` não foram encontradas, confirme se o arquivo `.env` foi criado na raiz do projeto.
 
 No Windows PowerShell:
 
@@ -271,15 +271,15 @@ cp .env.example .env
 
 Depois edite o arquivo e preencha as senhas antes de executar o Docker Compose novamente.
 
-### Senha do banco diferente da senha da aplicacao
+### Senha do banco diferente da senha da aplicação
 
-Se aparecer erro de autenticacao no PostgreSQL, como:
+Se aparecer erro de autenticação no PostgreSQL, como:
 
 ```text
 password authentication failed for user "postgres"
 ```
 
-Confira se os valores abaixo no `.env` estao iguais:
+Confira se os valores abaixo no `.env` estão iguais:
 
 ```env
 POSTGRES_PASSWORD=troque_aqui
@@ -295,7 +295,7 @@ docker compose up --build
 
 ### Banco inicializado com credenciais antigas
 
-Se voce alterou `POSTGRES_DB`, `POSTGRES_USER` ou `POSTGRES_PASSWORD` depois da primeira execucao, o volume do PostgreSQL pode continuar usando as credenciais antigas.
+Se você alterou `POSTGRES_DB`, `POSTGRES_USER` ou `POSTGRES_PASSWORD` depois da primeira execução, o volume do PostgreSQL pode continuar usando as credenciais antigas.
 
 Para recriar o banco local do zero, execute:
 
@@ -304,24 +304,24 @@ docker compose down -v
 docker compose up --build
 ```
 
-Atencao: esse comando remove os dados locais gravados no volume do banco.
+Atenção: esse comando remove os dados locais gravados no volume do banco.
 
 ### Porta 5432 em uso
 
-Se ja existir um PostgreSQL local usando a porta `5432`, altere no `docker-compose.yml`:
+Se já existir um PostgreSQL local usando a porta `5432`, altere no `docker-compose.yml`:
 
 ```yaml
 ports:
   - "5433:5432"
 ```
 
-A aplicacao continuara acessando o banco internamente por `postgres:5432`. A mudanca afeta apenas o acesso ao banco pela maquina host.
+A aplicação continuará acessando o banco internamente por `postgres:5432`. A mudança afeta apenas o acesso ao banco pela máquina host.
 
-Se preferir, tambem e possivel parar o PostgreSQL local antes de subir o projeto.
+Se preferir, também é possível parar o PostgreSQL local antes de subir o projeto.
 
 ### Porta 8081 em uso
 
-Se a porta da API ja estiver ocupada, altere o mapeamento no `docker-compose.yml`:
+Se a porta da API já estiver ocupada, altere o mapeamento no `docker-compose.yml`:
 
 ```yaml
 ports:
@@ -334,15 +334,15 @@ Nesse caso, acesse a API por:
 http://localhost:8082
 ```
 
-O Swagger ficara disponivel em:
+O Swagger ficará disponível em:
 
 ```text
 http://localhost:8082/swagger-ui/index.html
 ```
 
-### Aplicacao inicia antes do banco estar pronto
+### Aplicação inicia antes do banco estar pronto
 
-Em algumas maquinas, o container da aplicacao pode tentar conectar no PostgreSQL antes do banco terminar a inicializacao. Se aparecer erro de conexao recusada ou indisponivel, aguarde alguns segundos e rode novamente:
+Em algumas máquinas, o container da aplicação pode tentar conectar no PostgreSQL antes do banco terminar a inicialização. Se aparecer erro de conexão recusada ou indisponível, aguarde alguns segundos e rode novamente:
 
 ```bash
 docker compose up --build
@@ -356,20 +356,20 @@ docker compose logs -f
 
 ### Erro nas migrations do Flyway
 
-Se aparecer erro relacionado ao Flyway, como falha ao aplicar uma migration, pode ser que o banco local esteja com uma versao antiga do schema.
+Se aparecer erro relacionado ao Flyway, como falha ao aplicar uma migration, pode ser que o banco local esteja com uma versão antiga do schema.
 
-Em ambiente local de desenvolvimento, a forma mais simples de resolver e recriar o volume:
+Em ambiente local de desenvolvimento, a forma mais simples de resolver é recriar o volume:
 
 ```bash
 docker compose down -v
 docker compose up --build
 ```
 
-Atencao: isso apaga os dados locais do banco.
+Atenção: isso apaga os dados locais do banco.
 
 ### JWT secret muito curto
 
-Se a aplicacao falhar ao gerar ou validar token, confira o valor de `JWT_SECRET` no `.env`. Use uma chave longa, com pelo menos 32 caracteres.
+Se a aplicação falhar ao gerar ou validar token, confira o valor de `JWT_SECRET` no `.env`. Use uma chave longa, com pelo menos 32 caracteres.
 
 Exemplo:
 
@@ -379,7 +379,7 @@ JWT_SECRET=minha_chave_super_secreta_com_mais_de_32_caracteres
 
 ### Endpoints retornando 401 Unauthorized
 
-Alguns endpoints exigem autenticacao. Primeiro faca login em:
+Alguns endpoints exigem autenticação. Primeiro faça login em:
 
 ```text
 POST /auth/login
@@ -393,20 +393,20 @@ Authorization: Bearer seu_token_aqui
 
 No Swagger, clique em `Authorize` e informe o token antes de testar os endpoints protegidos.
 
-### Build falha ao baixar dependencias Maven
+### Build falha ao baixar dependências Maven
 
-Se o build falhar com erro de download de dependencias, verifique a conexao com a internet e tente novamente:
+Se o build falhar com erro de download de dependências, verifique a conexão com a internet e tente novamente:
 
 ```bash
 docker compose build --no-cache
 docker compose up
 ```
 
-Se estiver usando rede corporativa, proxy ou VPN, pode ser necessario configurar o acesso do Docker/Maven a internet.
+Se estiver usando rede corporativa, proxy ou VPN, pode ser necessário configurar o acesso do Docker/Maven à internet.
 
-### Permissao negada no Maven Wrapper
+### Permissão negada no Maven Wrapper
 
-Em Linux/macOS, se aparecer erro de permissao ao rodar o Maven Wrapper:
+Em Linux/macOS, se aparecer erro de permissão ao rodar o Maven Wrapper:
 
 ```text
 permission denied: ./mvnw
@@ -419,9 +419,9 @@ chmod +x mvnw
 ./mvnw clean package
 ```
 
-### Java em versao incorreta no build sem Docker
+### Java em versão incorreta no build sem Docker
 
-Ao executar sem Docker, o projeto exige Java 21. Se aparecer erro como `release version 21 not supported`, verifique a versao ativa:
+Ao executar sem Docker, o projeto exige Java 21. Se aparecer erro como `release version 21 not supported`, verifique a versão ativa:
 
 ```bash
 java -version
@@ -433,27 +433,27 @@ Instale ou selecione o Java 21 antes de executar:
 ./mvnw clean package
 ```
 
-No Windows, tambem confira se a variavel `JAVA_HOME` aponta para uma instalacao do JDK 21.
+No Windows, também confira se a variável `JAVA_HOME` aponta para uma instalação do JDK 21.
 
-### Swagger nao abre
+### Swagger não abre
 
-Se `http://localhost:8081/swagger-ui/index.html` nao abrir, confirme se os containers estao rodando:
+Se `http://localhost:8081/swagger-ui/index.html` não abrir, confirme se os containers estão rodando:
 
 ```bash
 docker compose ps
 ```
 
-Depois verifique os logs da aplicacao:
+Depois verifique os logs da aplicação:
 
 ```bash
 docker compose logs -f app
 ```
 
-Se voce alterou a porta da API no `docker-compose.yml`, use a nova porta no navegador.
+Se você alterou a porta da API no `docker-compose.yml`, use a nova porta no navegador.
 
 ## Build sem Docker
 
-Tambem e possivel compilar com Maven Wrapper:
+Também é possível compilar com Maven Wrapper:
 
 ```powershell
 .\mvnw.cmd clean package
@@ -465,4 +465,4 @@ Ou em Linux/macOS:
 ./mvnw clean package
 ```
 
-Para executar fora do Docker, sera necessario ter Java 21, PostgreSQL disponivel e as variaveis de ambiente configuradas na maquina.
+Para executar fora do Docker, será necessário ter Java 21, PostgreSQL disponível e as variáveis de ambiente configuradas na máquina.
