@@ -220,6 +220,23 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
     }
 
     @Test
+    void deveListarTodasAsOrdensDeServicoSemFiltro() {
+        var clienteId = criarCliente();
+        var ordemId1 = criarOrdem(clienteId, criarVeiculo(clienteId));
+        var ordemId2 = criarOrdem(clienteId, criarVeiculo(clienteId));
+
+        var ordens = getList("/ordens-servico");
+
+        assertEquals(HttpStatus.OK, ordens.getStatusCode());
+        assertNotNull(ordens.getBody());
+        var ids = ordens.getBody().stream()
+                .map(item -> ((Map<?, ?>) item).get("id"))
+                .toList();
+        assertEquals(true, ids.contains(ordemId1));
+        assertEquals(true, ids.contains(ordemId2));
+    }
+
+    @Test
     void deveListarOrdensPorStatusOrdenadasDaMaisAntigaParaMaisRecente() {
         var clienteId = criarCliente();
         var ordemId1 = criarOrdem(clienteId, criarVeiculo(clienteId));
@@ -235,6 +252,19 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         assertEquals(true, ids.contains(ordemId1));
         assertEquals(true, ids.contains(ordemId2));
         assertEquals(true, ids.indexOf(ordemId1) < ids.indexOf(ordemId2));
+    }
+
+    @Test
+    void deveConsultarTempoMedioExecucao() {
+        var ordemId = prepararAteFinalizada();
+
+        var tempoMedio = getMap("/ordens-servico/tempo-medio-execucao");
+
+        assertEquals(HttpStatus.OK, tempoMedio.getStatusCode());
+        assertNotNull(tempoMedio.getBody());
+        assertEquals(true, tempoMedio.getBody().containsKey("tempoMedioExecucao"));
+        assertNotNull(tempoMedio.getBody().get("tempoMedioExecucao"));
+        assertEquals("FINALIZADA", getMap("/ordens-servico/" + ordemId).getBody().get("status"));
     }
 
     @Test

@@ -1,0 +1,73 @@
+package br.com.fiap.oficina.ordemservico.frameworks.config;
+
+import br.com.fiap.oficina.estoque.application.gateways.EstoqueRepositoryPort;
+import br.com.fiap.oficina.ordemservico.interfaceadapters.gateways.event.SpringDomainEventPublisherAdapter;
+import br.com.fiap.oficina.ordemservico.interfaceadapters.gateways.persistence.jpa.EstoqueVerificadorAdapter;
+import br.com.fiap.oficina.ordemservico.interfaceadapters.gateways.persistence.jpa.OrcamentoPersistenceAdapter;
+import br.com.fiap.oficina.ordemservico.frameworks.persistence.jpa.OrcamentoSpringDataRepository;
+import br.com.fiap.oficina.ordemservico.interfaceadapters.gateways.persistence.jpa.OrdemServicoPersistenceAdapter;
+import br.com.fiap.oficina.ordemservico.frameworks.persistence.jpa.SpringDataOrdemServicoRepository;
+import br.com.fiap.oficina.ordemservico.application.gateways.OrcamentoRepositoryPort;
+import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoRepositoryPort;
+import br.com.fiap.oficina.ordemservico.application.gateways.PublicarEventoPort;
+import br.com.fiap.oficina.ordemservico.application.gateways.VerificadorEstoquePort;
+import br.com.fiap.oficina.ordemservico.application.usecases.interactors.OrcamentoApplicationService;
+import br.com.fiap.oficina.ordemservico.application.usecases.interactors.OrdemServicoApplicationService;
+import br.com.fiap.oficina.servico.application.gateways.ServicoRepositoryPort;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class OrdemServicoConfiguration {
+
+    @Bean
+    public OrdemServicoApplicationService ordemServicoApplicationService(
+            OrdemServicoRepositoryPort ordemServicoRepositoryPort,
+            OrcamentoRepositoryPort orcamentoRepositoryPort,
+            PublicarEventoPort publicarEventoPort) {
+        return new OrdemServicoApplicationService(
+                ordemServicoRepositoryPort,
+                orcamentoRepositoryPort,
+                publicarEventoPort);
+    }
+
+    @Bean
+    public OrcamentoApplicationService orcamentoApplicationService(
+            OrcamentoRepositoryPort orcamentoRepositoryPort,
+            OrdemServicoRepositoryPort ordemServicoRepositoryPort,
+            ServicoRepositoryPort servicoRepositoryPort,
+            EstoqueRepositoryPort estoqueRepositoryPort,
+            VerificadorEstoquePort verificadorEstoquePort,
+            PublicarEventoPort publicarEventoPort) {
+        return new OrcamentoApplicationService(
+                orcamentoRepositoryPort,
+                ordemServicoRepositoryPort,
+                servicoRepositoryPort,
+                estoqueRepositoryPort,
+                verificadorEstoquePort,
+                publicarEventoPort);
+    }
+
+    @Bean
+    public OrdemServicoRepositoryPort ordemServicoRepositoryPort(
+            SpringDataOrdemServicoRepository springDataRepository,
+            OrcamentoSpringDataRepository orcamentoSpringDataRepository) {
+        return new OrdemServicoPersistenceAdapter(springDataRepository, orcamentoSpringDataRepository);
+    }
+
+    @Bean
+    public OrcamentoRepositoryPort orcamentoRepositoryPort(OrcamentoSpringDataRepository springDataRepository) {
+        return new OrcamentoPersistenceAdapter(springDataRepository);
+    }
+
+    @Bean
+    public VerificadorEstoquePort verificadorEstoquePort(EstoqueRepositoryPort estoqueRepositoryPort) {
+        return new EstoqueVerificadorAdapter(estoqueRepositoryPort);
+    }
+
+    @Bean
+    public PublicarEventoPort publicarEventoPort(ApplicationEventPublisher eventPublisher) {
+        return new SpringDomainEventPublisherAdapter(eventPublisher);
+    }
+}

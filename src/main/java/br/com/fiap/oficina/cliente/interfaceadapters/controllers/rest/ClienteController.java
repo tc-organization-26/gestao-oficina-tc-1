@@ -1,0 +1,115 @@
+package br.com.fiap.oficina.cliente.interfaceadapters.controllers.rest;
+
+import br.com.fiap.oficina.cliente.interfaceadapters.controllers.rest.request.AtualizarClienteRequest;
+import br.com.fiap.oficina.cliente.interfaceadapters.controllers.rest.request.CadastrarClienteRequest;
+import br.com.fiap.oficina.cliente.interfaceadapters.presenters.rest.response.ClienteResponse;
+import br.com.fiap.oficina.cliente.interfaceadapters.presenters.rest.response.ConsultarVeiculosDoClienteResponse;
+import br.com.fiap.oficina.cliente.application.dtos.AtualizarClienteCommand;
+import br.com.fiap.oficina.cliente.application.dtos.CadastrarClienteCommand;
+import br.com.fiap.oficina.cliente.application.usecases.AtualizarClienteUseCase;
+import br.com.fiap.oficina.cliente.application.usecases.CadastrarClienteUseCase;
+import br.com.fiap.oficina.cliente.application.usecases.ConsultarClienteUseCase;
+import br.com.fiap.oficina.cliente.application.usecases.ConsultarTodosClientesUseCase;
+import br.com.fiap.oficina.cliente.application.usecases.ExcluirClienteUseCase;
+import br.com.fiap.oficina.cliente.domain.valueobjects.ClienteId;
+import br.com.fiap.oficina.veiculo.application.dtos.ConsultarVeiculosPorClienteCommand;
+import br.com.fiap.oficina.veiculo.application.usecases.ConsultarVeiculosPorClienteUseCase;
+import jakarta.validation.Valid;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/clientes")
+public class ClienteController {
+
+    private final CadastrarClienteUseCase cadastrarClienteUseCase;
+    private final AtualizarClienteUseCase atualizarClienteUseCase;
+    private final ConsultarClienteUseCase consultarClienteUseCase;
+    private final ConsultarTodosClientesUseCase consultarTodosClientesUseCase;
+    private final ExcluirClienteUseCase excluirClienteUseCase;
+    private final ConsultarVeiculosPorClienteUseCase consultarVeiculosPorClienteUseCase;
+
+    public ClienteController(
+            CadastrarClienteUseCase cadastrarClienteUseCase,
+            AtualizarClienteUseCase atualizarClienteUseCase,
+            ConsultarClienteUseCase consultarClienteUseCase,
+            ConsultarTodosClientesUseCase consultarTodosClientesUseCase,
+            ExcluirClienteUseCase excluirClienteUseCase,
+            ConsultarVeiculosPorClienteUseCase consultarVeiculosPorClienteUseCase) {
+        this.cadastrarClienteUseCase = cadastrarClienteUseCase;
+        this.atualizarClienteUseCase = atualizarClienteUseCase;
+        this.consultarClienteUseCase = consultarClienteUseCase;
+        this.consultarTodosClientesUseCase = consultarTodosClientesUseCase;
+        this.excluirClienteUseCase = excluirClienteUseCase;
+        this.consultarVeiculosPorClienteUseCase = consultarVeiculosPorClienteUseCase;
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public ClienteResponse cadastrar(@Valid @RequestBody CadastrarClienteRequest request) {
+        var command = new CadastrarClienteCommand(
+                request.nome(),
+                request.cpfCnpj(),
+                request.email(),
+                request.telefone());
+
+        return ClienteResponse.from(cadastrarClienteUseCase.cadastrar(command));
+    }
+
+    @PutMapping("/{id}")
+    public ClienteResponse atualizar(
+            @PathVariable UUID id,
+            @Valid @RequestBody AtualizarClienteRequest request) {
+        var command = new AtualizarClienteCommand(
+                id,
+                request.nome(),
+                request.email(),
+                request.telefone());
+
+        return ClienteResponse.from(atualizarClienteUseCase.atualizar(command));
+    }
+
+    @GetMapping("/{id}")
+    public ClienteResponse consultarPorId(@PathVariable UUID id) {
+        return ClienteResponse.from(consultarClienteUseCase.consultarPorId(new ClienteId(id)));
+    }
+
+    @GetMapping("/documento/{cpfCnpj}")
+    public ClienteResponse consultarPorDocumento(@PathVariable String cpfCnpj) {
+        return ClienteResponse.from(consultarClienteUseCase.consultarPorDocumento(cpfCnpj));
+    }
+
+    @GetMapping
+    public List<ClienteResponse> consultarTodos() {
+        return consultarTodosClientesUseCase.consultarTodos().stream()
+                .map(ClienteResponse::from)
+                .toList();
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void excluir(@PathVariable UUID id) {
+        excluirClienteUseCase.excluir(new ClienteId(id));
+    }
+
+    @GetMapping("/{id}/veiculos")
+    public List<ConsultarVeiculosDoClienteResponse> consultarVeiculosDoCliente(@PathVariable UUID id) {
+        var command = new ConsultarVeiculosPorClienteCommand(id);
+
+        return consultarVeiculosPorClienteUseCase.consultarPorCliente(command).stream()
+                .map(ConsultarVeiculosDoClienteResponse::from)
+                .toList();
+    }
+}
