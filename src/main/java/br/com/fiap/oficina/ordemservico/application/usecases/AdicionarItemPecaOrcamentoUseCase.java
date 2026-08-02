@@ -1,8 +1,8 @@
 package br.com.fiap.oficina.ordemservico.application.usecases;
 
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemPecaOrcamentoCommand;
-import br.com.fiap.oficina.ordemservico.domain.entities.Orcamento;
+import br.com.fiap.oficina.ordemservico.domain.entities.OrdemServico;
 
 public interface AdicionarItemPecaOrcamentoUseCase {
-    Orcamento adicionarItemPeca(AdicionarItemPecaOrcamentoCommand command);
+    OrdemServico adicionarItemPeca(AdicionarItemPecaOrcamentoCommand command);
 }

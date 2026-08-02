@@ -56,7 +56,7 @@ public class OrcamentoApplicationService implements
     }
 
     @Override
-    public Orcamento adicionarItemServico(AdicionarItemServicoOrcamentoCommand command) {
+    public OrdemServico adicionarItemServico(AdicionarItemServicoOrcamentoCommand command) {
         var ordemServicoId = new OrdemServicoId(command.ordemId());
         var orcamento = orcamentoRepository.buscarPorOrdemServicoId(ordemServicoId)
                 .orElseThrow(() -> new DomainException("Orcamento nao encontrado para a ordem: " + command.ordemId()));
@@ -64,11 +64,12 @@ public class OrcamentoApplicationService implements
                 .orElseThrow(() -> new DomainException("Servico nao encontrado: " + command.servicoCodigo()));
         var item = new OrcamentoItemServico(servico.id(), command.quantidade());
         orcamento.adicionarItemServico(item);
-        return orcamentoRepository.salvar(orcamento);
+        orcamentoRepository.salvar(orcamento);
+        return buscarOrdemServicoAtualizada(ordemServicoId);
     }
 
     @Override
-    public Orcamento adicionarItemPeca(AdicionarItemPecaOrcamentoCommand command) {
+    public OrdemServico adicionarItemPeca(AdicionarItemPecaOrcamentoCommand command) {
         var ordemServicoId = new OrdemServicoId(command.ordemId());
         var orcamento = orcamentoRepository.buscarPorOrdemServicoId(ordemServicoId)
                 .orElseThrow(() -> new DomainException("Orcamento nao encontrado para a ordem: " + command.ordemId()));
@@ -83,11 +84,12 @@ public class OrcamentoApplicationService implements
                     command.quantidade()));
         }
 
-        return orcamentoRepository.salvar(orcamento);
+        orcamentoRepository.salvar(orcamento);
+        return buscarOrdemServicoAtualizada(ordemServicoId);
     }
 
     @Override
-    public void fechar(FecharOrcamentoCommand command) {
+    public OrdemServico fechar(FecharOrcamentoCommand command) {
         var ordemServicoId = new OrdemServicoId(command.ordemId());
         var ordemServico = ordemServicoRepository.buscarPorId(ordemServicoId)
                 .orElseThrow(() -> new DomainException("Ordem de servico nao encontrada: " + command.ordemId()));
@@ -96,6 +98,12 @@ public class OrcamentoApplicationService implements
                 .orElseThrow(() -> new DomainException("Orcamento nao encontrado: " + command.ordemId()));
 
         fecharOrcamentoComSucesso(ordemServico, orcamento);
+        return buscarOrdemServicoAtualizada(ordemServicoId);
+    }
+
+    private OrdemServico buscarOrdemServicoAtualizada(OrdemServicoId ordemServicoId) {
+        return ordemServicoRepository.buscarPorId(ordemServicoId)
+                .orElseThrow(() -> new DomainException("Ordem de servico nao encontrada: " + ordemServicoId.value()));
     }
 
     private Orcamento fecharOrcamentoComSucesso(OrdemServico ordemServico, Orcamento orcamento) {

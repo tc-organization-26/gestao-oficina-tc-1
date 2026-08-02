@@ -30,7 +30,6 @@ import br.com.fiap.oficina.ordemservico.domain.valueobjects.OrdemServicoId;
 import br.com.fiap.oficina.ordemservico.domain.enums.StatusOrdemServico;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -134,38 +133,34 @@ public class OrdemServicoController {
     }
 
     @PostMapping("/{id}/diagnostico")
-    public ResponseEntity<Void> registrarDiagnostico(
+    public OrdemServicoResponse registrarDiagnostico(
             @PathVariable UUID id,
             @Valid @RequestBody RegistrarDiagnosticoRequest request) {
         var command = new RegistrarDiagnosticoCommand(id, request.descricao());
-        registrarDiagnosticoUseCase.registrarDiagnostico(command);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return OrdemServicoResponse.from(registrarDiagnosticoUseCase.registrarDiagnostico(command));
     }
 
     @PostMapping("/{ordemId}/orcamento/servicos")
-    public ResponseEntity<Void> adicionarItemServicoAoOrcamento(
+    public OrdemServicoResponse adicionarItemServicoAoOrcamento(
             @PathVariable UUID ordemId,
             @Valid @RequestBody AdicionarItemServicoOrcamentoRequest request) {
         var cmd = new AdicionarItemServicoOrcamentoCommand(ordemId, request.codigo(), request.quantidade());
-        adicionarItemServicoOrcamentoUseCase.adicionarItemServico(cmd);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return OrdemServicoResponse.from(adicionarItemServicoOrcamentoUseCase.adicionarItemServico(cmd));
     }
 
     @PostMapping("/{ordemId}/orcamento/pecas")
-    public ResponseEntity<Void> adicionarItemPecaAoOrcamento(
+    public OrdemServicoResponse adicionarItemPecaAoOrcamento(
             @PathVariable UUID ordemId,
             @Valid @RequestBody AdicionarItemPecaOrcamentoRequest request) {
         var cmd = new AdicionarItemPecaOrcamentoCommand(ordemId, request.codigo(), request.quantidade());
-        adicionarItemPecaOrcamentoUseCase.adicionarItemPeca(cmd);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return OrdemServicoResponse.from(adicionarItemPecaOrcamentoUseCase.adicionarItemPeca(cmd));
     }
 
     @PostMapping("/{ordemId}/orcamento/fechar")
-    public ResponseEntity<Void> fecharOrcamento(
+    public OrdemServicoResponse fecharOrcamento(
             @PathVariable UUID ordemId,
             @RequestBody(required = false) FecharOrcamentoRequest request) {
-        fecharOrcamentoUseCase.fechar(new FecharOrcamentoCommand(ordemId));
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return OrdemServicoResponse.from(fecharOrcamentoUseCase.fechar(new FecharOrcamentoCommand(ordemId)));
     }
 
     @PostMapping("/{ordemId}/orcamento/aprovacao")

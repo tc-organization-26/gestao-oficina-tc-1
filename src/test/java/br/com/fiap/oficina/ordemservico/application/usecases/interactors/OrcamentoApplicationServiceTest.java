@@ -41,17 +41,31 @@ class OrcamentoApplicationServiceTest {
         var orcamentoExistente = Orcamento.novo(new OrdemServicoId(ordemId));
         var repository = new FakeOrcamentoRepository(Optional.of(orcamentoExistente));
         var servico = novoServico("SRV-001");
-        var service = service(repository, new FakeOrdemServicoRepository(Optional.empty()), new FakeServicoRepository(Optional.of(servico)), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
+        var ordem = new OrdemServico(
+                new OrdemServicoId(ordemId),
+                null,
+                new ClienteId(UUID.randomUUID()),
+                new VeiculoId(UUID.randomUUID()),
+                StatusOrdemServico.RECEBIDA,
+                "Revisao",
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                null);
+        var service = service(repository, new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeServicoRepository(Optional.of(servico)), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
 
-        var orcamento = service.adicionarItemServico(
+        var retornada = service.adicionarItemServico(
                 new AdicionarItemServicoOrcamentoCommand(ordemId, "SRV-001", 1.0));
 
-        assertEquals(new OrdemServicoId(ordemId), orcamento.ordemServicoId());
-        assertNotEquals(ordemId, orcamento.id().value());
-        assertEquals(1, orcamento.itensServico().size());
-        assertEquals(servico.id(), orcamento.itensServico().get(0).servicoId());
-        assertEquals(StatusOrcamento.ABERTO, orcamento.status());
-        assertSame(orcamento, repository.salvo);
+        assertEquals(new OrdemServicoId(ordemId), repository.salvo.ordemServicoId());
+        assertNotEquals(ordemId, repository.salvo.id().value());
+        assertEquals(1, repository.salvo.itensServico().size());
+        assertEquals(servico.id(), repository.salvo.itensServico().get(0).servicoId());
+        assertEquals(StatusOrcamento.ABERTO, repository.salvo.status());
+        assertSame(ordem, retornada);
     }
 
     @Test
@@ -81,13 +95,14 @@ class OrcamentoApplicationServiceTest {
         var ordemRepository = new FakeOrdemServicoRepository(Optional.of(ordem));
         var service = service(repository, ordemRepository, new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.of(itemEstoque)), new FakeVerificadorEstoque(true), eventos);
 
-        var orcamento = service.adicionarItemPeca(
+        var retornada = service.adicionarItemPeca(
                 new AdicionarItemPecaOrcamentoCommand(ordem.id().value(), "PEC-001", 2.0));
 
-        assertEquals(1, orcamento.itensPeca().size());
-        assertEquals(itemEstoque.id(), orcamento.itensPeca().get(0).itemEstoqueId());
-        assertEquals(StatusOrcamento.ABERTO, orcamento.status());
-        assertNull(orcamento.dataFechamento());
+        assertSame(ordem, retornada);
+        assertEquals(1, repository.salvo.itensPeca().size());
+        assertEquals(itemEstoque.id(), repository.salvo.itensPeca().get(0).itemEstoqueId());
+        assertEquals(StatusOrcamento.ABERTO, repository.salvo.status());
+        assertNull(repository.salvo.dataFechamento());
         assertNull(ordemRepository.salvo);
         assertTrue(eventos.isEmpty());
     }
@@ -113,25 +128,29 @@ class OrcamentoApplicationServiceTest {
         var ordemRepository = new FakeOrdemServicoRepository(Optional.of(ordem));
         var service = service(orcamentoRepository, ordemRepository, new FakeServicoRepository(Optional.of(servico)), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), eventos);
 
-        var orcamento = service.adicionarItemServico(
+        var retornada = service.adicionarItemServico(
                 new AdicionarItemServicoOrcamentoCommand(ordem.id().value(), "SRV-002", 1.0));
 
-        assertEquals(StatusOrcamento.ABERTO, orcamento.status());
+        assertSame(ordem, retornada);
+        assertEquals(StatusOrcamento.ABERTO, orcamentoRepository.salvo.status());
         assertNull(ordemRepository.salvo);
         assertTrue(eventos.isEmpty());
     }
 
     @Test
     void adicionarItemPecaMarcaParaVerificacaoEPublicaEventoQuandoEstoqueIndisponivel() {
-        var ordemId = UUID.randomUUID();
+        var ordem = novaOrdemEmDiagnostico();
+        var ordemId = ordem.id().value();
         var itemEstoque = novoItemEstoque("PEC-001");
         var eventos = new ArrayList<>();
-        var service = service(new FakeOrcamentoRepository(Optional.of(Orcamento.novo(new OrdemServicoId(ordemId)))), new FakeOrdemServicoRepository(Optional.empty()), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.of(itemEstoque)), new FakeVerificadorEstoque(false), eventos);
+        var orcamentoRepository = new FakeOrcamentoRepository(Optional.of(Orcamento.novo(new OrdemServicoId(ordemId))));
+        var service = service(orcamentoRepository, new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.of(itemEstoque)), new FakeVerificadorEstoque(false), eventos);
 
-        var orcamento = service.adicionarItemPeca(
+        var retornada = service.adicionarItemPeca(
                 new AdicionarItemPecaOrcamentoCommand(ordemId, "PEC-001", 2.0));
 
-        assertEquals(StatusOrcamento.ABERTO, orcamento.status());
+        assertSame(ordem, retornada);
+        assertEquals(StatusOrcamento.ABERTO, orcamentoRepository.salvo.status());
         assertEquals(1, eventos.size());
         assertInstanceOf(FaltaPecaEstoqueEvent.class, eventos.get(0));
     }
@@ -145,8 +164,9 @@ class OrcamentoApplicationServiceTest {
         var ordemRepository = new FakeOrdemServicoRepository(Optional.of(ordem));
         var service = service(orcamentoRepository, ordemRepository, new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), eventos);
 
-        service.fechar(new FecharOrcamentoCommand(ordem.id().value()));
+        var retornada = service.fechar(new FecharOrcamentoCommand(ordem.id().value()));
 
+        assertSame(ordem, retornada);
         assertEquals(StatusOrcamento.ENVIADO, orcamentoRepository.salvo.status());
         assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, ordemRepository.salvo.status());
         assertEquals(1, eventos.size());
