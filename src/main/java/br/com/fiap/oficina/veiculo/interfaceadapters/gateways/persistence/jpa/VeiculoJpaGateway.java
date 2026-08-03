@@ -3,19 +3,17 @@ package br.com.fiap.oficina.veiculo.interfaceadapters.gateways.persistence.jpa;
 import br.com.fiap.oficina.veiculo.frameworks.persistence.jpa.*;
 
 import br.com.fiap.oficina.cliente.domain.valueobjects.ClienteId;
-import br.com.fiap.oficina.veiculo.application.gateways.VeiculoRepositoryPort;
+import br.com.fiap.oficina.veiculo.application.gateways.VeiculoGateway;
 import br.com.fiap.oficina.veiculo.domain.entities.Veiculo;
 import br.com.fiap.oficina.veiculo.domain.valueobjects.VeiculoId;
-import br.com.fiap.oficina.veiculo.domain.valueobjects.VeiculoPlaca;
-
 import java.util.List;
 import java.util.Optional;
 
-public class VeiculoPersistenceAdapter implements VeiculoRepositoryPort {
+public class VeiculoJpaGateway implements VeiculoGateway {
 
     private final SpringDataVeiculoRepository repository;
 
-    public VeiculoPersistenceAdapter(SpringDataVeiculoRepository repository) {
+    public VeiculoJpaGateway(SpringDataVeiculoRepository repository) {
         this.repository = repository;
     }
 

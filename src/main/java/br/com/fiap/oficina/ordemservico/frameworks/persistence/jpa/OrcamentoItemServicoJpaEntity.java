@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -20,11 +21,11 @@ public class OrcamentoItemServicoJpaEntity {
     private UUID servicoId;
 
     @Column(name = "quantidade")
-    private double quantidade;
+    private BigDecimal quantidade;
 
     public OrcamentoItemServicoJpaEntity() {}
 
-    public OrcamentoItemServicoJpaEntity(UUID id, UUID orcamentoId, UUID servicoId, double quantidade) {
+    public OrcamentoItemServicoJpaEntity(UUID id, UUID orcamentoId, UUID servicoId, BigDecimal quantidade) {
         this.id = id;
         this.orcamentoId = orcamentoId;
         this.servicoId = servicoId;
@@ -34,5 +35,5 @@ public class OrcamentoItemServicoJpaEntity {
     public UUID getId() { return id; }
     public UUID getOrcamentoId() { return orcamentoId; }
     public UUID getServicoId() { return servicoId; }
-    public double getQuantidade() { return quantidade; }
+    public BigDecimal getQuantidade() { return quantidade; }
 }

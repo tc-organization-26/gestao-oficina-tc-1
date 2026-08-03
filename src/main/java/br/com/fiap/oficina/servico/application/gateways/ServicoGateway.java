@@ -6,7 +6,7 @@ import java.util.Optional;
 import br.com.fiap.oficina.servico.domain.entities.Servico;
 import br.com.fiap.oficina.servico.domain.valueobjects.ServicoId;
 
-public interface ServicoRepositoryPort {
+public interface ServicoGateway {
 
     boolean existePorCodigo(String codigo);
 

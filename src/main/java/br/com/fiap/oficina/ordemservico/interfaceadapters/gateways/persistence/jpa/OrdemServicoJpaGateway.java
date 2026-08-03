@@ -2,7 +2,7 @@ package br.com.fiap.oficina.ordemservico.interfaceadapters.gateways.persistence.
 
 import br.com.fiap.oficina.ordemservico.frameworks.persistence.jpa.*;
 
-import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoRepositoryPort;
+import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoGateway;
 import br.com.fiap.oficina.ordemservico.domain.entities.OrdemServico;
 import br.com.fiap.oficina.ordemservico.domain.valueobjects.OrdemServicoId;
 import br.com.fiap.oficina.shared.domain.exceptions.DomainException;
@@ -11,17 +11,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class OrdemServicoPersistenceAdapter implements OrdemServicoRepositoryPort {
+public class OrdemServicoJpaGateway implements OrdemServicoGateway {
 
     private final SpringDataOrdemServicoRepository repository;
-    private final OrcamentoSpringDataRepository orcamentoRepository;
+    private final OrcamentoSpringDataRepository orcamentoSpringDataRepository;
     private final OrdemServicoJpaMapper mapper = new OrdemServicoJpaMapper();
 
-    public OrdemServicoPersistenceAdapter(
+    public OrdemServicoJpaGateway(
             SpringDataOrdemServicoRepository repository,
-            OrcamentoSpringDataRepository orcamentoRepository) {
+            OrcamentoSpringDataRepository orcamentoSpringDataRepository) {
         this.repository = repository;
-        this.orcamentoRepository = orcamentoRepository;
+        this.orcamentoSpringDataRepository = orcamentoSpringDataRepository;
     }
 
     @Override
@@ -62,7 +62,7 @@ public class OrdemServicoPersistenceAdapter implements OrdemServicoRepositoryPor
     }
 
     private OrdemServico toDomainComOrcamento(OrdemServicoJpaEntity entity) {
-        var orcamento = orcamentoRepository.findByOrdemServicoId(entity.getId())
+        var orcamento = orcamentoSpringDataRepository.findByOrdemServicoId(entity.getId())
                 .map(OrcamentoMapper::toDomain)
                 .orElse(null);
         return mapper.toDomain(entity, orcamento);

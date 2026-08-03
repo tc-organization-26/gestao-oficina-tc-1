@@ -1,9 +1,9 @@
 package br.com.fiap.oficina.autenticacao.interfaceadapters.gateways.security;
 
-import br.com.fiap.oficina.autenticacao.application.gateways.VerificarSenhaPort;
+import br.com.fiap.oficina.autenticacao.application.gateways.VerificarSenhaGateway;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-public class PasswordEncoderAdapter implements VerificarSenhaPort {
+public class BCryptSenhaGateway implements VerificarSenhaGateway {
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 

@@ -1,9 +1,5 @@
 package br.com.fiap.oficina.ordemservico.domain.entities;
 
-import br.com.fiap.oficina.ordemservico.domain.enums.*;
-
-import br.com.fiap.oficina.ordemservico.domain.valueobjects.*;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 import br.com.fiap.oficina.servico.domain.valueobjects.ServicoId;
@@ -17,22 +13,22 @@ class OrcamentoItemServicoTest {
     void criaItemServicoValido() {
         var servicoId = new ServicoId(UUID.randomUUID());
 
-        var item = new OrcamentoItemServico(servicoId, 2.0);
+        var item = new OrcamentoItemServico(servicoId, java.math.BigDecimal.valueOf(2));
 
         assertEquals(servicoId, item.servicoId());
-        assertEquals(2.0, item.quantidade());
+        assertEquals(java.math.BigDecimal.valueOf(2), item.quantidade());
     }
 
     @Test
     void rejeitaServicoNulo() {
-        assertThrows(DomainException.class, () -> new OrcamentoItemServico(null, 1.0));
+        assertThrows(DomainException.class, () -> new OrcamentoItemServico(null, java.math.BigDecimal.ONE));
     }
 
     @Test
     void rejeitaQuantidadeMenorOuIgualAZero() {
         var servicoId = new ServicoId(UUID.randomUUID());
 
-        assertThrows(DomainException.class, () -> new OrcamentoItemServico(servicoId, 0));
-        assertThrows(DomainException.class, () -> new OrcamentoItemServico(servicoId, -1));
+        assertThrows(DomainException.class, () -> new OrcamentoItemServico(servicoId, java.math.BigDecimal.ZERO));
+        assertThrows(DomainException.class, () -> new OrcamentoItemServico(servicoId, java.math.BigDecimal.valueOf(-1)));
     }
 }

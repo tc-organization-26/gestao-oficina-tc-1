@@ -7,7 +7,7 @@ import br.com.fiap.oficina.cliente.application.usecases.CadastrarClienteUseCase;
 import br.com.fiap.oficina.cliente.application.usecases.ConsultarClienteUseCase;
 import br.com.fiap.oficina.cliente.application.usecases.ConsultarTodosClientesUseCase;
 import br.com.fiap.oficina.cliente.application.usecases.ExcluirClienteUseCase;
-import br.com.fiap.oficina.cliente.application.gateways.ClienteRepositoryPort;
+import br.com.fiap.oficina.cliente.application.gateways.ClienteGateway;
 import br.com.fiap.oficina.cliente.domain.entities.Cliente;
 import br.com.fiap.oficina.cliente.domain.valueobjects.ClienteId;
 import br.com.fiap.oficina.cliente.domain.valueobjects.CpfCnpj;
@@ -21,17 +21,17 @@ public class ClienteApplicationService implements CadastrarClienteUseCase,
         ConsultarTodosClientesUseCase,
         ExcluirClienteUseCase {
 
-    private final ClienteRepositoryPort clienteRepository;
+    private final ClienteGateway clienteGateway;
 
-    public ClienteApplicationService(ClienteRepositoryPort clienteRepository) {
-        this.clienteRepository = clienteRepository;
+    public ClienteApplicationService(ClienteGateway clienteGateway) {
+        this.clienteGateway = clienteGateway;
     }
 
     @Override
     public Cliente cadastrar(CadastrarClienteCommand command) {
         var cpfCnpj = new CpfCnpj(command.cpfCnpj());
 
-        if (clienteRepository.existePorCpfCnpj(cpfCnpj)) {
+        if (clienteGateway.existePorCpfCnpj(cpfCnpj)) {
             throw new DomainException("CPF/CNPJ já cadastrado.");
         }
 
@@ -41,14 +41,14 @@ public class ClienteApplicationService implements CadastrarClienteUseCase,
                 command.email(),
                 command.telefone());
 
-        return clienteRepository.salvar(cliente);
+        return clienteGateway.salvar(cliente);
     }
 
     @Override
     public Cliente atualizar(AtualizarClienteCommand command) {
         var clienteId = new ClienteId(command.clienteId());
 
-        var cliente = clienteRepository.buscarPorId(clienteId)
+        var cliente = clienteGateway.buscarPorId(clienteId)
                 .orElseThrow(() -> new DomainException("Cliente não encontrado."));
 
         cliente.atualizar(
@@ -56,29 +56,29 @@ public class ClienteApplicationService implements CadastrarClienteUseCase,
                 command.email(),
                 command.telefone());
 
-        return clienteRepository.salvar(cliente);
+        return clienteGateway.salvar(cliente);
     }
 
     @Override
     public Cliente consultarPorId(ClienteId clienteId) {
-        return clienteRepository.buscarPorId(clienteId)
+        return clienteGateway.buscarPorId(clienteId)
                 .orElseThrow(() -> new DomainException("Cliente não encontrado."));
     }
 
     @Override
     public Cliente consultarPorDocumento(String cpfCnpj) {
-        return clienteRepository.buscarPorCpfCnpj(new CpfCnpj(cpfCnpj))
+        return clienteGateway.buscarPorCpfCnpj(new CpfCnpj(cpfCnpj))
                 .orElseThrow(() -> new DomainException("Cliente não encontrado."));
     }
 
     @Override
     public List<Cliente> consultarTodos() {
-        return clienteRepository.buscarTodos();
+        return clienteGateway.buscarTodos();
     }
 
     @Override
     public void excluir(ClienteId clienteId) {
         consultarPorId(clienteId);
-        clienteRepository.excluirPorId(clienteId);
+        clienteGateway.excluirPorId(clienteId);
     }
 }

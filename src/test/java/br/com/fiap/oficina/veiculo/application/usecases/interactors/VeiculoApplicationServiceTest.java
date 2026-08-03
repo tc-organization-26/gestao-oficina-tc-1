@@ -6,7 +6,7 @@ import br.com.fiap.oficina.cliente.domain.valueobjects.ClienteId;
 import br.com.fiap.oficina.shared.domain.exceptions.DomainException;
 import br.com.fiap.oficina.veiculo.application.dtos.AtualizarVeiculoCommand;
 import br.com.fiap.oficina.veiculo.application.dtos.CadastrarVeiculoCommand;
-import br.com.fiap.oficina.veiculo.application.gateways.VeiculoRepositoryPort;
+import br.com.fiap.oficina.veiculo.application.gateways.VeiculoGateway;
 import br.com.fiap.oficina.veiculo.domain.entities.Veiculo;
 import br.com.fiap.oficina.veiculo.domain.valueobjects.VeiculoId;
 import br.com.fiap.oficina.veiculo.domain.valueobjects.VeiculoPlaca;
@@ -83,7 +83,7 @@ class VeiculoApplicationServiceTest {
         assertEquals(existente.id(), repository.excluido);
     }
 
-    private static class FakeRepository implements VeiculoRepositoryPort {
+    private static class FakeRepository implements VeiculoGateway {
         private final boolean existe;
         private final Optional<Veiculo> busca;
         private final List<Veiculo> todos;

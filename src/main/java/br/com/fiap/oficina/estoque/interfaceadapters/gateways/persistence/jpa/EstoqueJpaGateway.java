@@ -2,18 +2,18 @@ package br.com.fiap.oficina.estoque.interfaceadapters.gateways.persistence.jpa;
 
 import br.com.fiap.oficina.estoque.frameworks.persistence.jpa.*;
 
-import br.com.fiap.oficina.estoque.application.gateways.EstoqueRepositoryPort;
+import br.com.fiap.oficina.estoque.application.gateways.EstoqueGateway;
 import br.com.fiap.oficina.estoque.domain.entities.ItemEstoque;
 import br.com.fiap.oficina.estoque.domain.valueobjects.ItemEstoqueId;
 
 import java.util.List;
 import java.util.Optional;
 
-public class EstoquePersistenceAdapter implements EstoqueRepositoryPort {
+public class EstoqueJpaGateway implements EstoqueGateway {
 
     private final SpringDataEstoqueRepository repository;
 
-    public EstoquePersistenceAdapter(SpringDataEstoqueRepository repository) {
+    public EstoqueJpaGateway(SpringDataEstoqueRepository repository) {
         this.repository = repository;
     }
 

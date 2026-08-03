@@ -7,7 +7,7 @@ import br.com.fiap.oficina.cliente.domain.entities.Cliente;
 import br.com.fiap.oficina.cliente.domain.valueobjects.ClienteId;
 import br.com.fiap.oficina.cliente.domain.valueobjects.CpfCnpj;
 
-public interface ClienteRepositoryPort {
+public interface ClienteGateway {
 
     boolean existePorCpfCnpj(CpfCnpj cpfCnpj);
 

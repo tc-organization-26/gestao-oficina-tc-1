@@ -1,19 +1,17 @@
 package br.com.fiap.oficina.ordemservico.interfaceadapters.gateways.persistence.jpa;
 
-import br.com.fiap.oficina.ordemservico.frameworks.persistence.jpa.*;
-
-import br.com.fiap.oficina.estoque.application.gateways.EstoqueRepositoryPort;
-import br.com.fiap.oficina.ordemservico.application.gateways.VerificadorEstoquePort;
+import br.com.fiap.oficina.estoque.application.gateways.EstoqueGateway;
+import br.com.fiap.oficina.ordemservico.application.gateways.VerificadorEstoqueGateway;
 import br.com.fiap.oficina.ordemservico.domain.entities.ItemPeca;
 
 import java.util.List;
 
-public class EstoqueVerificadorAdapter implements VerificadorEstoquePort {
+public class EstoqueVerificadorAdapter implements VerificadorEstoqueGateway {
 
-    private final EstoqueRepositoryPort estoqueRepository;
+    private final EstoqueGateway estoqueGateway;
 
-    public EstoqueVerificadorAdapter(EstoqueRepositoryPort estoqueRepository) {
-        this.estoqueRepository = estoqueRepository;
+    public EstoqueVerificadorAdapter(EstoqueGateway estoqueGateway) {
+        this.estoqueGateway = estoqueGateway;
     }
 
     @Override
@@ -23,9 +21,9 @@ public class EstoqueVerificadorAdapter implements VerificadorEstoquePort {
         }
 
         for (ItemPeca peca : itensPeca) {
-            var itemEstoque = estoqueRepository.buscarPorId(peca.itemEstoqueId());
+            var itemEstoque = estoqueGateway.buscarPorId(peca.itemEstoqueId());
             
-            if (itemEstoque.isEmpty() || itemEstoque.get().quantidadeDisponivel().doubleValue() < peca.quantidade()) {
+            if (itemEstoque.isEmpty() || itemEstoque.get().quantidadeDisponivel().compareTo(peca.quantidade()) < 0) {
                 return false; // Item não existe ou quantidade insuficiente
             }
         }

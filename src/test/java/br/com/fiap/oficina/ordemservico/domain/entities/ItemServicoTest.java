@@ -17,22 +17,22 @@ class ItemServicoTest {
     void criaItemServicoValido() {
         var servicoId = new ServicoId(UUID.randomUUID());
 
-        var item = new ItemServico(servicoId, 2.0);
+        var item = new ItemServico(servicoId, java.math.BigDecimal.valueOf(2));
 
         assertEquals(servicoId, item.servicoId());
-        assertEquals(2.0, item.quantidade());
+        assertEquals(java.math.BigDecimal.valueOf(2), item.quantidade());
     }
 
     @Test
     void rejeitaServicoNulo() {
-        assertThrows(DomainException.class, () -> new ItemServico(null, 1.0));
+        assertThrows(DomainException.class, () -> new ItemServico(null, java.math.BigDecimal.ONE));
     }
 
     @Test
     void rejeitaQuantidadeMenorOuIgualAZero() {
         var servicoId = new ServicoId(UUID.randomUUID());
 
-        assertThrows(DomainException.class, () -> new ItemServico(servicoId, 0));
-        assertThrows(DomainException.class, () -> new ItemServico(servicoId, -1));
+        assertThrows(DomainException.class, () -> new ItemServico(servicoId, java.math.BigDecimal.ZERO));
+        assertThrows(DomainException.class, () -> new ItemServico(servicoId, java.math.BigDecimal.valueOf(-1)));
     }
 }

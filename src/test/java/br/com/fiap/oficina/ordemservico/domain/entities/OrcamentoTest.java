@@ -34,8 +34,8 @@ class OrcamentoTest {
     @Test
     void adicionaItensServicoEPeca() {
         var orcamento = Orcamento.novo(OrdemServicoId.novo());
-        var servico = new OrcamentoItemServico(new ServicoId(UUID.randomUUID()), 1.0);
-        var peca = new ItemPeca(new ItemEstoqueId(UUID.randomUUID()), 2.0);
+        var servico = new OrcamentoItemServico(new ServicoId(UUID.randomUUID()), java.math.BigDecimal.ONE);
+        var peca = new ItemPeca(new ItemEstoqueId(UUID.randomUUID()), java.math.BigDecimal.valueOf(2));
 
         orcamento.adicionarItemServico(servico);
         orcamento.adicionarItemPeca(peca);

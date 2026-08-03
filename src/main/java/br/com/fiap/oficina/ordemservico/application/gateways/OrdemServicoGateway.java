@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface OrdemServicoRepositoryPort {
+public interface OrdemServicoGateway {
     OrdemServico salvar(OrdemServico ordemServico);
     Optional<OrdemServico> buscarPorId(OrdemServicoId ordemServicoId);
     List<OrdemServico> buscarPorClienteOrdenado(UUID clienteId);

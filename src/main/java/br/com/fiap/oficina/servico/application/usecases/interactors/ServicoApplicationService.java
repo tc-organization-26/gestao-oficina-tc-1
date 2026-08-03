@@ -7,7 +7,7 @@ import br.com.fiap.oficina.servico.application.usecases.CadastrarServicoUseCase;
 import br.com.fiap.oficina.servico.application.usecases.ConsultarServicoUseCase;
 import br.com.fiap.oficina.servico.application.usecases.ConsultarTodosServicosUseCase;
 import br.com.fiap.oficina.servico.application.usecases.ExcluirServicoUseCase;
-import br.com.fiap.oficina.servico.application.gateways.ServicoRepositoryPort;
+import br.com.fiap.oficina.servico.application.gateways.ServicoGateway;
 import br.com.fiap.oficina.servico.domain.entities.Servico;
 import br.com.fiap.oficina.servico.domain.valueobjects.ServicoId;
 import br.com.fiap.oficina.shared.domain.exceptions.DomainException;
@@ -20,15 +20,15 @@ public class ServicoApplicationService implements CadastrarServicoUseCase,
         ConsultarTodosServicosUseCase,
         ExcluirServicoUseCase {
 
-    private final ServicoRepositoryPort servicoRepository;
+    private final ServicoGateway servicoGateway;
 
-    public ServicoApplicationService(ServicoRepositoryPort servicoRepository) {
-        this.servicoRepository = servicoRepository;
+    public ServicoApplicationService(ServicoGateway servicoGateway) {
+        this.servicoGateway = servicoGateway;
     }
 
     @Override
     public Servico cadastrar(CadastrarServicoCommand command) {
-        if (servicoRepository.existePorCodigo(command.codigo())) {
+        if (servicoGateway.existePorCodigo(command.codigo())) {
             throw new DomainException("Código de serviço já cadastrado.");
         }
 
@@ -38,14 +38,14 @@ public class ServicoApplicationService implements CadastrarServicoUseCase,
                 command.valorUnitario(),
                 command.tempoEstimadoMinutos());
 
-        return servicoRepository.salvar(servico);
+        return servicoGateway.salvar(servico);
     }
 
     @Override
     public Servico atualizar(AtualizarServicoCommand command) {
         ServicoId servicoId = new ServicoId(command.servicoId());
 
-        Servico servico = servicoRepository.buscarPorId(servicoId)
+        Servico servico = servicoGateway.buscarPorId(servicoId)
                 .orElseThrow(() -> new DomainException("Servico não encontrado."));
 
         servico.atualizar(
@@ -54,23 +54,23 @@ public class ServicoApplicationService implements CadastrarServicoUseCase,
                 command.tempoEstimadoMinutos()
         );
 
-        return servicoRepository.salvar(servico);
+        return servicoGateway.salvar(servico);
     }
 
     @Override
     public Servico consultarPorId(ServicoId servicoId) {
-        return servicoRepository.buscarPorId(servicoId)
+        return servicoGateway.buscarPorId(servicoId)
                 .orElseThrow(() -> new DomainException("Servico não encontrado."));
     }
 
     @Override
     public List<Servico> consultarTodos() {
-        return servicoRepository.buscarTodos();
+        return servicoGateway.buscarTodos();
     }
 
     @Override
     public void excluir(ServicoId servicoId) {
         consultarPorId(servicoId);
-        servicoRepository.excluirPorId(servicoId);
+        servicoGateway.excluirPorId(servicoId);
     }
 }

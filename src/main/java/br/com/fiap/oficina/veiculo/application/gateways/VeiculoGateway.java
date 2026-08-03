@@ -7,7 +7,7 @@ import br.com.fiap.oficina.cliente.domain.valueobjects.ClienteId;
 import br.com.fiap.oficina.veiculo.domain.entities.Veiculo;
 import br.com.fiap.oficina.veiculo.domain.valueobjects.VeiculoId;
 
-public interface VeiculoRepositoryPort {
+public interface VeiculoGateway {
 
     boolean existePorPlaca(String placa);
 

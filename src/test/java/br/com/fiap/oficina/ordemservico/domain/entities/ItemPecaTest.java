@@ -17,22 +17,22 @@ class ItemPecaTest {
     void criaItemPecaValido() {
         var itemEstoqueId = new ItemEstoqueId(UUID.randomUUID());
 
-        var peca = new ItemPeca(itemEstoqueId, 3.0);
+        var peca = new ItemPeca(itemEstoqueId, java.math.BigDecimal.valueOf(3));
 
         assertEquals(itemEstoqueId, peca.itemEstoqueId());
-        assertEquals(3.0, peca.quantidade());
+        assertEquals(java.math.BigDecimal.valueOf(3), peca.quantidade());
     }
 
     @Test
     void rejeitaItemEstoqueNulo() {
-        assertThrows(DomainException.class, () -> new ItemPeca(null, 1.0));
+        assertThrows(DomainException.class, () -> new ItemPeca(null, java.math.BigDecimal.ONE));
     }
 
     @Test
     void rejeitaQuantidadeMenorOuIgualAZero() {
         var itemEstoqueId = new ItemEstoqueId(UUID.randomUUID());
 
-        assertThrows(DomainException.class, () -> new ItemPeca(itemEstoqueId, 0));
-        assertThrows(DomainException.class, () -> new ItemPeca(itemEstoqueId, -1));
+        assertThrows(DomainException.class, () -> new ItemPeca(itemEstoqueId, java.math.BigDecimal.ZERO));
+        assertThrows(DomainException.class, () -> new ItemPeca(itemEstoqueId, java.math.BigDecimal.valueOf(-1)));
     }
 }

@@ -1,8 +1,8 @@
 package br.com.fiap.oficina.veiculo.frameworks.config;
 
 import br.com.fiap.oficina.veiculo.frameworks.persistence.jpa.SpringDataVeiculoRepository;
-import br.com.fiap.oficina.veiculo.interfaceadapters.gateways.persistence.jpa.VeiculoPersistenceAdapter;
-import br.com.fiap.oficina.veiculo.application.gateways.VeiculoRepositoryPort;
+import br.com.fiap.oficina.veiculo.interfaceadapters.gateways.persistence.jpa.VeiculoJpaGateway;
+import br.com.fiap.oficina.veiculo.application.gateways.VeiculoGateway;
 import br.com.fiap.oficina.veiculo.application.usecases.interactors.VeiculoApplicationService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,12 +18,12 @@ public class VeiculoConfiguration {
             "consultarVeiculosPorClienteUseCase",
             "excluirVeiculoUseCase"
     })
-    public VeiculoApplicationService veiculoApplicationService(VeiculoRepositoryPort veiculoRepositoryPort) {
-        return new VeiculoApplicationService(veiculoRepositoryPort);
+    public VeiculoApplicationService veiculoApplicationService(VeiculoGateway veiculoGateway) {
+        return new VeiculoApplicationService(veiculoGateway);
     }
 
     @Bean
-    public VeiculoRepositoryPort veiculoRepositoryPort(SpringDataVeiculoRepository springDataRepository) {
-        return new VeiculoPersistenceAdapter(springDataRepository);
+    public VeiculoGateway veiculoGateway(SpringDataVeiculoRepository springDataRepository) {
+        return new VeiculoJpaGateway(springDataRepository);
     }
 }

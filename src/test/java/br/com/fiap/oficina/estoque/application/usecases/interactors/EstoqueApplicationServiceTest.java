@@ -6,7 +6,7 @@ import br.com.fiap.oficina.estoque.application.dtos.AtualizarItemEstoqueCommand;
 import br.com.fiap.oficina.estoque.application.dtos.BaixarItemEstoqueCommand;
 import br.com.fiap.oficina.estoque.application.dtos.CadastrarItemEstoqueCommand;
 import br.com.fiap.oficina.estoque.application.dtos.IncluirItemEstoqueCommand;
-import br.com.fiap.oficina.estoque.application.gateways.EstoqueRepositoryPort;
+import br.com.fiap.oficina.estoque.application.gateways.EstoqueGateway;
 import br.com.fiap.oficina.estoque.domain.entities.ItemEstoque;
 import br.com.fiap.oficina.estoque.domain.valueobjects.ItemEstoqueId;
 import br.com.fiap.oficina.shared.domain.exceptions.DomainException;
@@ -94,7 +94,7 @@ class EstoqueApplicationServiceTest {
         assertThrows(DomainException.class, () -> service.consultarPorId(new ItemEstoqueId(UUID.randomUUID())));
     }
 
-    private static class FakeRepository implements EstoqueRepositoryPort {
+    private static class FakeRepository implements EstoqueGateway {
         private final boolean existe;
         private final Optional<ItemEstoque> busca;
         private final List<ItemEstoque> todos;

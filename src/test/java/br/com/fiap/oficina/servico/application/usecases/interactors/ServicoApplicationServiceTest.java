@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import br.com.fiap.oficina.servico.application.dtos.AtualizarServicoCommand;
 import br.com.fiap.oficina.servico.application.dtos.CadastrarServicoCommand;
-import br.com.fiap.oficina.servico.application.gateways.ServicoRepositoryPort;
+import br.com.fiap.oficina.servico.application.gateways.ServicoGateway;
 import br.com.fiap.oficina.servico.domain.entities.Servico;
 import br.com.fiap.oficina.servico.domain.valueobjects.ServicoId;
 import br.com.fiap.oficina.shared.domain.exceptions.DomainException;
@@ -72,7 +72,7 @@ class ServicoApplicationServiceTest {
         assertEquals(existente.id(), repository.excluido);
     }
 
-    private static class FakeRepository implements ServicoRepositoryPort {
+    private static class FakeRepository implements ServicoGateway {
         private final boolean existe;
         private final Optional<Servico> busca;
         private final List<Servico> todos;

@@ -13,28 +13,28 @@ import java.util.stream.Collectors;
 
 public final class OrcamentoMapper {
 
-    public static Orcamento toDomain(OrcamentoJpaEntity e) {
+    public static Orcamento toDomain(OrcamentoJpaEntity entity) {
         var orcamento = new Orcamento(
-                e.getId(),
-                new br.com.fiap.oficina.ordemservico.domain.valueobjects.OrdemServicoId(e.getOrdemServicoId()),
-                e.getStatus(),
-                e.getDataFechamento()
+                entity.getId(),
+                new br.com.fiap.oficina.ordemservico.domain.valueobjects.OrdemServicoId(entity.getOrdemServicoId()),
+                entity.getStatus(),
+                entity.getDataFechamento()
         );
-        var itens = e.getItens().stream()
-                .map(i -> new OrcamentoItemServico(new ServicoId(i.getServicoId()), i.getQuantidade()))
+        var itens = entity.getItens().stream()
+                .map(item -> new OrcamentoItemServico(new ServicoId(item.getServicoId()), item.getQuantidade()))
                 .collect(Collectors.toList());
         itens.forEach(orcamento::adicionarItemServico);
 
-        var itensPeca = e.getItensPeca().stream()
-                .map(i -> new ItemPeca(new ItemEstoqueId(i.getItemEstoqueId()), i.getQuantidade()))
+        var itensPeca = entity.getItensPeca().stream()
+                .map(item -> new ItemPeca(new ItemEstoqueId(item.getItemEstoqueId()), item.getQuantidade()))
                 .collect(Collectors.toList());
         itensPeca.forEach(orcamento::adicionarItemPeca);
 
         return orcamento;
     }
 
-    public static OrcamentoJpaEntity toJpa(Orcamento orcamento) {
-        var e = new OrcamentoJpaEntity(
+    public static OrcamentoJpaEntity toJpaEntity(Orcamento orcamento) {
+        var entity = new OrcamentoJpaEntity(
                 orcamento.id().value(),
                 orcamento.ordemServicoId().value(),
                 orcamento.status(),
@@ -43,14 +43,14 @@ public final class OrcamentoMapper {
         var itens = orcamento.itens().stream()
                 .map(it -> new OrcamentoItemServicoJpaEntity(UUID.randomUUID(), orcamento.id().value(), it.servicoId().value(), it.quantidade()))
                 .collect(Collectors.toList());
-        e.setItens(itens);
+        entity.setItens(itens);
 
         var itensPeca = orcamento.itensPeca().stream()
                 .map(it -> new OrcamentoItemPecaJpaEntity(UUID.randomUUID(), orcamento.id().value(), it.itemEstoqueId().value(), it.quantidade()))
                 .collect(Collectors.toList());
-        e.setItensPeca(itensPeca);
+        entity.setItensPeca(itensPeca);
 
-        return e;
+        return entity;
     }
 }
 

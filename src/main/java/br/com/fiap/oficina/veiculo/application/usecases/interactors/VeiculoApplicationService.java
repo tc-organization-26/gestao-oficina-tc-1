@@ -11,7 +11,7 @@ import br.com.fiap.oficina.veiculo.application.usecases.ConsultarTodosVeiculosUs
 import br.com.fiap.oficina.veiculo.application.usecases.ConsultarVeiculoUseCase;
 import br.com.fiap.oficina.veiculo.application.usecases.ConsultarVeiculosPorClienteUseCase;
 import br.com.fiap.oficina.veiculo.application.usecases.ExcluirVeiculoUseCase;
-import br.com.fiap.oficina.veiculo.application.gateways.VeiculoRepositoryPort;
+import br.com.fiap.oficina.veiculo.application.gateways.VeiculoGateway;
 import br.com.fiap.oficina.veiculo.domain.entities.Veiculo;
 import br.com.fiap.oficina.veiculo.domain.valueobjects.VeiculoId;
 import br.com.fiap.oficina.veiculo.domain.valueobjects.VeiculoPlaca;
@@ -25,17 +25,17 @@ public class VeiculoApplicationService implements CadastrarVeiculoUseCase,
         ConsultarVeiculosPorClienteUseCase,
         ExcluirVeiculoUseCase {
 
-    private final VeiculoRepositoryPort veiculoRepository;
+    private final VeiculoGateway veiculoGateway;
 
-    public VeiculoApplicationService(VeiculoRepositoryPort veiculoRepository) {
-        this.veiculoRepository = veiculoRepository;
+    public VeiculoApplicationService(VeiculoGateway veiculoGateway) {
+        this.veiculoGateway = veiculoGateway;
     }
 
     @Override
     public Veiculo cadastrar(CadastrarVeiculoCommand command) {
         var placa = VeiculoPlaca.novo(command.placa());
 
-        if (veiculoRepository.existePorPlaca(placa.value())) {
+        if (veiculoGateway.existePorPlaca(placa.value())) {
             throw new DomainException("Placa já cadastrada.");
         }
 
@@ -46,13 +46,13 @@ public class VeiculoApplicationService implements CadastrarVeiculoUseCase,
                 command.modelo(),
                 command.ano());
 
-        return veiculoRepository.salvar(veiculo);
+        return veiculoGateway.salvar(veiculo);
     }
     @Override
     public Veiculo atualizar(AtualizarVeiculoCommand command) {
         VeiculoId veiculoId = new VeiculoId(command.veiculoId());
 
-        Veiculo veiculo = veiculoRepository.buscarPorId(veiculoId)
+        Veiculo veiculo = veiculoGateway.buscarPorId(veiculoId)
                 .orElseThrow(() -> new DomainException("Veiculo não encontrado."));
 
         veiculo.atualizar(
@@ -60,28 +60,28 @@ public class VeiculoApplicationService implements CadastrarVeiculoUseCase,
                 command.modelo(),
                 command.ano());
 
-        return veiculoRepository.salvar(veiculo);
+        return veiculoGateway.salvar(veiculo);
     }
 
     @Override
     public Veiculo consultarPorId(VeiculoId veiculoId) {
-        return veiculoRepository.buscarPorId(veiculoId)
+        return veiculoGateway.buscarPorId(veiculoId)
                 .orElseThrow(() -> new DomainException("Veiculo não encontrado."));
     }
 
     @Override
     public List<Veiculo> consultarTodos() {
-        return veiculoRepository.buscarTodos();
+        return veiculoGateway.buscarTodos();
     }
 
     @Override
     public void excluir(VeiculoId veiculoId) {
         consultarPorId(veiculoId);
-        veiculoRepository.excluirPorId(veiculoId);
+        veiculoGateway.excluirPorId(veiculoId);
     }
 
     @Override
     public List<Veiculo> consultarPorCliente(ConsultarVeiculosPorClienteCommand command) {
-        return veiculoRepository.buscarPorClienteId(new ClienteId(command.clienteId()));
+        return veiculoGateway.buscarPorClienteId(new ClienteId(command.clienteId()));
     }
 }

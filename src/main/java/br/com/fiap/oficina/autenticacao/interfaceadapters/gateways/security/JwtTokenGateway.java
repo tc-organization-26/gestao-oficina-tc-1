@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.autenticacao.interfaceadapters.gateways.security;
 
-import br.com.fiap.oficina.autenticacao.application.gateways.GerarTokenPort;
-import br.com.fiap.oficina.autenticacao.application.gateways.ValidarTokenPort;
+import br.com.fiap.oficina.autenticacao.application.gateways.GerarTokenGateway;
+import br.com.fiap.oficina.autenticacao.application.gateways.ValidarTokenGateway;
 import br.com.fiap.oficina.autenticacao.domain.entities.Usuario;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -14,12 +14,12 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
-public class JwtTokenAdapter implements GerarTokenPort, ValidarTokenPort {
+public class JwtTokenGateway implements GerarTokenGateway, ValidarTokenGateway {
 
     private final SecretKey secretKey;
     private final long expirationSeconds;
 
-    public JwtTokenAdapter(String secret, long expirationSeconds) {
+    public JwtTokenGateway(String secret, long expirationSeconds) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationSeconds = expirationSeconds;
     }

@@ -5,16 +5,16 @@ import br.com.fiap.oficina.cliente.frameworks.persistence.jpa.*;
 import java.util.List;
 import java.util.Optional;
 
-import br.com.fiap.oficina.cliente.application.gateways.ClienteRepositoryPort;
+import br.com.fiap.oficina.cliente.application.gateways.ClienteGateway;
 import br.com.fiap.oficina.cliente.domain.entities.Cliente;
 import br.com.fiap.oficina.cliente.domain.valueobjects.ClienteId;
 import br.com.fiap.oficina.cliente.domain.valueobjects.CpfCnpj;
 
-public class ClientePersistenceAdapter implements ClienteRepositoryPort {
+public class ClienteJpaGateway implements ClienteGateway {
 
     private final SpringDataClienteRepository repository;
 
-    public ClientePersistenceAdapter(SpringDataClienteRepository repository) {
+    public ClienteJpaGateway(SpringDataClienteRepository repository) {
         this.repository = repository;
     }
 

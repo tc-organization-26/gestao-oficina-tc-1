@@ -7,13 +7,13 @@ import java.util.Optional;
 
 import br.com.fiap.oficina.servico.domain.entities.Servico;
 import br.com.fiap.oficina.servico.domain.valueobjects.ServicoId;
-import br.com.fiap.oficina.servico.application.gateways.ServicoRepositoryPort;
+import br.com.fiap.oficina.servico.application.gateways.ServicoGateway;
 
-public class ServicoPersistenceAdapter implements ServicoRepositoryPort {
+public class ServicoJpaGateway implements ServicoGateway {
 
     private final SpringDataServicoRepository repository;
 
-    public ServicoPersistenceAdapter(SpringDataServicoRepository repository) {
+    public ServicoJpaGateway(SpringDataServicoRepository repository) {
         this.repository = repository;
     }
 

@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.ordemservico.application.usecases.interactors;
 
-import br.com.fiap.oficina.estoque.application.gateways.EstoqueRepositoryPort;
+import br.com.fiap.oficina.estoque.application.gateways.EstoqueGateway;
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemPecaOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemServicoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.FecharOrcamentoCommand;
@@ -9,10 +9,10 @@ import br.com.fiap.oficina.ordemservico.application.usecases.AdicionarItemServic
 import br.com.fiap.oficina.ordemservico.application.usecases.AprovarOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.FecharOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.RecusarOrcamentoUseCase;
-import br.com.fiap.oficina.ordemservico.application.gateways.OrcamentoRepositoryPort;
-import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoRepositoryPort;
-import br.com.fiap.oficina.ordemservico.application.gateways.PublicarEventoPort;
-import br.com.fiap.oficina.ordemservico.application.gateways.VerificadorEstoquePort;
+import br.com.fiap.oficina.ordemservico.application.gateways.OrcamentoGateway;
+import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoGateway;
+import br.com.fiap.oficina.ordemservico.application.gateways.PublicadorEventoGateway;
+import br.com.fiap.oficina.ordemservico.application.gateways.VerificadorEstoqueGateway;
 import br.com.fiap.oficina.ordemservico.domain.events.FaltaPecaEstoqueEvent;
 import br.com.fiap.oficina.ordemservico.domain.events.OrcamentoFechadoEvent;
 import br.com.fiap.oficina.ordemservico.domain.entities.ItemPeca;
@@ -21,7 +21,7 @@ import br.com.fiap.oficina.ordemservico.domain.entities.OrcamentoItemServico;
 import br.com.fiap.oficina.ordemservico.domain.entities.OrdemServico;
 import br.com.fiap.oficina.ordemservico.domain.valueobjects.OrdemServicoId;
 import br.com.fiap.oficina.ordemservico.domain.enums.StatusOrcamento;
-import br.com.fiap.oficina.servico.application.gateways.ServicoRepositoryPort;
+import br.com.fiap.oficina.servico.application.gateways.ServicoGateway;
 import br.com.fiap.oficina.shared.domain.exceptions.DomainException;
 
 import java.util.UUID;
@@ -33,68 +33,68 @@ public class OrcamentoApplicationService implements
         AprovarOrcamentoUseCase,
         RecusarOrcamentoUseCase {
 
-    private final OrcamentoRepositoryPort orcamentoRepository;
-    private final OrdemServicoRepositoryPort ordemServicoRepository;
-    private final ServicoRepositoryPort servicoRepository;
-    private final EstoqueRepositoryPort estoqueRepository;
-    private final VerificadorEstoquePort verificadorEstoque;
-    private final PublicarEventoPort publicarEvento;
+    private final OrcamentoGateway orcamentoGateway;
+    private final OrdemServicoGateway ordemServicoGateway;
+    private final ServicoGateway servicoGateway;
+    private final EstoqueGateway estoqueGateway;
+    private final VerificadorEstoqueGateway verificadorEstoque;
+    private final PublicadorEventoGateway publicadorEventoGateway;
 
     public OrcamentoApplicationService(
-            OrcamentoRepositoryPort orcamentoRepository,
-            OrdemServicoRepositoryPort ordemServicoRepository,
-            ServicoRepositoryPort servicoRepository,
-            EstoqueRepositoryPort estoqueRepository,
-            VerificadorEstoquePort verificadorEstoque,
-            PublicarEventoPort publicarEvento) {
-        this.orcamentoRepository = orcamentoRepository;
-        this.ordemServicoRepository = ordemServicoRepository;
-        this.servicoRepository = servicoRepository;
-        this.estoqueRepository = estoqueRepository;
+            OrcamentoGateway orcamentoGateway,
+            OrdemServicoGateway ordemServicoGateway,
+            ServicoGateway servicoGateway,
+            EstoqueGateway estoqueGateway,
+            VerificadorEstoqueGateway verificadorEstoque,
+            PublicadorEventoGateway publicadorEventoGateway) {
+        this.orcamentoGateway = orcamentoGateway;
+        this.ordemServicoGateway = ordemServicoGateway;
+        this.servicoGateway = servicoGateway;
+        this.estoqueGateway = estoqueGateway;
         this.verificadorEstoque = verificadorEstoque;
-        this.publicarEvento = publicarEvento;
+        this.publicadorEventoGateway = publicadorEventoGateway;
     }
 
     @Override
     public OrdemServico adicionarItemServico(AdicionarItemServicoOrcamentoCommand command) {
         var ordemServicoId = new OrdemServicoId(command.ordemId());
-        var orcamento = orcamentoRepository.buscarPorOrdemServicoId(ordemServicoId)
+        var orcamento = orcamentoGateway.buscarPorOrdemServicoId(ordemServicoId)
                 .orElseThrow(() -> new DomainException("Orcamento nao encontrado para a ordem: " + command.ordemId()));
-        var servico = servicoRepository.buscarPorCodigo(command.servicoCodigo().trim().toUpperCase())
+        var servico = servicoGateway.buscarPorCodigo(command.servicoCodigo().trim().toUpperCase())
                 .orElseThrow(() -> new DomainException("Servico nao encontrado: " + command.servicoCodigo()));
         var item = new OrcamentoItemServico(servico.id(), command.quantidade());
         orcamento.adicionarItemServico(item);
-        orcamentoRepository.salvar(orcamento);
+        orcamentoGateway.salvar(orcamento);
         return buscarOrdemServicoAtualizada(ordemServicoId);
     }
 
     @Override
     public OrdemServico adicionarItemPeca(AdicionarItemPecaOrcamentoCommand command) {
         var ordemServicoId = new OrdemServicoId(command.ordemId());
-        var orcamento = orcamentoRepository.buscarPorOrdemServicoId(ordemServicoId)
+        var orcamento = orcamentoGateway.buscarPorOrdemServicoId(ordemServicoId)
                 .orElseThrow(() -> new DomainException("Orcamento nao encontrado para a ordem: " + command.ordemId()));
-        var itemEstoque = estoqueRepository.buscarPorCodigo(command.itemEstoqueCodigo().trim().toUpperCase())
+        var itemEstoque = estoqueGateway.buscarPorCodigo(command.itemEstoqueCodigo().trim().toUpperCase())
                 .orElseThrow(() -> new DomainException("Item de estoque nao encontrado: " + command.itemEstoqueCodigo()));
         var item = new ItemPeca(itemEstoque.id(), command.quantidade());
         orcamento.adicionarItemPeca(item);
         if (!verificadorEstoque.temTodosOsItensDisponiveis(orcamento.itensPeca())) {
-            publicarEvento.publicar(new FaltaPecaEstoqueEvent(
+            publicadorEventoGateway.publicar(new FaltaPecaEstoqueEvent(
                     command.ordemId(),
                     itemEstoque.id().value(),
                     command.quantidade()));
         }
 
-        orcamentoRepository.salvar(orcamento);
+        orcamentoGateway.salvar(orcamento);
         return buscarOrdemServicoAtualizada(ordemServicoId);
     }
 
     @Override
     public OrdemServico fechar(FecharOrcamentoCommand command) {
         var ordemServicoId = new OrdemServicoId(command.ordemId());
-        var ordemServico = ordemServicoRepository.buscarPorId(ordemServicoId)
+        var ordemServico = ordemServicoGateway.buscarPorId(ordemServicoId)
                 .orElseThrow(() -> new DomainException("Ordem de servico nao encontrada: " + command.ordemId()));
 
-        var orcamento = orcamentoRepository.buscarPorOrdemServicoId(ordemServicoId)
+        var orcamento = orcamentoGateway.buscarPorOrdemServicoId(ordemServicoId)
                 .orElseThrow(() -> new DomainException("Orcamento nao encontrado: " + command.ordemId()));
 
         fecharOrcamentoComSucesso(ordemServico, orcamento);
@@ -102,7 +102,7 @@ public class OrcamentoApplicationService implements
     }
 
     private OrdemServico buscarOrdemServicoAtualizada(OrdemServicoId ordemServicoId) {
-        return ordemServicoRepository.buscarPorId(ordemServicoId)
+        return ordemServicoGateway.buscarPorId(ordemServicoId)
                 .orElseThrow(() -> new DomainException("Ordem de servico nao encontrada: " + ordemServicoId.value()));
     }
 
@@ -110,32 +110,32 @@ public class OrcamentoApplicationService implements
         if (orcamento.status() != StatusOrcamento.ENVIADO) {
             orcamento.fechar();
         }
-        var orcamentoSalvo = orcamentoRepository.salvar(orcamento);
+        var orcamentoSalvo = orcamentoGateway.salvar(orcamento);
 
         ordemServico.finalizarOrcamento();
-        ordemServicoRepository.salvar(ordemServico);
+        ordemServicoGateway.salvar(ordemServico);
 
-        publicarEvento.publicar(new OrcamentoFechadoEvent(ordemServico.id().value(), ordemServico.clienteId().value()));
+        publicadorEventoGateway.publicar(new OrcamentoFechadoEvent(ordemServico.id().value(), ordemServico.clienteId().value()));
         return orcamentoSalvo;
     }
 
     @Override
     public OrdemServico aprovar(UUID ordemId) {
-        var orcamento = orcamentoRepository.buscarPorOrdemServicoId(new OrdemServicoId(ordemId))
+        var orcamento = orcamentoGateway.buscarPorOrdemServicoId(new OrdemServicoId(ordemId))
                 .orElseThrow(() -> new DomainException("Orcamento nao encontrado: " + ordemId));
         orcamento.aprovar();
-        orcamentoRepository.salvar(orcamento);
-        return ordemServicoRepository.buscarPorId(new OrdemServicoId(ordemId))
+        orcamentoGateway.salvar(orcamento);
+        return ordemServicoGateway.buscarPorId(new OrdemServicoId(ordemId))
                 .orElseThrow(() -> new DomainException("Ordem de servico nao encontrada: " + ordemId));
     }
 
     @Override
     public OrdemServico recusar(UUID ordemId) {
-        var orcamento = orcamentoRepository.buscarPorOrdemServicoId(new OrdemServicoId(ordemId))
+        var orcamento = orcamentoGateway.buscarPorOrdemServicoId(new OrdemServicoId(ordemId))
                 .orElseThrow(() -> new DomainException("Orcamento nao encontrado: " + ordemId));
         orcamento.recusar();
-        orcamentoRepository.salvar(orcamento);
-        return ordemServicoRepository.buscarPorId(new OrdemServicoId(ordemId))
+        orcamentoGateway.salvar(orcamento);
+        return ordemServicoGateway.buscarPorId(new OrdemServicoId(ordemId))
                 .orElseThrow(() -> new DomainException("Ordem de servico nao encontrada: " + ordemId));
     }
 }

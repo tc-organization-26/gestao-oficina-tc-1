@@ -1,14 +1,14 @@
 package br.com.fiap.oficina.ordemservico.interfaceadapters.gateways.event;
 
-import br.com.fiap.oficina.ordemservico.application.gateways.PublicarEventoPort;
+import br.com.fiap.oficina.ordemservico.application.gateways.PublicadorEventoGateway;
 import br.com.fiap.oficina.shared.domain.events.DomainEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
-public class SpringDomainEventPublisherAdapter implements PublicarEventoPort {
+public class SpringDomainEventPublisherGateway implements PublicadorEventoGateway {
 
     private final ApplicationEventPublisher eventPublisher;
 
-    public SpringDomainEventPublisherAdapter(ApplicationEventPublisher eventPublisher) {
+    public SpringDomainEventPublisherGateway(ApplicationEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
     }
 

@@ -1,8 +1,8 @@
 package br.com.fiap.oficina.cliente.frameworks.config;
 
-import br.com.fiap.oficina.cliente.interfaceadapters.gateways.persistence.jpa.ClientePersistenceAdapter;
+import br.com.fiap.oficina.cliente.interfaceadapters.gateways.persistence.jpa.ClienteJpaGateway;
 import br.com.fiap.oficina.cliente.frameworks.persistence.jpa.SpringDataClienteRepository;
-import br.com.fiap.oficina.cliente.application.gateways.ClienteRepositoryPort;
+import br.com.fiap.oficina.cliente.application.gateways.ClienteGateway;
 import br.com.fiap.oficina.cliente.application.usecases.interactors.ClienteApplicationService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,12 +17,12 @@ public class ClienteConfiguration {
             "consultarTodosClientesUseCase",
             "excluirClienteUseCase"
     })
-    public ClienteApplicationService clienteApplicationService(ClienteRepositoryPort clienteRepositoryPort) {
-        return new ClienteApplicationService(clienteRepositoryPort);
+    public ClienteApplicationService clienteApplicationService(ClienteGateway clienteGateway) {
+        return new ClienteApplicationService(clienteGateway);
     }
 
     @Bean
-    public ClienteRepositoryPort clienteRepositoryPort(SpringDataClienteRepository springDataRepository) {
-        return new ClientePersistenceAdapter(springDataRepository);
+    public ClienteGateway clienteGateway(SpringDataClienteRepository springDataRepository) {
+        return new ClienteJpaGateway(springDataRepository);
     }
 }

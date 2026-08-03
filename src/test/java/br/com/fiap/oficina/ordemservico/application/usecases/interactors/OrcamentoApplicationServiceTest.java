@@ -3,15 +3,15 @@ package br.com.fiap.oficina.ordemservico.application.usecases.interactors;
 import static org.junit.jupiter.api.Assertions.*;
 
 import br.com.fiap.oficina.cliente.domain.valueobjects.ClienteId;
-import br.com.fiap.oficina.estoque.application.gateways.EstoqueRepositoryPort;
+import br.com.fiap.oficina.estoque.application.gateways.EstoqueGateway;
 import br.com.fiap.oficina.estoque.domain.entities.ItemEstoque;
 import br.com.fiap.oficina.estoque.domain.valueobjects.ItemEstoqueId;
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemPecaOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemServicoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.FecharOrcamentoCommand;
-import br.com.fiap.oficina.ordemservico.application.gateways.OrcamentoRepositoryPort;
-import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoRepositoryPort;
-import br.com.fiap.oficina.ordemservico.application.gateways.VerificadorEstoquePort;
+import br.com.fiap.oficina.ordemservico.application.gateways.OrcamentoGateway;
+import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoGateway;
+import br.com.fiap.oficina.ordemservico.application.gateways.VerificadorEstoqueGateway;
 import br.com.fiap.oficina.ordemservico.domain.events.FaltaPecaEstoqueEvent;
 import br.com.fiap.oficina.ordemservico.domain.events.OrcamentoFechadoEvent;
 import br.com.fiap.oficina.ordemservico.domain.entities.ItemPeca;
@@ -21,7 +21,7 @@ import br.com.fiap.oficina.ordemservico.domain.entities.OrdemServico;
 import br.com.fiap.oficina.ordemservico.domain.valueobjects.OrdemServicoId;
 import br.com.fiap.oficina.ordemservico.domain.enums.StatusOrcamento;
 import br.com.fiap.oficina.ordemservico.domain.enums.StatusOrdemServico;
-import br.com.fiap.oficina.servico.application.gateways.ServicoRepositoryPort;
+import br.com.fiap.oficina.servico.application.gateways.ServicoGateway;
 import br.com.fiap.oficina.servico.domain.entities.Servico;
 import br.com.fiap.oficina.servico.domain.valueobjects.ServicoId;
 import br.com.fiap.oficina.shared.domain.exceptions.DomainException;
@@ -58,7 +58,7 @@ class OrcamentoApplicationServiceTest {
         var service = service(repository, new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeServicoRepository(Optional.of(servico)), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
 
         var retornada = service.adicionarItemServico(
-                new AdicionarItemServicoOrcamentoCommand(ordemId, "SRV-001", 1.0));
+                new AdicionarItemServicoOrcamentoCommand(ordemId, "SRV-001", java.math.BigDecimal.ONE));
 
         assertEquals(new OrdemServicoId(ordemId), repository.salvo.ordemServicoId());
         assertNotEquals(ordemId, repository.salvo.id().value());
@@ -73,7 +73,7 @@ class OrcamentoApplicationServiceTest {
         var service = service(new FakeOrcamentoRepository(Optional.empty()), new FakeOrdemServicoRepository(Optional.empty()), new FakeServicoRepository(Optional.of(novoServico("SRV-001"))), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
 
         assertThrows(DomainException.class, () -> service.adicionarItemServico(
-                new AdicionarItemServicoOrcamentoCommand(UUID.randomUUID(), "SRV-001", 1.0)));
+                new AdicionarItemServicoOrcamentoCommand(UUID.randomUUID(), "SRV-001", java.math.BigDecimal.ONE)));
     }
 
     @Test
@@ -83,7 +83,7 @@ class OrcamentoApplicationServiceTest {
         var service = service(new FakeOrcamentoRepository(Optional.of(orcamento)), new FakeOrdemServicoRepository(Optional.empty()), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
 
         assertThrows(DomainException.class, () -> service.adicionarItemServico(
-                new AdicionarItemServicoOrcamentoCommand(ordemId, "SRV-INEXISTENTE", 1.0)));
+                new AdicionarItemServicoOrcamentoCommand(ordemId, "SRV-INEXISTENTE", java.math.BigDecimal.ONE)));
     }
 
     @Test
@@ -96,7 +96,7 @@ class OrcamentoApplicationServiceTest {
         var service = service(repository, ordemRepository, new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.of(itemEstoque)), new FakeVerificadorEstoque(true), eventos);
 
         var retornada = service.adicionarItemPeca(
-                new AdicionarItemPecaOrcamentoCommand(ordem.id().value(), "PEC-001", 2.0));
+                new AdicionarItemPecaOrcamentoCommand(ordem.id().value(), "PEC-001", java.math.BigDecimal.valueOf(2)));
 
         assertSame(ordem, retornada);
         assertEquals(1, repository.salvo.itensPeca().size());
@@ -114,7 +114,7 @@ class OrcamentoApplicationServiceTest {
         var service = service(new FakeOrcamentoRepository(Optional.of(orcamento)), new FakeOrdemServicoRepository(Optional.empty()), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
 
         assertThrows(DomainException.class, () -> service.adicionarItemPeca(
-                new AdicionarItemPecaOrcamentoCommand(ordemId, "PEC-INEXISTENTE", 2.0)));
+                new AdicionarItemPecaOrcamentoCommand(ordemId, "PEC-INEXISTENTE", java.math.BigDecimal.valueOf(2))));
     }
 
     @Test
@@ -122,17 +122,17 @@ class OrcamentoApplicationServiceTest {
         var ordem = novaOrdemEmDiagnostico();
         var servico = novoServico("SRV-002");
         var orcamentoExistente = Orcamento.novo(ordem.id());
-        orcamentoExistente.adicionarItemPeca(new ItemPeca(new ItemEstoqueId(UUID.randomUUID()), 1.0));
+        orcamentoExistente.adicionarItemPeca(new ItemPeca(new ItemEstoqueId(UUID.randomUUID()), java.math.BigDecimal.ONE));
         var eventos = new ArrayList<>();
-        var orcamentoRepository = new FakeOrcamentoRepository(Optional.of(orcamentoExistente));
+        var orcamentoGateway = new FakeOrcamentoRepository(Optional.of(orcamentoExistente));
         var ordemRepository = new FakeOrdemServicoRepository(Optional.of(ordem));
-        var service = service(orcamentoRepository, ordemRepository, new FakeServicoRepository(Optional.of(servico)), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), eventos);
+        var service = service(orcamentoGateway, ordemRepository, new FakeServicoRepository(Optional.of(servico)), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), eventos);
 
         var retornada = service.adicionarItemServico(
-                new AdicionarItemServicoOrcamentoCommand(ordem.id().value(), "SRV-002", 1.0));
+                new AdicionarItemServicoOrcamentoCommand(ordem.id().value(), "SRV-002", java.math.BigDecimal.ONE));
 
         assertSame(ordem, retornada);
-        assertEquals(StatusOrcamento.ABERTO, orcamentoRepository.salvo.status());
+        assertEquals(StatusOrcamento.ABERTO, orcamentoGateway.salvo.status());
         assertNull(ordemRepository.salvo);
         assertTrue(eventos.isEmpty());
     }
@@ -143,14 +143,14 @@ class OrcamentoApplicationServiceTest {
         var ordemId = ordem.id().value();
         var itemEstoque = novoItemEstoque("PEC-001");
         var eventos = new ArrayList<>();
-        var orcamentoRepository = new FakeOrcamentoRepository(Optional.of(Orcamento.novo(new OrdemServicoId(ordemId))));
-        var service = service(orcamentoRepository, new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.of(itemEstoque)), new FakeVerificadorEstoque(false), eventos);
+        var orcamentoGateway = new FakeOrcamentoRepository(Optional.of(Orcamento.novo(new OrdemServicoId(ordemId))));
+        var service = service(orcamentoGateway, new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.of(itemEstoque)), new FakeVerificadorEstoque(false), eventos);
 
         var retornada = service.adicionarItemPeca(
-                new AdicionarItemPecaOrcamentoCommand(ordemId, "PEC-001", 2.0));
+                new AdicionarItemPecaOrcamentoCommand(ordemId, "PEC-001", java.math.BigDecimal.valueOf(2)));
 
         assertSame(ordem, retornada);
-        assertEquals(StatusOrcamento.ABERTO, orcamentoRepository.salvo.status());
+        assertEquals(StatusOrcamento.ABERTO, orcamentoGateway.salvo.status());
         assertEquals(1, eventos.size());
         assertInstanceOf(FaltaPecaEstoqueEvent.class, eventos.get(0));
     }
@@ -160,14 +160,14 @@ class OrcamentoApplicationServiceTest {
         var ordem = novaOrdemEmDiagnostico();
         var orcamento = Orcamento.novo(ordem.id());
         var eventos = new ArrayList<>();
-        var orcamentoRepository = new FakeOrcamentoRepository(Optional.of(orcamento));
+        var orcamentoGateway = new FakeOrcamentoRepository(Optional.of(orcamento));
         var ordemRepository = new FakeOrdemServicoRepository(Optional.of(ordem));
-        var service = service(orcamentoRepository, ordemRepository, new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), eventos);
+        var service = service(orcamentoGateway, ordemRepository, new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), eventos);
 
         var retornada = service.fechar(new FecharOrcamentoCommand(ordem.id().value()));
 
         assertSame(ordem, retornada);
-        assertEquals(StatusOrcamento.ENVIADO, orcamentoRepository.salvo.status());
+        assertEquals(StatusOrcamento.ENVIADO, orcamentoGateway.salvo.status());
         assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, ordemRepository.salvo.status());
         assertEquals(1, eventos.size());
         assertInstanceOf(OrcamentoFechadoEvent.class, eventos.get(0));
@@ -185,13 +185,13 @@ class OrcamentoApplicationServiceTest {
         var ordem = novaOrdemAguardandoAprovacao();
         var orcamento = Orcamento.novo(ordem.id());
         orcamento.fechar();
-        var orcamentoRepository = new FakeOrcamentoRepository(Optional.of(orcamento));
-        var service = service(orcamentoRepository, new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
+        var orcamentoGateway = new FakeOrcamentoRepository(Optional.of(orcamento));
+        var service = service(orcamentoGateway, new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
 
         var retornada = service.aprovar(ordem.id().value());
 
         assertSame(ordem, retornada);
-        assertEquals(StatusOrcamento.APROVADO, orcamentoRepository.salvo.status());
+        assertEquals(StatusOrcamento.APROVADO, orcamentoGateway.salvo.status());
     }
 
     @Test
@@ -199,13 +199,13 @@ class OrcamentoApplicationServiceTest {
         var ordem = novaOrdemAguardandoAprovacao();
         var orcamento = Orcamento.novo(ordem.id());
         orcamento.fechar();
-        var orcamentoRepository = new FakeOrcamentoRepository(Optional.of(orcamento));
-        var service = service(orcamentoRepository, new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
+        var orcamentoGateway = new FakeOrcamentoRepository(Optional.of(orcamento));
+        var service = service(orcamentoGateway, new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
 
         var retornada = service.recusar(ordem.id().value());
 
         assertSame(ordem, retornada);
-        assertEquals(StatusOrcamento.RECUSADO, orcamentoRepository.salvo.status());
+        assertEquals(StatusOrcamento.RECUSADO, orcamentoGateway.salvo.status());
     }
 
     @Test
@@ -216,13 +216,13 @@ class OrcamentoApplicationServiceTest {
     }
 
     private static OrcamentoApplicationService service(
-            FakeOrcamentoRepository orcamentoRepository,
+            FakeOrcamentoRepository orcamentoGateway,
             FakeOrdemServicoRepository ordemRepository,
-            FakeServicoRepository servicoRepository,
-            FakeEstoqueRepository estoqueRepository,
+            FakeServicoRepository servicoGateway,
+            FakeEstoqueRepository estoqueGateway,
             FakeVerificadorEstoque verificadorEstoque,
             List<Object> eventos) {
-        return new OrcamentoApplicationService(orcamentoRepository, ordemRepository, servicoRepository, estoqueRepository, verificadorEstoque, eventos::add);
+        return new OrcamentoApplicationService(orcamentoGateway, ordemRepository, servicoGateway, estoqueGateway, verificadorEstoque, eventos::add);
     }
 
     private static OrdemServico novaOrdemEmDiagnostico() {
@@ -245,7 +245,7 @@ class OrcamentoApplicationServiceTest {
         return ItemEstoque.criar(codigo, "Pastilha de freio", BigDecimal.TEN, BigDecimal.TEN);
     }
 
-    private static class FakeOrcamentoRepository implements OrcamentoRepositoryPort {
+    private static class FakeOrcamentoRepository implements OrcamentoGateway {
         private final Optional<Orcamento> busca;
         private Orcamento salvo;
 
@@ -258,7 +258,7 @@ class OrcamentoApplicationServiceTest {
         @Override public Optional<Orcamento> buscarPorOrdemServicoId(OrdemServicoId ordemServicoId) { return busca.filter(orcamento -> orcamento.ordemServicoId().equals(ordemServicoId)); }
     }
 
-    private static class FakeOrdemServicoRepository implements OrdemServicoRepositoryPort {
+    private static class FakeOrdemServicoRepository implements OrdemServicoGateway {
         private final Optional<OrdemServico> busca;
         private OrdemServico salvo;
 
@@ -273,7 +273,7 @@ class OrcamentoApplicationServiceTest {
         @Override public List<OrdemServico> buscarTodosOrdenado() { return busca.stream().toList(); }
     }
 
-    private static class FakeServicoRepository implements ServicoRepositoryPort {
+    private static class FakeServicoRepository implements ServicoGateway {
         private final Optional<Servico> busca;
 
         FakeServicoRepository(Optional<Servico> busca) {
@@ -288,7 +288,7 @@ class OrcamentoApplicationServiceTest {
         @Override public void excluirPorId(ServicoId servicoId) {}
     }
 
-    private static class FakeEstoqueRepository implements EstoqueRepositoryPort {
+    private static class FakeEstoqueRepository implements EstoqueGateway {
         private final Optional<ItemEstoque> busca;
 
         FakeEstoqueRepository(Optional<ItemEstoque> busca) {
@@ -303,7 +303,7 @@ class OrcamentoApplicationServiceTest {
         @Override public List<ItemEstoque> buscarTodosAtivos() { return busca.filter(ItemEstoque::ativo).stream().toList(); }
     }
 
-    private record FakeVerificadorEstoque(boolean disponivel) implements VerificadorEstoquePort {
+    private record FakeVerificadorEstoque(boolean disponivel) implements VerificadorEstoqueGateway {
         @Override public boolean temTodosOsItensDisponiveis(List<ItemPeca> itensPeca) {
             return disponivel;
         }

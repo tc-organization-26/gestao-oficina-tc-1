@@ -6,7 +6,7 @@ import br.com.fiap.oficina.ordemservico.domain.valueobjects.OrdemServicoId;
 
 import java.util.Optional;
 
-public interface OrcamentoRepositoryPort {
+public interface OrcamentoGateway {
     Orcamento salvar(Orcamento orcamento);
     Optional<Orcamento> buscarPorId(OrcamentoId orcamentoId);
     Optional<Orcamento> buscarPorOrdemServicoId(OrdemServicoId ordemServicoId);

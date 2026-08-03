@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import br.com.fiap.oficina.cliente.domain.valueobjects.ClienteId;
 import br.com.fiap.oficina.ordemservico.application.dtos.CriarOrdemServicoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.RegistrarDiagnosticoCommand;
-import br.com.fiap.oficina.ordemservico.application.gateways.OrcamentoRepositoryPort;
-import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoRepositoryPort;
+import br.com.fiap.oficina.ordemservico.application.gateways.OrcamentoGateway;
+import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoGateway;
 import br.com.fiap.oficina.ordemservico.domain.events.OrdemServicoFinalizadaEvent;
 import br.com.fiap.oficina.ordemservico.domain.entities.Orcamento;
 import br.com.fiap.oficina.ordemservico.domain.valueobjects.OrcamentoId;
@@ -195,13 +195,13 @@ class OrdemServicoApplicationServiceTest {
         var orcamento = Orcamento.novo(ordem.id());
         orcamento.fechar();
         var ordemRepository = new FakeOrdemServicoRepository(Optional.of(ordem));
-        var orcamentoRepository = new FakeOrcamentoRepository(Optional.of(orcamento));
-        var service = service(ordemRepository, orcamentoRepository, new ArrayList<>());
+        var orcamentoGateway = new FakeOrcamentoRepository(Optional.of(orcamento));
+        var service = service(ordemRepository, orcamentoGateway, new ArrayList<>());
 
         var ajustada = service.pedirAjuste(ordem.id().value());
 
         assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, ajustada.status());
-        assertEquals(StatusOrcamento.ABERTO, orcamentoRepository.salvo.status());
+        assertEquals(StatusOrcamento.ABERTO, orcamentoGateway.salvo.status());
     }
 
     @Test
@@ -210,22 +210,22 @@ class OrdemServicoApplicationServiceTest {
         var orcamento = Orcamento.novo(ordem.id());
         orcamento.fechar();
         orcamento.aprovar();
-        var orcamentoRepository = new FakeOrcamentoRepository(Optional.of(orcamento));
+        var orcamentoGateway = new FakeOrcamentoRepository(Optional.of(orcamento));
         var eventos = new ArrayList<>();
-        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), orcamentoRepository, eventos);
+        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), orcamentoGateway, eventos);
 
         var ajustada = service.pedirAjuste(ordem.id().value());
 
         assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, ajustada.status());
-        assertEquals(StatusOrcamento.ABERTO, orcamentoRepository.salvo.status());
+        assertEquals(StatusOrcamento.ABERTO, orcamentoGateway.salvo.status());
         assertTrue(eventos.isEmpty());
     }
 
     private static OrdemServicoApplicationService service(
             FakeOrdemServicoRepository ordemRepository,
-            FakeOrcamentoRepository orcamentoRepository,
+            FakeOrcamentoRepository orcamentoGateway,
             List<Object> eventos) {
-        return new OrdemServicoApplicationService(ordemRepository, orcamentoRepository, eventos::add);
+        return new OrdemServicoApplicationService(ordemRepository, orcamentoGateway, eventos::add);
     }
 
     private static OrdemServico novaOrdem() {
@@ -251,7 +251,7 @@ class OrdemServicoApplicationServiceTest {
         return ordem;
     }
 
-    private static class FakeOrdemServicoRepository implements OrdemServicoRepositoryPort {
+    private static class FakeOrdemServicoRepository implements OrdemServicoGateway {
         private final Optional<OrdemServico> busca;
         private OrdemServico salvo;
 
@@ -266,7 +266,7 @@ class OrdemServicoApplicationServiceTest {
         @Override public List<OrdemServico> buscarTodosOrdenado() { return busca.stream().toList(); }
     }
 
-    private static class FakeOrcamentoRepository implements OrcamentoRepositoryPort {
+    private static class FakeOrcamentoRepository implements OrcamentoGateway {
         private final Optional<Orcamento> busca;
         private Orcamento salvo;
 

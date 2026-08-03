@@ -6,7 +6,7 @@ import br.com.fiap.oficina.estoque.domain.valueobjects.ItemEstoqueId;
 import java.util.List;
 import java.util.Optional;
 
-public interface EstoqueRepositoryPort {
+public interface EstoqueGateway {
     boolean existePorCodigo(String codigo);
     ItemEstoque salvar(ItemEstoque itemEstoque);
     Optional<ItemEstoque> buscarPorId(ItemEstoqueId itemEstoqueId);

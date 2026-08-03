@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import br.com.fiap.oficina.cliente.application.dtos.AtualizarClienteCommand;
 import br.com.fiap.oficina.cliente.application.dtos.CadastrarClienteCommand;
-import br.com.fiap.oficina.cliente.application.gateways.ClienteRepositoryPort;
+import br.com.fiap.oficina.cliente.application.gateways.ClienteGateway;
 import br.com.fiap.oficina.cliente.domain.entities.Cliente;
 import br.com.fiap.oficina.cliente.domain.valueobjects.ClienteId;
 import br.com.fiap.oficina.cliente.domain.valueobjects.CpfCnpj;
@@ -72,7 +72,7 @@ class ClienteApplicationServiceTest {
         assertEquals(existente.id(), repository.excluido);
     }
 
-    private static class FakeRepository implements ClienteRepositoryPort {
+    private static class FakeRepository implements ClienteGateway {
         private final boolean existe;
         private final Optional<Cliente> busca;
         private final List<Cliente> todos;
