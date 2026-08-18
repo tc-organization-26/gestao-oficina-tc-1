@@ -3,19 +3,28 @@ package br.com.fiap.oficina.ordemservico.application.usecases.interactors;
 import static org.junit.jupiter.api.Assertions.*;
 
 import br.com.fiap.oficina.cliente.domain.valueobjects.ClienteId;
+import br.com.fiap.oficina.estoque.application.gateways.EstoqueGateway;
+import br.com.fiap.oficina.estoque.domain.entities.ItemEstoque;
+import br.com.fiap.oficina.estoque.domain.valueobjects.ItemEstoqueId;
 import br.com.fiap.oficina.ordemservico.application.dtos.CriarOrdemServicoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.RegistrarDiagnosticoCommand;
 import br.com.fiap.oficina.ordemservico.application.gateways.OrcamentoGateway;
 import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoGateway;
+import br.com.fiap.oficina.ordemservico.application.gateways.VerificadorEstoqueGateway;
 import br.com.fiap.oficina.ordemservico.domain.events.OrdemServicoFinalizadaEvent;
+import br.com.fiap.oficina.ordemservico.domain.entities.ItemPeca;
 import br.com.fiap.oficina.ordemservico.domain.entities.Orcamento;
 import br.com.fiap.oficina.ordemservico.domain.valueobjects.OrcamentoId;
 import br.com.fiap.oficina.ordemservico.domain.entities.OrdemServico;
 import br.com.fiap.oficina.ordemservico.domain.valueobjects.OrdemServicoId;
 import br.com.fiap.oficina.ordemservico.domain.enums.StatusOrcamento;
 import br.com.fiap.oficina.ordemservico.domain.enums.StatusOrdemServico;
+import br.com.fiap.oficina.servico.application.gateways.ServicoGateway;
+import br.com.fiap.oficina.servico.domain.entities.Servico;
+import br.com.fiap.oficina.servico.domain.valueobjects.ServicoId;
 import br.com.fiap.oficina.shared.domain.exceptions.DomainException;
 import br.com.fiap.oficina.veiculo.domain.valueobjects.VeiculoId;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +41,7 @@ class OrdemServicoApplicationServiceTest {
         var clienteId = UUID.randomUUID();
         var veiculoId = UUID.randomUUID();
 
-        var ordem = service.criar(new CriarOrdemServicoCommand(clienteId, veiculoId, "Revisao"));
+        var ordem = service.criar(new CriarOrdemServicoCommand(clienteId, veiculoId, List.of(), List.of(), "Revisao"));
 
         assertNotNull(ordem.id());
         assertEquals(new ClienteId(clienteId), ordem.clienteId());
@@ -41,6 +50,32 @@ class OrdemServicoApplicationServiceTest {
         assertNotNull(ordem.orcamento());
         assertEquals(ordem.id(), ordem.orcamento().ordemServicoId());
         assertNotEquals(ordem.id().value(), ordem.orcamento().id().value());
+    }
+
+    @Test
+    void criarComItensIniciaisMontaOrcamento() {
+        var ordemRepository = new FakeOrdemServicoRepository(Optional.empty());
+        var orcamentoGateway = new FakeOrcamentoRepository(Optional.empty());
+        var servicoGateway = new FakeServicoRepository(Optional.of(Servico.criar("SRV-001", "Troca de oleo", BigDecimal.TEN, 30)));
+        var itemEstoque = ItemEstoque.criar("PEC-001", "Filtro", BigDecimal.TEN, BigDecimal.TEN);
+        var service = new OrdemServicoApplicationService(
+                ordemRepository,
+                orcamentoGateway,
+                servicoGateway,
+                new FakeEstoqueRepository(Optional.of(itemEstoque)),
+                new FakeVerificadorEstoque(true),
+                evento -> {});
+        var command = new CriarOrdemServicoCommand(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                List.of(new CriarOrdemServicoCommand.ItemServicoCommand("SRV-001", BigDecimal.ONE)),
+                List.of(new CriarOrdemServicoCommand.ItemPecaCommand("PEC-001", BigDecimal.valueOf(2))),
+                "Revisao");
+
+        service.criar(command);
+
+        assertEquals(1, orcamentoGateway.salvo.itensServico().size());
+        assertEquals(1, orcamentoGateway.salvo.itensPeca().size());
     }
 
     @Test
@@ -225,7 +260,13 @@ class OrdemServicoApplicationServiceTest {
             FakeOrdemServicoRepository ordemRepository,
             FakeOrcamentoRepository orcamentoGateway,
             List<Object> eventos) {
-        return new OrdemServicoApplicationService(ordemRepository, orcamentoGateway, eventos::add);
+        return new OrdemServicoApplicationService(
+                ordemRepository,
+                orcamentoGateway,
+                new FakeServicoRepository(Optional.empty()),
+                new FakeEstoqueRepository(Optional.empty()),
+                new FakeVerificadorEstoque(true),
+                eventos::add);
     }
 
     private static OrdemServico novaOrdem() {
@@ -277,6 +318,42 @@ class OrdemServicoApplicationServiceTest {
         @Override public Orcamento salvar(Orcamento orcamento) { this.salvo = orcamento; return orcamento; }
         @Override public Optional<Orcamento> buscarPorId(OrcamentoId orcamentoId) { return busca.filter(orcamento -> orcamento.id().equals(orcamentoId)); }
         @Override public Optional<Orcamento> buscarPorOrdemServicoId(OrdemServicoId ordemServicoId) { return busca.filter(orcamento -> orcamento.ordemServicoId().equals(ordemServicoId)); }
+    }
+
+    private static class FakeServicoRepository implements ServicoGateway {
+        private final Optional<Servico> busca;
+
+        FakeServicoRepository(Optional<Servico> busca) {
+            this.busca = busca;
+        }
+
+        @Override public boolean existePorCodigo(String codigo) { return busca.map(Servico::codigo).filter(codigo::equals).isPresent(); }
+        @Override public Servico salvar(Servico servico) { return servico; }
+        @Override public Optional<Servico> buscarPorId(ServicoId servicoId) { return busca.filter(servico -> servico.id().equals(servicoId)); }
+        @Override public Optional<Servico> buscarPorCodigo(String codigo) { return busca.filter(servico -> servico.codigo().equals(codigo)); }
+        @Override public List<Servico> buscarTodos() { return busca.stream().toList(); }
+        @Override public void excluirPorId(ServicoId servicoId) {}
+    }
+
+    private static class FakeEstoqueRepository implements EstoqueGateway {
+        private final Optional<ItemEstoque> busca;
+
+        FakeEstoqueRepository(Optional<ItemEstoque> busca) {
+            this.busca = busca;
+        }
+
+        @Override public boolean existePorCodigo(String codigo) { return busca.map(ItemEstoque::codigo).filter(codigo::equals).isPresent(); }
+        @Override public ItemEstoque salvar(ItemEstoque itemEstoque) { return itemEstoque; }
+        @Override public Optional<ItemEstoque> buscarPorId(ItemEstoqueId itemEstoqueId) { return busca.filter(item -> item.id().equals(itemEstoqueId)); }
+        @Override public Optional<ItemEstoque> buscarPorCodigo(String codigo) { return busca.filter(item -> item.codigo().equals(codigo)); }
+        @Override public List<ItemEstoque> buscarTodos() { return busca.stream().toList(); }
+        @Override public List<ItemEstoque> buscarTodosAtivos() { return busca.filter(ItemEstoque::ativo).stream().toList(); }
+    }
+
+    private record FakeVerificadorEstoque(boolean disponivel) implements VerificadorEstoqueGateway {
+        @Override public boolean temTodosOsItensDisponiveis(List<ItemPeca> itensPeca) {
+            return disponivel;
+        }
     }
 }
 

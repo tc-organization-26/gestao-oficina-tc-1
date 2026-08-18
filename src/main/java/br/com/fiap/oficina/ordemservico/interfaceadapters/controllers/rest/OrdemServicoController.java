@@ -2,19 +2,25 @@ package br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest;
 
 import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.request.AdicionarItemServicoOrcamentoRequest;
 import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.request.AdicionarItemPecaOrcamentoRequest;
+import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.request.AtualizarStatusOrdemServicoRequest;
 import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.request.CriarOrdemServicoRequest;
 import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.request.FecharOrcamentoRequest;
+import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.request.NotificarAprovacaoOrcamentoRequest;
 import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.request.RegistrarDiagnosticoRequest;
+import br.com.fiap.oficina.ordemservico.interfaceadapters.presenters.rest.response.OrdemServicoCriadaResponse;
 import br.com.fiap.oficina.ordemservico.interfaceadapters.presenters.rest.response.OrdemServicoResponse;
+import br.com.fiap.oficina.ordemservico.interfaceadapters.presenters.rest.response.StatusOrdemServicoResponse;
 import br.com.fiap.oficina.ordemservico.interfaceadapters.presenters.rest.response.TempoMedioExecucaoResponse;
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemServicoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemPecaOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.CriarOrdemServicoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.FecharOrcamentoCommand;
+import br.com.fiap.oficina.ordemservico.application.dtos.NotificarAprovacaoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.RegistrarDiagnosticoCommand;
 import br.com.fiap.oficina.ordemservico.application.usecases.AdicionarItemServicoOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.AdicionarItemPecaOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.AprovarOrcamentoUseCase;
+import br.com.fiap.oficina.ordemservico.application.usecases.AtualizarStatusOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.ConsultarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.CriarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.EntregarOrdemServicoUseCase;
@@ -22,6 +28,7 @@ import br.com.fiap.oficina.ordemservico.application.usecases.FecharOrcamentoUseC
 import br.com.fiap.oficina.ordemservico.application.usecases.FinalizarExecucaoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.IniciarDiagnosticoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.IniciarExecucaoUseCase;
+import br.com.fiap.oficina.ordemservico.application.usecases.NotificarAprovacaoOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.PedirAjusteOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.RecusarOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.RegistrarDiagnosticoUseCase;
@@ -29,15 +36,16 @@ import br.com.fiap.oficina.ordemservico.application.usecases.RegistrarPagamentoU
 import br.com.fiap.oficina.ordemservico.domain.valueobjects.OrdemServicoId;
 import br.com.fiap.oficina.ordemservico.domain.enums.StatusOrdemServico;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 import java.util.UUID;
@@ -60,6 +68,8 @@ public class OrdemServicoController {
     private final FinalizarExecucaoUseCase finalizarExecucaoUseCase;
     private final RegistrarPagamentoUseCase registrarPagamentoUseCase;
     private final EntregarOrdemServicoUseCase entregarOrdemServicoUseCase;
+    private final AtualizarStatusOrdemServicoUseCase atualizarStatusOrdemServicoUseCase;
+    private final NotificarAprovacaoOrcamentoUseCase notificarAprovacaoOrcamentoUseCase;
 
     public OrdemServicoController(
             CriarOrdemServicoUseCase criarOrdemServicoUseCase,
@@ -75,7 +85,9 @@ public class OrdemServicoController {
             IniciarExecucaoUseCase iniciarExecucaoUseCase,
             FinalizarExecucaoUseCase finalizarExecucaoUseCase,
             RegistrarPagamentoUseCase registrarPagamentoUseCase,
-            EntregarOrdemServicoUseCase entregarOrdemServicoUseCase) {
+            EntregarOrdemServicoUseCase entregarOrdemServicoUseCase,
+            AtualizarStatusOrdemServicoUseCase atualizarStatusOrdemServicoUseCase,
+            NotificarAprovacaoOrcamentoUseCase notificarAprovacaoOrcamentoUseCase) {
         this.criarOrdemServicoUseCase = criarOrdemServicoUseCase;
         this.consultarOrdemServicoUseCase = consultarOrdemServicoUseCase;
         this.iniciarDiagnosticoUseCase = iniciarDiagnosticoUseCase;
@@ -90,13 +102,25 @@ public class OrdemServicoController {
         this.finalizarExecucaoUseCase = finalizarExecucaoUseCase;
         this.registrarPagamentoUseCase = registrarPagamentoUseCase;
         this.entregarOrdemServicoUseCase = entregarOrdemServicoUseCase;
+        this.atualizarStatusOrdemServicoUseCase = atualizarStatusOrdemServicoUseCase;
+        this.notificarAprovacaoOrcamentoUseCase = notificarAprovacaoOrcamentoUseCase;
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public OrdemServicoResponse criar(@Valid @RequestBody CriarOrdemServicoRequest request) {
-        var command = new CriarOrdemServicoCommand(request.clienteId(), request.veiculoId(), request.anotacoes());
-        return OrdemServicoResponse.from(criarOrdemServicoUseCase.criar(command));
+    public ResponseEntity<OrdemServicoCriadaResponse> criar(@Valid @RequestBody CriarOrdemServicoRequest request) {
+        var servicos = request.servicos().stream()
+                .map(item -> new CriarOrdemServicoCommand.ItemServicoCommand(item.codigo(), item.quantidade()))
+                .toList();
+        var pecas = request.pecas().stream()
+                .map(item -> new CriarOrdemServicoCommand.ItemPecaCommand(item.codigo(), item.quantidade()))
+                .toList();
+        var command = new CriarOrdemServicoCommand(request.clienteId(), request.veiculoId(), servicos, pecas, request.anotacoes());
+        var ordemServico = criarOrdemServicoUseCase.criar(command);
+        var location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(ordemServico.id().value())
+                .toUri();
+        return ResponseEntity.created(location).body(OrdemServicoCriadaResponse.from(ordemServico));
     }
 
     @GetMapping("/tempo-medio-execucao")
@@ -107,6 +131,11 @@ public class OrdemServicoController {
     @GetMapping("/{id}")
     public OrdemServicoResponse consultarPorId(@PathVariable UUID id) {
         return OrdemServicoResponse.from(consultarOrdemServicoUseCase.consultarPorId(new OrdemServicoId(id)));
+    }
+
+    @GetMapping("/{id}/status")
+    public StatusOrdemServicoResponse consultarStatus(@PathVariable UUID id) {
+        return StatusOrdemServicoResponse.from(consultarOrdemServicoUseCase.consultarPorId(new OrdemServicoId(id)));
     }
 
     @GetMapping
@@ -168,6 +197,19 @@ public class OrdemServicoController {
         return OrdemServicoResponse.from(aprovarOrcamentoUseCase.aprovar(ordemId));
     }
 
+    @PostMapping("/{ordemId}/orcamento/notificacoes-aprovacao")
+    public StatusOrdemServicoResponse notificarAprovacaoOrcamento(
+            @PathVariable UUID ordemId,
+            @Valid @RequestBody NotificarAprovacaoOrcamentoRequest request) {
+        var command = new NotificarAprovacaoOrcamentoCommand(
+                ordemId,
+                NotificarAprovacaoOrcamentoCommand.DecisaoOrcamento.valueOf(request.decisao().name()),
+                request.origem(),
+                request.protocoloExterno());
+        var ordemServico = notificarAprovacaoOrcamentoUseCase.notificarAprovacao(command);
+        return StatusOrdemServicoResponse.from(ordemServico);
+    }
+
     @PostMapping("/{ordemId}/orcamento/recusa")
     public OrdemServicoResponse recusarOrcamento(@PathVariable UUID ordemId) {
         return OrdemServicoResponse.from(recusarOrcamentoUseCase.recusar(ordemId));
@@ -197,5 +239,12 @@ public class OrdemServicoController {
     @PostMapping("/{ordemId}/entrega")
     public OrdemServicoResponse entregar(@PathVariable UUID ordemId) {
         return OrdemServicoResponse.from(entregarOrdemServicoUseCase.entregar(ordemId));
+    }
+
+    @PatchMapping("/{ordemId}/status")
+    public StatusOrdemServicoResponse atualizarStatus(
+            @PathVariable UUID ordemId,
+            @Valid @RequestBody AtualizarStatusOrdemServicoRequest request) {
+        return StatusOrdemServicoResponse.from(atualizarStatusOrdemServicoUseCase.atualizarStatus(ordemId, request.status()));
     }
 }

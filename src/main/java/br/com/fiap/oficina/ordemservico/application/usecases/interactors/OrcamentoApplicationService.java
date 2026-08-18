@@ -4,10 +4,12 @@ import br.com.fiap.oficina.estoque.application.gateways.EstoqueGateway;
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemPecaOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemServicoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.FecharOrcamentoCommand;
+import br.com.fiap.oficina.ordemservico.application.dtos.NotificarAprovacaoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.usecases.AdicionarItemPecaOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.AdicionarItemServicoOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.AprovarOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.FecharOrcamentoUseCase;
+import br.com.fiap.oficina.ordemservico.application.usecases.NotificarAprovacaoOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.RecusarOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.gateways.OrcamentoGateway;
 import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoGateway;
@@ -31,7 +33,8 @@ public class OrcamentoApplicationService implements
         AdicionarItemServicoOrcamentoUseCase,
         FecharOrcamentoUseCase,
         AprovarOrcamentoUseCase,
-        RecusarOrcamentoUseCase {
+        RecusarOrcamentoUseCase,
+        NotificarAprovacaoOrcamentoUseCase {
 
     private final OrcamentoGateway orcamentoGateway;
     private final OrdemServicoGateway ordemServicoGateway;
@@ -137,5 +140,16 @@ public class OrcamentoApplicationService implements
         orcamentoGateway.salvar(orcamento);
         return ordemServicoGateway.buscarPorId(new OrdemServicoId(ordemId))
                 .orElseThrow(() -> new DomainException("Ordem de servico nao encontrada: " + ordemId));
+    }
+
+    @Override
+    public OrdemServico notificarAprovacao(NotificarAprovacaoOrcamentoCommand command) {
+        if (command.decisao() == null) {
+            throw new DomainException("Decisao da aprovacao do orcamento e obrigatoria.");
+        }
+        return switch (command.decisao()) {
+            case APROVADO -> aprovar(command.ordemId());
+            case RECUSADO -> recusar(command.ordemId());
+        };
     }
 }

@@ -25,10 +25,16 @@ public class OrdemServicoConfiguration {
     public OrdemServicoApplicationService ordemServicoApplicationService(
             OrdemServicoGateway ordemServicoGateway,
             OrcamentoGateway orcamentoGateway,
+            ServicoGateway servicoGateway,
+            EstoqueGateway estoqueGateway,
+            VerificadorEstoqueGateway verificadorEstoqueGateway,
             PublicadorEventoGateway publicadorEventoGateway) {
         return new OrdemServicoApplicationService(
                 ordemServicoGateway,
                 orcamentoGateway,
+                servicoGateway,
+                estoqueGateway,
+                verificadorEstoqueGateway,
                 publicadorEventoGateway);
     }
 

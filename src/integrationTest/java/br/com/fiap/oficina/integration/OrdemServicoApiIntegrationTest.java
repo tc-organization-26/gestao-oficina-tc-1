@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -56,12 +57,14 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         var veiculoId = criarVeiculo(clienteId);
 
         var criacao = postMap("/ordens-servico", Map.of(
-                "clienteId", clienteId, "veiculoId", veiculoId, "anotacoes", "Cliente relatou barulho ao frear."));
+                "clienteId", clienteId,
+                "veiculoId", veiculoId,
+                "servicos", List.of(),
+                "pecas", List.of(),
+                "anotacoes", "Cliente relatou barulho ao frear."));
 
         assertEquals(HttpStatus.CREATED, criacao.getStatusCode());
         assertNotNull(criacao.getBody().get("id"));
-        assertEquals("RECEBIDA", criacao.getBody().get("status"));
-        assertEquals(false, criacao.getBody().get("pago"));
 
         var ordemId = criacao.getBody().get("id").toString();
         ordemIds.add(ordemId);
@@ -70,6 +73,20 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         assertEquals(HttpStatus.OK, consulta.getStatusCode());
         assertEquals(ordemId, consulta.getBody().get("id"));
         assertEquals("RECEBIDA", consulta.getBody().get("status"));
+    }
+
+    @Test
+    void deveConsultarStatusDaOrdemServico() {
+        var clienteId = criarCliente();
+        var veiculoId = criarVeiculo(clienteId);
+        var ordemId = criarOrdem(clienteId, veiculoId);
+
+        var status = getMap("/ordens-servico/" + ordemId + "/status");
+
+        assertEquals(HttpStatus.OK, status.getStatusCode());
+        assertEquals(ordemId, status.getBody().get("id"));
+        assertEquals("RECEBIDA", status.getBody().get("status"));
+        assertEquals("Recebida", status.getBody().get("descricao"));
     }
 
     // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -154,6 +171,21 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
     }
 
     @Test
+    void deveReceberNotificacaoExternaDeAprovacaoDoOrcamento() {
+        var ordemId = prepararAteAguardandoAprovacao();
+
+        var aprovacao = postMap("/ordens-servico/" + ordemId + "/orcamento/notificacoes-aprovacao",
+                Map.of(
+                        "decisao", "APROVADO",
+                        "origem", "whatsapp",
+                        "protocoloExterno", UUID.randomUUID().toString()));
+
+        assertEquals(HttpStatus.OK, aprovacao.getStatusCode());
+        assertEquals(ordemId, aprovacao.getBody().get("id"));
+        assertEquals("AGUARDANDO_APROVACAO", aprovacao.getBody().get("status"));
+    }
+
+    @Test
     void deveRecusarOrcamento() {
         var ordemId = prepararAteAguardandoAprovacao();
 
@@ -183,6 +215,20 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         var execucao = postMap("/ordens-servico/" + ordemId + "/execucao/inicio", Map.of());
         assertEquals(HttpStatus.OK, execucao.getStatusCode());
         assertEquals("EM_EXECUCAO", execucao.getBody().get("status"));
+    }
+
+    @Test
+    void deveAtualizarStatusViaPatch() {
+        var clienteId = criarCliente();
+        var veiculoId = criarVeiculo(clienteId);
+        var ordemId = criarOrdem(clienteId, veiculoId);
+
+        var status = patchMap("/ordens-servico/" + ordemId + "/status",
+                Map.of("status", "EM_DIAGNOSTICO"));
+
+        assertEquals(HttpStatus.OK, status.getStatusCode());
+        assertEquals(ordemId, status.getBody().get("id"));
+        assertEquals("EM_DIAGNOSTICO", status.getBody().get("status"));
     }
 
     @Test
@@ -256,6 +302,26 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         assertEquals(true, ids.contains(ordemId1));
         assertEquals(true, ids.contains(ordemId2));
         assertEquals(true, ids.indexOf(ordemId1) < ids.indexOf(ordemId2));
+    }
+
+    @Test
+    void deveListarApenasOrdensAtivasOrdenadasPorPrioridadeEAntiguidade() {
+        var clienteId = criarCliente();
+        var ordemRecebida = criarOrdem(clienteId, criarVeiculo(clienteId));
+        var ordemExecucao = prepararAteEmExecucao();
+        var ordemFinalizada = prepararAteFinalizada();
+
+        var ordens = getList("/ordens-servico");
+
+        assertEquals(HttpStatus.OK, ordens.getStatusCode());
+        assertNotNull(ordens.getBody());
+        var ids = ordens.getBody().stream()
+                .map(item -> ((Map<?, ?>) item).get("id"))
+                .toList();
+        assertEquals(true, ids.contains(ordemRecebida));
+        assertEquals(true, ids.contains(ordemExecucao));
+        assertEquals(false, ids.contains(ordemFinalizada));
+        assertEquals(true, ids.indexOf(ordemExecucao) < ids.indexOf(ordemRecebida));
     }
 
     @Test
@@ -347,9 +413,12 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
 
         // 1. Criar ordem
         var criacao = postMap("/ordens-servico", Map.of(
-                "clienteId", clienteId, "veiculoId", veiculoId, "anotacoes", "Revisao completa"));
+                "clienteId", clienteId,
+                "veiculoId", veiculoId,
+                "servicos", List.of(),
+                "pecas", List.of(),
+                "anotacoes", "Revisao completa"));
         assertEquals(HttpStatus.CREATED, criacao.getStatusCode());
-        assertEquals("RECEBIDA", criacao.getBody().get("status"));
         var ordemId = criacao.getBody().get("id").toString();
         ordemIds.add(ordemId);
 
@@ -513,7 +582,11 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
 
     private String criarOrdem(String clienteId, String veiculoId) {
         var resp = postMap("/ordens-servico", Map.of(
-                "clienteId", clienteId, "veiculoId", veiculoId, "anotacoes", "Revisao"));
+                "clienteId", clienteId,
+                "veiculoId", veiculoId,
+                "servicos", List.of(),
+                "pecas", List.of(),
+                "anotacoes", "Revisao"));
         assertEquals(HttpStatus.CREATED, resp.getStatusCode());
         var id = resp.getBody().get("id").toString();
         ordemIds.add(id);
