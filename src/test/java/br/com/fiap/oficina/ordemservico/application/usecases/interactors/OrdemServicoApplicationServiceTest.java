@@ -256,6 +256,61 @@ class OrdemServicoApplicationServiceTest {
         assertTrue(eventos.isEmpty());
     }
 
+    @Test
+    void atualizarStatusIniciaDiagnostico() {
+        var ordem = novaOrdem();
+        var repository = new FakeOrdemServicoRepository(Optional.of(ordem));
+        var service = service(repository, new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
+
+        var atualizada = service.atualizarStatus(ordem.id().value(), StatusOrdemServico.EM_DIAGNOSTICO);
+
+        assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, atualizada.status());
+        assertSame(ordem, repository.salvo);
+    }
+
+    @Test
+    void atualizarStatusParaAguardandoAprovacaoFechaOrcamento() {
+        var ordem = novaOrdem();
+        ordem.iniciarDiagnostico();
+        var orcamento = Orcamento.novo(ordem.id());
+        var ordemRepository = new FakeOrdemServicoRepository(Optional.of(ordem));
+        var orcamentoGateway = new FakeOrcamentoRepository(Optional.of(orcamento));
+        var service = service(ordemRepository, orcamentoGateway, new ArrayList<>());
+
+        var atualizada = service.atualizarStatus(ordem.id().value(), StatusOrdemServico.AGUARDANDO_APROVACAO);
+
+        assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, atualizada.status());
+        assertEquals(StatusOrcamento.ENVIADO, orcamentoGateway.salvo.status());
+    }
+
+    @Test
+    void atualizarStatusIgualNaoSalvaNovamente() {
+        var ordem = novaOrdem();
+        var repository = new FakeOrdemServicoRepository(Optional.of(ordem));
+        var service = service(repository, new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
+
+        var atualizada = service.atualizarStatus(ordem.id().value(), StatusOrdemServico.RECEBIDA);
+
+        assertSame(ordem, atualizada);
+        assertNull(repository.salvo);
+    }
+
+    @Test
+    void atualizarStatusRejeitaStatusNulo() {
+        var service = service(new FakeOrdemServicoRepository(Optional.of(novaOrdem())), new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
+
+        assertThrows(DomainException.class, () -> service.atualizarStatus(UUID.randomUUID(), null));
+    }
+
+    @Test
+    void atualizarStatusRejeitaRetornoParaRecebida() {
+        var ordem = novaOrdem();
+        ordem.iniciarDiagnostico();
+        var service = service(new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeOrcamentoRepository(Optional.empty()), new ArrayList<>());
+
+        assertThrows(DomainException.class, () -> service.atualizarStatus(ordem.id().value(), StatusOrdemServico.RECEBIDA));
+    }
+
     private static OrdemServicoApplicationService service(
             FakeOrdemServicoRepository ordemRepository,
             FakeOrcamentoRepository orcamentoGateway,

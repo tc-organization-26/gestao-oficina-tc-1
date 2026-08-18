@@ -9,6 +9,7 @@ import br.com.fiap.oficina.estoque.domain.valueobjects.ItemEstoqueId;
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemPecaOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemServicoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.FecharOrcamentoCommand;
+import br.com.fiap.oficina.ordemservico.application.dtos.NotificarAprovacaoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.gateways.OrcamentoGateway;
 import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoGateway;
 import br.com.fiap.oficina.ordemservico.application.gateways.VerificadorEstoqueGateway;
@@ -213,6 +214,53 @@ class OrcamentoApplicationServiceTest {
         var service = service(new FakeOrcamentoRepository(Optional.empty()), new FakeOrdemServicoRepository(Optional.empty()), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
 
         assertThrows(DomainException.class, () -> service.aprovar(UUID.randomUUID()));
+    }
+
+    @Test
+    void notificarAprovacaoExternaAprovaOrcamento() {
+        var ordem = novaOrdemAguardandoAprovacao();
+        var orcamento = Orcamento.novo(ordem.id());
+        orcamento.fechar();
+        var orcamentoGateway = new FakeOrcamentoRepository(Optional.of(orcamento));
+        var service = service(orcamentoGateway, new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
+
+        var retornada = service.notificarAprovacao(new NotificarAprovacaoOrcamentoCommand(
+                ordem.id().value(),
+                NotificarAprovacaoOrcamentoCommand.DecisaoOrcamento.APROVADO,
+                "whatsapp",
+                "protocolo-1"));
+
+        assertSame(ordem, retornada);
+        assertEquals(StatusOrcamento.APROVADO, orcamentoGateway.salvo.status());
+    }
+
+    @Test
+    void notificarAprovacaoExternaRecusaOrcamento() {
+        var ordem = novaOrdemAguardandoAprovacao();
+        var orcamento = Orcamento.novo(ordem.id());
+        orcamento.fechar();
+        var orcamentoGateway = new FakeOrcamentoRepository(Optional.of(orcamento));
+        var service = service(orcamentoGateway, new FakeOrdemServicoRepository(Optional.of(ordem)), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
+
+        var retornada = service.notificarAprovacao(new NotificarAprovacaoOrcamentoCommand(
+                ordem.id().value(),
+                NotificarAprovacaoOrcamentoCommand.DecisaoOrcamento.RECUSADO,
+                "email",
+                "protocolo-2"));
+
+        assertSame(ordem, retornada);
+        assertEquals(StatusOrcamento.RECUSADO, orcamentoGateway.salvo.status());
+    }
+
+    @Test
+    void notificarAprovacaoExternaRejeitaDecisaoNula() {
+        var service = service(new FakeOrcamentoRepository(Optional.empty()), new FakeOrdemServicoRepository(Optional.empty()), new FakeServicoRepository(Optional.empty()), new FakeEstoqueRepository(Optional.empty()), new FakeVerificadorEstoque(true), new ArrayList<>());
+
+        assertThrows(DomainException.class, () -> service.notificarAprovacao(new NotificarAprovacaoOrcamentoCommand(
+                UUID.randomUUID(),
+                null,
+                "whatsapp",
+                "protocolo-3")));
     }
 
     private static OrcamentoApplicationService service(

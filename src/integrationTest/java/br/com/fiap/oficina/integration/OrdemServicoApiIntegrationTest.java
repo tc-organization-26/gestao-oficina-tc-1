@@ -47,9 +47,9 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         limparItensEstoque(itemEstoqueIds);
     }
 
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    // CRIAÃ‡ÃƒO E CONSULTA
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ----------------------------------------------
+    // CRIAÇÃO E CONSULTA
+    // ----------------------------------------------
 
     @Test
     void deveCriarEConsultarOrdemServico() {
@@ -89,9 +89,33 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         assertEquals("Recebida", status.getBody().get("descricao"));
     }
 
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    // DIAGNÃ“STICO
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    @Test
+    void deveCriarOrdemServicoComServicosEPecasNoBody() {
+        var clienteId = criarCliente();
+        var veiculoId = criarVeiculo(clienteId);
+        var servicoCodigo = criarServico();
+        var itemEstoqueCodigo = criarItemEstoqueCodigo();
+
+        var criacao = postMap("/ordens-servico", Map.of(
+                "clienteId", clienteId,
+                "veiculoId", veiculoId,
+                "servicos", List.of(Map.of("codigo", servicoCodigo, "quantidade", 1.0)),
+                "pecas", List.of(Map.of("codigo", itemEstoqueCodigo, "quantidade", 2.0)),
+                "anotacoes", "Revisao com itens iniciais"));
+
+        assertEquals(HttpStatus.CREATED, criacao.getStatusCode());
+        var ordemId = criacao.getBody().get("id").toString();
+        ordemIds.add(ordemId);
+
+        var consulta = getMap("/ordens-servico/" + ordemId);
+        var orcamento = (Map<?, ?>) consulta.getBody().get("orcamento");
+        assertEquals(1, ((List<?>) orcamento.get("itensServico")).size());
+        assertEquals(1, ((List<?>) orcamento.get("itensPeca")).size());
+    }
+
+    // ----------------------------------------------
+    // DIAGNÓSTICO
+    // ----------------------------------------------
 
     @Test
     void deveIniciarERegistrarDiagnostico() {
@@ -110,9 +134,9 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         assertEquals("Motor com desgaste nas buchas", ((Map<?, ?>) registro.getBody().get("diagnostico")).get("descricao"));
     }
 
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    // ORÃ‡AMENTO
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ----------------------------------------------
+    // ORÇAMENTO
+    // ----------------------------------------------
 
     @Test
     void deveAdicionarServicoAoOrcamentoDaOrdem() {
@@ -186,6 +210,21 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
     }
 
     @Test
+    void deveReceberNotificacaoExternaDeRecusaDoOrcamento() {
+        var ordemId = prepararAteAguardandoAprovacao();
+
+        var recusa = postMap("/ordens-servico/" + ordemId + "/orcamento/notificacoes-aprovacao",
+                Map.of(
+                        "decisao", "RECUSADO",
+                        "origem", "portal-cliente",
+                        "protocoloExterno", UUID.randomUUID().toString()));
+
+        assertEquals(HttpStatus.OK, recusa.getStatusCode());
+        assertEquals(ordemId, recusa.getBody().get("id"));
+        assertEquals("AGUARDANDO_APROVACAO", recusa.getBody().get("status"));
+    }
+
+    @Test
     void deveRecusarOrcamento() {
         var ordemId = prepararAteAguardandoAprovacao();
 
@@ -203,9 +242,9 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         assertEquals("EM_DIAGNOSTICO", ajuste.getBody().get("status"));
     }
 
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    // EXECUÃ‡ÃƒO
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ----------------------------------------------
+    // EXECUÇÃO
+    // ----------------------------------------------
 
     @Test
     void deveIniciarExecucaoAposAprovacao() {
@@ -368,9 +407,9 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         assertEquals("FINALIZADA", finalizacao.getBody().get("status"));
     }
 
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ----------------------------------------------
     // PAGAMENTO E ENTREGA
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ----------------------------------------------
 
     @Test
     void deveRegistrarPagamento() {
@@ -400,9 +439,9 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         assertEquals("ENTREGUE", entrega.getBody().get("status"));
     }
 
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ----------------------------------------------
     // FLUXO COMPLETO HAPPY PATH
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ----------------------------------------------
 
     @Test
     void deveExecutarFluxoCompletoHappyPath() {
@@ -422,29 +461,29 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         var ordemId = criacao.getBody().get("id").toString();
         ordemIds.add(ordemId);
 
-        // 2. Iniciar diagnÃ³stico
+        // 2. Iniciar diagnóstico
         var inicio = postMap("/ordens-servico/" + ordemId + "/diagnostico/inicio", Map.of());
         assertEquals("EM_DIAGNOSTICO", inicio.getBody().get("status"));
 
-        // 3. Registrar diagnÃ³stico
+        // 3. Registrar diagnóstico
         postMap("/ordens-servico/" + ordemId + "/diagnostico", Map.of("descricao", "Freios desgastados"));
 
-        // 4. Adicionar serviÃ§o ao orÃ§amento
+        // 4. Adicionar serviço ao orçamento
         var itemServico = postMap("/ordens-servico/" + ordemId + "/orcamento/servicos",
                 Map.of("codigo", servicoId, "quantidade", 1.0));
         assertEquals(HttpStatus.OK, itemServico.getStatusCode());
         assertEquals(ordemId, itemServico.getBody().get("id"));
 
-        // 5. Fechar orÃ§amento
+        // 5. Fechar orçamento
         var fechamento = postMap("/ordens-servico/" + ordemId + "/orcamento/fechar", Map.of());
         assertEquals(HttpStatus.OK, fechamento.getStatusCode());
         assertEquals("AGUARDANDO_APROVACAO", fechamento.getBody().get("status"));
 
-        // 6. Aprovar orÃ§amento
+        // 6. Aprovar orçamento
         var aprovacao = postMap("/ordens-servico/" + ordemId + "/orcamento/aprovacao", Map.of());
         assertEquals(HttpStatus.OK, aprovacao.getStatusCode());
 
-        // 7. Iniciar execuÃ§Ã£o
+        // 7. Iniciar execução
         var execucao = postMap("/ordens-servico/" + ordemId + "/execucao/inicio", Map.of());
         assertEquals("EM_EXECUCAO", execucao.getBody().get("status"));
 
@@ -452,12 +491,12 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         var acompanhamento = getMap("/ordens-servico/" + ordemId + "/acompanhamento");
         assertEquals("EM_EXECUCAO", acompanhamento.getBody().get("status"));
 
-        // 9. Baixar estoque durante execuÃ§Ã£o
+        // 9. Baixar estoque durante execução
         assertEquals(HttpStatus.OK,
                 postMap("/estoque/" + itemEstoqueCodigo + "/baixas",
                         Map.of("quantidade", 1.0)).getStatusCode());
 
-        // 10. Finalizar execuÃ§Ã£o
+        // 10. Finalizar execução
         var finalizacao = postMap("/ordens-servico/" + ordemId + "/execucao/finalizacao", Map.of());
         assertEquals("FINALIZADA", finalizacao.getBody().get("status"));
 
@@ -478,22 +517,22 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         var servicoId = criarServico();
         var ordemId = criarOrdem(clienteId, veiculoId);
 
-        // Iniciar diagnÃ³stico â†’ adicionar item â†’ fechar
+        // Iniciar diagnóstico -> adicionar item -> fechar
         postMap("/ordens-servico/" + ordemId + "/diagnostico/inicio", Map.of());
         postMap("/ordens-servico/" + ordemId + "/orcamento/servicos",
                 Map.of("codigo", servicoId, "quantidade", 1.0));
         postMap("/ordens-servico/" + ordemId + "/orcamento/fechar", Map.of());
 
-        // Cliente pede ajuste â†’ volta EM_DIAGNOSTICO
+        // Cliente pede ajuste -> volta EM_DIAGNOSTICO
         var ajuste = postMap("/ordens-servico/" + ordemId + "/orcamento/ajustes", Map.of());
         assertEquals("EM_DIAGNOSTICO", ajuste.getBody().get("status"));
 
-        // Re-adicionar serviÃ§o (orcamento reaberto) â†’ fechar novamente
+        // Re-adicionar serviço (orçamento reaberto) -> fechar novamente
         postMap("/ordens-servico/" + ordemId + "/orcamento/servicos",
                 Map.of("codigo", servicoId, "quantidade", 2.0));
         postMap("/ordens-servico/" + ordemId + "/orcamento/fechar", Map.of());
 
-        // Aprovar â†’ iniciar execuÃ§Ã£o
+        // Aprovar -> iniciar execução
         postMap("/ordens-servico/" + ordemId + "/orcamento/aprovacao", Map.of());
         var execucao = postMap("/ordens-servico/" + ordemId + "/execucao/inicio", Map.of());
         assertEquals("EM_EXECUCAO", execucao.getBody().get("status"));
@@ -504,11 +543,11 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         var servicoId = criarServico();
         var ordemId = prepararAteEmExecucao();
 
-        // Alterar orÃ§amento durante execuÃ§Ã£o â†’ volta AGUARDANDO_APROVACAO
+        // Alterar orçamento durante execução -> volta AGUARDANDO_APROVACAO
         var alteracao = postMap("/ordens-servico/" + ordemId + "/orcamento/ajustes", Map.of());
         assertEquals("EM_DIAGNOSTICO", alteracao.getBody().get("status"));
 
-        // Re-adicionar serviÃ§o â†’ fechar â†’ aprovar â†’ voltar a executar
+        // Re-adicionar serviço -> fechar -> aprovar -> voltar a executar
         postMap("/ordens-servico/" + ordemId + "/orcamento/servicos",
                 Map.of("codigo", servicoId, "quantidade", 1.0));
         postMap("/ordens-servico/" + ordemId + "/orcamento/fechar", Map.of());
@@ -518,9 +557,9 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         assertEquals("EM_EXECUCAO", execucao.getBody().get("status"));
     }
 
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ----------------------------------------------
     // HELPERS PRIVADOS
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ----------------------------------------------
 
     private String criarCliente() {
         var suffix = UUID.randomUUID().toString().substring(0, 8);
@@ -555,18 +594,6 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         assertEquals(HttpStatus.CREATED, resp.getStatusCode());
         servicoIds.add(resp.getBody().get("id").toString());
         return resp.getBody().get("codigo").toString();
-    }
-
-    private String criarItemEstoque() {
-        var suffix = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        var resp = postMap("/estoque", Map.of(
-            "codigo", "FILTRO-" + suffix,
-            "descricao", "Filtro de oleo " + suffix,
-                "valorUnitario", 25.0, "quantidadeInicial", 10.0));
-        assertEquals(HttpStatus.CREATED, resp.getStatusCode());
-        var id = resp.getBody().get("id").toString();
-        itemEstoqueIds.add(id);
-        return id;
     }
 
     private String criarItemEstoqueCodigo() {
