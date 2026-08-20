@@ -19,7 +19,6 @@ import br.com.fiap.oficina.ordemservico.application.dtos.NotificarAprovacaoOrcam
 import br.com.fiap.oficina.ordemservico.application.dtos.RegistrarDiagnosticoCommand;
 import br.com.fiap.oficina.ordemservico.application.usecases.AdicionarItemServicoOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.AdicionarItemPecaOrcamentoUseCase;
-import br.com.fiap.oficina.ordemservico.application.usecases.AprovarOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.AtualizarStatusOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.ConsultarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.CriarOrdemServicoUseCase;
@@ -61,7 +60,6 @@ public class OrdemServicoController {
     private final AdicionarItemServicoOrcamentoUseCase adicionarItemServicoOrcamentoUseCase;
     private final AdicionarItemPecaOrcamentoUseCase adicionarItemPecaOrcamentoUseCase;
     private final FecharOrcamentoUseCase fecharOrcamentoUseCase;
-    private final AprovarOrcamentoUseCase aprovarOrcamentoUseCase;
     private final RecusarOrcamentoUseCase recusarOrcamentoUseCase;
     private final PedirAjusteOrcamentoUseCase pedirAjusteOrcamentoUseCase;
     private final IniciarExecucaoUseCase iniciarExecucaoUseCase;
@@ -79,7 +77,6 @@ public class OrdemServicoController {
             AdicionarItemServicoOrcamentoUseCase adicionarItemServicoOrcamentoUseCase,
             AdicionarItemPecaOrcamentoUseCase adicionarItemPecaOrcamentoUseCase,
             FecharOrcamentoUseCase fecharOrcamentoUseCase,
-            AprovarOrcamentoUseCase aprovarOrcamentoUseCase,
             RecusarOrcamentoUseCase recusarOrcamentoUseCase,
             PedirAjusteOrcamentoUseCase pedirAjusteOrcamentoUseCase,
             IniciarExecucaoUseCase iniciarExecucaoUseCase,
@@ -95,7 +92,6 @@ public class OrdemServicoController {
         this.adicionarItemServicoOrcamentoUseCase = adicionarItemServicoOrcamentoUseCase;
         this.adicionarItemPecaOrcamentoUseCase = adicionarItemPecaOrcamentoUseCase;
         this.fecharOrcamentoUseCase = fecharOrcamentoUseCase;
-        this.aprovarOrcamentoUseCase = aprovarOrcamentoUseCase;
         this.recusarOrcamentoUseCase = recusarOrcamentoUseCase;
         this.pedirAjusteOrcamentoUseCase = pedirAjusteOrcamentoUseCase;
         this.iniciarExecucaoUseCase = iniciarExecucaoUseCase;
@@ -151,11 +147,6 @@ public class OrdemServicoController {
                 .toList();
     }
 
-    @GetMapping("/{id}/acompanhamento")
-    public OrdemServicoResponse acompanhamento(@PathVariable UUID id) {
-        return OrdemServicoResponse.from(consultarOrdemServicoUseCase.consultarPorId(new OrdemServicoId(id)));
-    }
-
     @PostMapping("/{id}/diagnostico/inicio")
     public OrdemServicoResponse iniciarDiagnostico(@PathVariable UUID id) {
         return OrdemServicoResponse.from(iniciarDiagnosticoUseCase.iniciarDiagnostico(new OrdemServicoId(id)));
@@ -190,11 +181,6 @@ public class OrdemServicoController {
             @PathVariable UUID ordemId,
             @RequestBody(required = false) FecharOrcamentoRequest request) {
         return OrdemServicoResponse.from(fecharOrcamentoUseCase.fechar(new FecharOrcamentoCommand(ordemId)));
-    }
-
-    @PostMapping("/{ordemId}/orcamento/aprovacao")
-    public OrdemServicoResponse aprovarOrcamento(@PathVariable UUID ordemId) {
-        return OrdemServicoResponse.from(aprovarOrcamentoUseCase.aprovar(ordemId));
     }
 
     @PostMapping("/{ordemId}/orcamento/notificacoes-aprovacao")

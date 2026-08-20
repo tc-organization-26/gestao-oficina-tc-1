@@ -6,6 +6,8 @@ import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoGateway
 import br.com.fiap.oficina.ordemservico.domain.entities.OrdemServico;
 import br.com.fiap.oficina.ordemservico.domain.valueobjects.OrdemServicoId;
 import br.com.fiap.oficina.shared.domain.exceptions.DomainException;
+import jakarta.persistence.EntityManager;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,18 +17,23 @@ public class OrdemServicoJpaGateway implements OrdemServicoGateway {
 
     private final SpringDataOrdemServicoRepository repository;
     private final OrcamentoSpringDataRepository orcamentoSpringDataRepository;
+    private final EntityManager entityManager;
     private final OrdemServicoJpaMapper mapper = new OrdemServicoJpaMapper();
 
     public OrdemServicoJpaGateway(
             SpringDataOrdemServicoRepository repository,
-            OrcamentoSpringDataRepository orcamentoSpringDataRepository) {
+            OrcamentoSpringDataRepository orcamentoSpringDataRepository,
+            EntityManager entityManager) {
         this.repository = repository;
         this.orcamentoSpringDataRepository = orcamentoSpringDataRepository;
+        this.entityManager = entityManager;
     }
 
     @Override
+    @Transactional
     public OrdemServico salvar(OrdemServico ordemServico) {
         var persisted = repository.saveAndFlush(mapper.toEntity(ordemServico));
+        entityManager.refresh(persisted);
         return repository.findById(persisted.getId())
                 .map(this::toDomainComOrcamento)
                 .orElseThrow(() -> new DomainException("Ordem de servico nao encontrada apos salvar."));

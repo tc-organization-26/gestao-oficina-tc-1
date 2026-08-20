@@ -14,6 +14,7 @@ import br.com.fiap.oficina.ordemservico.application.gateways.VerificadorEstoqueG
 import br.com.fiap.oficina.ordemservico.application.usecases.interactors.OrcamentoApplicationService;
 import br.com.fiap.oficina.ordemservico.application.usecases.interactors.OrdemServicoApplicationService;
 import br.com.fiap.oficina.servico.application.gateways.ServicoGateway;
+import jakarta.persistence.EntityManager;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,8 +59,9 @@ public class OrdemServicoConfiguration {
     @Bean
     public OrdemServicoGateway ordemServicoGateway(
             SpringDataOrdemServicoRepository springDataRepository,
-            OrcamentoSpringDataRepository orcamentoSpringDataRepository) {
-        return new OrdemServicoJpaGateway(springDataRepository, orcamentoSpringDataRepository);
+            OrcamentoSpringDataRepository orcamentoSpringDataRepository,
+            EntityManager entityManager) {
+        return new OrdemServicoJpaGateway(springDataRepository, orcamentoSpringDataRepository, entityManager);
     }
 
     @Bean

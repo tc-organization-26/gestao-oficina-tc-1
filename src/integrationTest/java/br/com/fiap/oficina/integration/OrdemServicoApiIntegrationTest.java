@@ -2,6 +2,7 @@ package br.com.fiap.oficina.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +66,9 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
 
         assertEquals(HttpStatus.CREATED, criacao.getStatusCode());
         assertNotNull(criacao.getBody().get("id"));
+        assertNotNull(criacao.getBody().get("numero"));
+        var numeroCriacao = ((Number) criacao.getBody().get("numero")).longValue();
+        assertTrue(numeroCriacao > 0);
 
         var ordemId = criacao.getBody().get("id").toString();
         ordemIds.add(ordemId);
@@ -72,6 +76,7 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
 
         assertEquals(HttpStatus.OK, consulta.getStatusCode());
         assertEquals(ordemId, consulta.getBody().get("id"));
+        assertEquals(numeroCriacao, ((Number) consulta.getBody().get("numero")).longValue());
         assertEquals("RECEBIDA", consulta.getBody().get("status"));
     }
 
@@ -186,15 +191,6 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
     }
 
     @Test
-    void deveAprovarOrcamento() {
-        var ordemId = prepararAteAguardandoAprovacao();
-
-        var aprovacao = postMap("/ordens-servico/" + ordemId + "/orcamento/aprovacao", Map.of());
-        assertEquals(HttpStatus.OK, aprovacao.getStatusCode());
-        assertEquals("AGUARDANDO_APROVACAO", aprovacao.getBody().get("status"));
-    }
-
-    @Test
     void deveReceberNotificacaoExternaDeAprovacaoDoOrcamento() {
         var ordemId = prepararAteAguardandoAprovacao();
 
@@ -249,7 +245,7 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
     @Test
     void deveIniciarExecucaoAposAprovacao() {
         var ordemId = prepararAteAguardandoAprovacao();
-        postMap("/ordens-servico/" + ordemId + "/orcamento/aprovacao", Map.of());
+        aprovarOrcamentoPorNotificacao(ordemId);
 
         var execucao = postMap("/ordens-servico/" + ordemId + "/execucao/inicio", Map.of());
         assertEquals(HttpStatus.OK, execucao.getStatusCode());
@@ -279,12 +275,12 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
     }
 
     @Test
-    void deveConsultarAcompanhamento() {
+    void deveConsultarStatusDaOrdem() {
         var ordemId = prepararAteEmExecucao();
 
-        var acompanhamento = getMap("/ordens-servico/" + ordemId + "/acompanhamento");
-        assertEquals(HttpStatus.OK, acompanhamento.getStatusCode());
-        assertEquals("EM_EXECUCAO", acompanhamento.getBody().get("status"));
+        var status = getMap("/ordens-servico/" + ordemId + "/status");
+        assertEquals(HttpStatus.OK, status.getStatusCode());
+        assertEquals("EM_EXECUCAO", status.getBody().get("status"));
     }
 
     @Test
@@ -480,16 +476,16 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         assertEquals("AGUARDANDO_APROVACAO", fechamento.getBody().get("status"));
 
         // 6. Aprovar orçamento
-        var aprovacao = postMap("/ordens-servico/" + ordemId + "/orcamento/aprovacao", Map.of());
+        var aprovacao = aprovarOrcamentoPorNotificacao(ordemId);
         assertEquals(HttpStatus.OK, aprovacao.getStatusCode());
 
         // 7. Iniciar execução
         var execucao = postMap("/ordens-servico/" + ordemId + "/execucao/inicio", Map.of());
         assertEquals("EM_EXECUCAO", execucao.getBody().get("status"));
 
-        // 8. Acompanhamento (pode ser feito por atendente/gestor/cliente)
-        var acompanhamento = getMap("/ordens-servico/" + ordemId + "/acompanhamento");
-        assertEquals("EM_EXECUCAO", acompanhamento.getBody().get("status"));
+        // 8. Consulta de status (pode ser feita por atendente/gestor/cliente)
+        var status = getMap("/ordens-servico/" + ordemId + "/status");
+        assertEquals("EM_EXECUCAO", status.getBody().get("status"));
 
         // 9. Baixar estoque durante execução
         assertEquals(HttpStatus.OK,
@@ -533,7 +529,7 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         postMap("/ordens-servico/" + ordemId + "/orcamento/fechar", Map.of());
 
         // Aprovar -> iniciar execução
-        postMap("/ordens-servico/" + ordemId + "/orcamento/aprovacao", Map.of());
+        aprovarOrcamentoPorNotificacao(ordemId);
         var execucao = postMap("/ordens-servico/" + ordemId + "/execucao/inicio", Map.of());
         assertEquals("EM_EXECUCAO", execucao.getBody().get("status"));
     }
@@ -551,7 +547,7 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
         postMap("/ordens-servico/" + ordemId + "/orcamento/servicos",
                 Map.of("codigo", servicoId, "quantidade", 1.0));
         postMap("/ordens-servico/" + ordemId + "/orcamento/fechar", Map.of());
-        postMap("/ordens-servico/" + ordemId + "/orcamento/aprovacao", Map.of());
+        aprovarOrcamentoPorNotificacao(ordemId);
 
         var execucao = postMap("/ordens-servico/" + ordemId + "/execucao/inicio", Map.of());
         assertEquals("EM_EXECUCAO", execucao.getBody().get("status"));
@@ -646,9 +642,17 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
 
     private String prepararAteEmExecucao() {
         var ordemId = prepararAteAguardandoAprovacao();
-        postMap("/ordens-servico/" + ordemId + "/orcamento/aprovacao", Map.of());
+        aprovarOrcamentoPorNotificacao(ordemId);
         postMap("/ordens-servico/" + ordemId + "/execucao/inicio", Map.of());
         return ordemId;
+    }
+
+    private org.springframework.http.ResponseEntity<Map> aprovarOrcamentoPorNotificacao(String ordemId) {
+        return postMap("/ordens-servico/" + ordemId + "/orcamento/notificacoes-aprovacao",
+                Map.of(
+                        "decisao", "APROVADO",
+                        "origem", "whatsapp",
+                        "protocoloExterno", UUID.randomUUID().toString()));
     }
 
     private String prepararAteFinalizada() {
