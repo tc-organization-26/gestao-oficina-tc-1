@@ -45,6 +45,30 @@ class OrcamentoTest {
     }
 
     @Test
+    void somaQuantidadeQuandoServicoJaExisteNoOrcamento() {
+        var orcamento = Orcamento.novo(OrdemServicoId.novo());
+        var servicoId = new ServicoId(UUID.randomUUID());
+
+        orcamento.adicionarItemServico(new OrcamentoItemServico(servicoId, java.math.BigDecimal.ONE));
+        orcamento.adicionarItemServico(new OrcamentoItemServico(servicoId, java.math.BigDecimal.valueOf(2)));
+
+        assertEquals(1, orcamento.itensServico().size());
+        assertEquals(java.math.BigDecimal.valueOf(3), orcamento.itensServico().get(0).quantidade());
+    }
+
+    @Test
+    void somaQuantidadeQuandoPecaJaExisteNoOrcamento() {
+        var orcamento = Orcamento.novo(OrdemServicoId.novo());
+        var itemEstoqueId = new ItemEstoqueId(UUID.randomUUID());
+
+        orcamento.adicionarItemPeca(new ItemPeca(itemEstoqueId, java.math.BigDecimal.ONE));
+        orcamento.adicionarItemPeca(new ItemPeca(itemEstoqueId, java.math.BigDecimal.valueOf(2)));
+
+        assertEquals(1, orcamento.itensPeca().size());
+        assertEquals(java.math.BigDecimal.valueOf(3), orcamento.itensPeca().get(0).quantidade());
+    }
+
+    @Test
     void rejeitaItensNulos() {
         var orcamento = Orcamento.novo(OrdemServicoId.novo());
 

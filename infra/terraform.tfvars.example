@@ -1,0 +1,6 @@
+kubeconfig_context = "docker-desktop"
+postgres_storage_class_name = "hostpath"
+
+postgres_user     = "troque_aqui"
+postgres_password = "troque_aqui"
+jwt_secret        = "troque_por_uma_chave_segura_com_32_bytes_ou_mais"

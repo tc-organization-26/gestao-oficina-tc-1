@@ -3,12 +3,10 @@ package br.com.fiap.oficina.ordemservico.application.usecases.interactors;
 import br.com.fiap.oficina.estoque.application.gateways.EstoqueGateway;
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemPecaOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemServicoOrcamentoCommand;
-import br.com.fiap.oficina.ordemservico.application.dtos.FecharOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.NotificarAprovacaoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.usecases.AdicionarItemPecaOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.AdicionarItemServicoOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.AprovarOrcamentoUseCase;
-import br.com.fiap.oficina.ordemservico.application.usecases.FecharOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.NotificarAprovacaoOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.RecusarOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.gateways.OrcamentoGateway;
@@ -16,7 +14,6 @@ import br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoGateway
 import br.com.fiap.oficina.ordemservico.application.gateways.PublicadorEventoGateway;
 import br.com.fiap.oficina.ordemservico.application.gateways.VerificadorEstoqueGateway;
 import br.com.fiap.oficina.ordemservico.domain.events.FaltaPecaEstoqueEvent;
-import br.com.fiap.oficina.ordemservico.domain.events.OrcamentoFechadoEvent;
 import br.com.fiap.oficina.ordemservico.domain.entities.ItemPeca;
 import br.com.fiap.oficina.ordemservico.domain.entities.Orcamento;
 import br.com.fiap.oficina.ordemservico.domain.entities.OrcamentoItemServico;
@@ -31,7 +28,6 @@ import java.util.UUID;
 public class OrcamentoApplicationService implements
         AdicionarItemPecaOrcamentoUseCase,
         AdicionarItemServicoOrcamentoUseCase,
-        FecharOrcamentoUseCase,
         AprovarOrcamentoUseCase,
         RecusarOrcamentoUseCase,
         NotificarAprovacaoOrcamentoUseCase {
@@ -91,35 +87,9 @@ public class OrcamentoApplicationService implements
         return buscarOrdemServicoAtualizada(ordemServicoId);
     }
 
-    @Override
-    public OrdemServico fechar(FecharOrcamentoCommand command) {
-        var ordemServicoId = new OrdemServicoId(command.ordemId());
-        var ordemServico = ordemServicoGateway.buscarPorId(ordemServicoId)
-                .orElseThrow(() -> new DomainException("Ordem de servico nao encontrada: " + command.ordemId()));
-
-        var orcamento = orcamentoGateway.buscarPorOrdemServicoId(ordemServicoId)
-                .orElseThrow(() -> new DomainException("Orcamento nao encontrado: " + command.ordemId()));
-
-        fecharOrcamentoComSucesso(ordemServico, orcamento);
-        return buscarOrdemServicoAtualizada(ordemServicoId);
-    }
-
     private OrdemServico buscarOrdemServicoAtualizada(OrdemServicoId ordemServicoId) {
         return ordemServicoGateway.buscarPorId(ordemServicoId)
                 .orElseThrow(() -> new DomainException("Ordem de servico nao encontrada: " + ordemServicoId.value()));
-    }
-
-    private Orcamento fecharOrcamentoComSucesso(OrdemServico ordemServico, Orcamento orcamento) {
-        if (orcamento.status() != StatusOrcamento.ENVIADO) {
-            orcamento.fechar();
-        }
-        var orcamentoSalvo = orcamentoGateway.salvar(orcamento);
-
-        ordemServico.finalizarOrcamento();
-        ordemServicoGateway.salvar(ordemServico);
-
-        publicadorEventoGateway.publicar(new OrcamentoFechadoEvent(ordemServico.id().value(), ordemServico.clienteId().value()));
-        return orcamentoSalvo;
     }
 
     @Override

@@ -4,7 +4,6 @@ import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.reque
 import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.request.AdicionarItemPecaOrcamentoRequest;
 import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.request.AtualizarStatusOrdemServicoRequest;
 import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.request.CriarOrdemServicoRequest;
-import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.request.FecharOrcamentoRequest;
 import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.request.NotificarAprovacaoOrcamentoRequest;
 import br.com.fiap.oficina.ordemservico.interfaceadapters.controllers.rest.request.RegistrarDiagnosticoRequest;
 import br.com.fiap.oficina.ordemservico.interfaceadapters.presenters.rest.response.OrdemServicoCriadaResponse;
@@ -14,7 +13,6 @@ import br.com.fiap.oficina.ordemservico.interfaceadapters.presenters.rest.respon
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemServicoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.AdicionarItemPecaOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.CriarOrdemServicoCommand;
-import br.com.fiap.oficina.ordemservico.application.dtos.FecharOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.NotificarAprovacaoOrcamentoCommand;
 import br.com.fiap.oficina.ordemservico.application.dtos.RegistrarDiagnosticoCommand;
 import br.com.fiap.oficina.ordemservico.application.usecases.AdicionarItemServicoOrcamentoUseCase;
@@ -22,13 +20,7 @@ import br.com.fiap.oficina.ordemservico.application.usecases.AdicionarItemPecaOr
 import br.com.fiap.oficina.ordemservico.application.usecases.AtualizarStatusOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.ConsultarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.CriarOrdemServicoUseCase;
-import br.com.fiap.oficina.ordemservico.application.usecases.EntregarOrdemServicoUseCase;
-import br.com.fiap.oficina.ordemservico.application.usecases.FecharOrcamentoUseCase;
-import br.com.fiap.oficina.ordemservico.application.usecases.FinalizarExecucaoUseCase;
-import br.com.fiap.oficina.ordemservico.application.usecases.IniciarDiagnosticoUseCase;
-import br.com.fiap.oficina.ordemservico.application.usecases.IniciarExecucaoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.NotificarAprovacaoOrcamentoUseCase;
-import br.com.fiap.oficina.ordemservico.application.usecases.PedirAjusteOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.RecusarOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.RegistrarDiagnosticoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.RegistrarPagamentoUseCase;
@@ -55,49 +47,31 @@ public class OrdemServicoController {
 
     private final CriarOrdemServicoUseCase criarOrdemServicoUseCase;
     private final ConsultarOrdemServicoUseCase consultarOrdemServicoUseCase;
-    private final IniciarDiagnosticoUseCase iniciarDiagnosticoUseCase;
     private final RegistrarDiagnosticoUseCase registrarDiagnosticoUseCase;
     private final AdicionarItemServicoOrcamentoUseCase adicionarItemServicoOrcamentoUseCase;
     private final AdicionarItemPecaOrcamentoUseCase adicionarItemPecaOrcamentoUseCase;
-    private final FecharOrcamentoUseCase fecharOrcamentoUseCase;
     private final RecusarOrcamentoUseCase recusarOrcamentoUseCase;
-    private final PedirAjusteOrcamentoUseCase pedirAjusteOrcamentoUseCase;
-    private final IniciarExecucaoUseCase iniciarExecucaoUseCase;
-    private final FinalizarExecucaoUseCase finalizarExecucaoUseCase;
     private final RegistrarPagamentoUseCase registrarPagamentoUseCase;
-    private final EntregarOrdemServicoUseCase entregarOrdemServicoUseCase;
     private final AtualizarStatusOrdemServicoUseCase atualizarStatusOrdemServicoUseCase;
     private final NotificarAprovacaoOrcamentoUseCase notificarAprovacaoOrcamentoUseCase;
 
     public OrdemServicoController(
             CriarOrdemServicoUseCase criarOrdemServicoUseCase,
             ConsultarOrdemServicoUseCase consultarOrdemServicoUseCase,
-            IniciarDiagnosticoUseCase iniciarDiagnosticoUseCase,
             RegistrarDiagnosticoUseCase registrarDiagnosticoUseCase,
             AdicionarItemServicoOrcamentoUseCase adicionarItemServicoOrcamentoUseCase,
             AdicionarItemPecaOrcamentoUseCase adicionarItemPecaOrcamentoUseCase,
-            FecharOrcamentoUseCase fecharOrcamentoUseCase,
             RecusarOrcamentoUseCase recusarOrcamentoUseCase,
-            PedirAjusteOrcamentoUseCase pedirAjusteOrcamentoUseCase,
-            IniciarExecucaoUseCase iniciarExecucaoUseCase,
-            FinalizarExecucaoUseCase finalizarExecucaoUseCase,
             RegistrarPagamentoUseCase registrarPagamentoUseCase,
-            EntregarOrdemServicoUseCase entregarOrdemServicoUseCase,
             AtualizarStatusOrdemServicoUseCase atualizarStatusOrdemServicoUseCase,
             NotificarAprovacaoOrcamentoUseCase notificarAprovacaoOrcamentoUseCase) {
         this.criarOrdemServicoUseCase = criarOrdemServicoUseCase;
         this.consultarOrdemServicoUseCase = consultarOrdemServicoUseCase;
-        this.iniciarDiagnosticoUseCase = iniciarDiagnosticoUseCase;
         this.registrarDiagnosticoUseCase = registrarDiagnosticoUseCase;
         this.adicionarItemServicoOrcamentoUseCase = adicionarItemServicoOrcamentoUseCase;
         this.adicionarItemPecaOrcamentoUseCase = adicionarItemPecaOrcamentoUseCase;
-        this.fecharOrcamentoUseCase = fecharOrcamentoUseCase;
         this.recusarOrcamentoUseCase = recusarOrcamentoUseCase;
-        this.pedirAjusteOrcamentoUseCase = pedirAjusteOrcamentoUseCase;
-        this.iniciarExecucaoUseCase = iniciarExecucaoUseCase;
-        this.finalizarExecucaoUseCase = finalizarExecucaoUseCase;
         this.registrarPagamentoUseCase = registrarPagamentoUseCase;
-        this.entregarOrdemServicoUseCase = entregarOrdemServicoUseCase;
         this.atualizarStatusOrdemServicoUseCase = atualizarStatusOrdemServicoUseCase;
         this.notificarAprovacaoOrcamentoUseCase = notificarAprovacaoOrcamentoUseCase;
     }
@@ -147,11 +121,6 @@ public class OrdemServicoController {
                 .toList();
     }
 
-    @PostMapping("/{id}/diagnostico/inicio")
-    public OrdemServicoResponse iniciarDiagnostico(@PathVariable UUID id) {
-        return OrdemServicoResponse.from(iniciarDiagnosticoUseCase.iniciarDiagnostico(new OrdemServicoId(id)));
-    }
-
     @PostMapping("/{id}/diagnostico")
     public OrdemServicoResponse registrarDiagnostico(
             @PathVariable UUID id,
@@ -176,13 +145,6 @@ public class OrdemServicoController {
         return OrdemServicoResponse.from(adicionarItemPecaOrcamentoUseCase.adicionarItemPeca(cmd));
     }
 
-    @PostMapping("/{ordemId}/orcamento/fechar")
-    public OrdemServicoResponse fecharOrcamento(
-            @PathVariable UUID ordemId,
-            @RequestBody(required = false) FecharOrcamentoRequest request) {
-        return OrdemServicoResponse.from(fecharOrcamentoUseCase.fechar(new FecharOrcamentoCommand(ordemId)));
-    }
-
     @PostMapping("/{ordemId}/orcamento/notificacoes-aprovacao")
     public StatusOrdemServicoResponse notificarAprovacaoOrcamento(
             @PathVariable UUID ordemId,
@@ -201,30 +163,9 @@ public class OrdemServicoController {
         return OrdemServicoResponse.from(recusarOrcamentoUseCase.recusar(ordemId));
     }
 
-    @PostMapping("/{ordemId}/orcamento/ajustes")
-    public OrdemServicoResponse pedirAjuste(@PathVariable UUID ordemId) {
-        return OrdemServicoResponse.from(pedirAjusteOrcamentoUseCase.pedirAjuste(ordemId));
-    }
-
-
-    @PostMapping("/{ordemId}/execucao/inicio")
-    public OrdemServicoResponse iniciarExecucao(@PathVariable UUID ordemId) {
-        return OrdemServicoResponse.from(iniciarExecucaoUseCase.iniciarExecucao(ordemId));
-    }
-
-    @PostMapping("/{ordemId}/execucao/finalizacao")
-    public OrdemServicoResponse finalizarExecucao(@PathVariable UUID ordemId) {
-        return OrdemServicoResponse.from(finalizarExecucaoUseCase.finalizar(ordemId));
-    }
-
     @PostMapping("/{ordemId}/pagamento")
     public OrdemServicoResponse registrarPagamento(@PathVariable UUID ordemId) {
         return OrdemServicoResponse.from(registrarPagamentoUseCase.registrarPagamento(ordemId));
-    }
-
-    @PostMapping("/{ordemId}/entrega")
-    public OrdemServicoResponse entregar(@PathVariable UUID ordemId) {
-        return OrdemServicoResponse.from(entregarOrdemServicoUseCase.entregar(ordemId));
     }
 
     @PatchMapping("/{ordemId}/status")

@@ -50,11 +50,29 @@ public final class Orcamento {
 
     public void adicionarItemServico(OrcamentoItemServico item) {
         if (item == null) throw new DomainException("Item obrigatorio");
+        for (int i = 0; i < this.itensServico.size(); i++) {
+            var itemExistente = this.itensServico.get(i);
+            if (itemExistente.servicoId().equals(item.servicoId())) {
+                this.itensServico.set(i, new OrcamentoItemServico(
+                        itemExistente.servicoId(),
+                        itemExistente.quantidade().add(item.quantidade())));
+                return;
+            }
+        }
         this.itensServico.add(item);
     }
 
     public void adicionarItemPeca(ItemPeca peca) {
         if (peca == null) throw new DomainException("Peca obrigatoria");
+        for (int i = 0; i < this.itensPeca.size(); i++) {
+            var pecaExistente = this.itensPeca.get(i);
+            if (pecaExistente.itemEstoqueId().equals(peca.itemEstoqueId())) {
+                this.itensPeca.set(i, new ItemPeca(
+                        pecaExistente.itemEstoqueId(),
+                        pecaExistente.quantidade().add(peca.quantidade())));
+                return;
+            }
+        }
         this.itensPeca.add(peca);
     }
 

@@ -1,0 +1,1813 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Oficina
+meta:
+  id: wrk_93157f1a9df64bf6a140e9afbd5b7a42
+  created: 1782695526988
+  modified: 1782695526988
+  description: ""
+collection:
+  - name: Ordens de serviços
+    meta:
+      id: fld_53189faed35e437385acb40121dd901f
+      created: 1782695388141
+      modified: 1787201224679
+      sortKey: 0
+      description: ""
+    children:
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/servicos"
+        name: Adicionar serviço ao orçamento
+        meta:
+          id: req_143a1b600b6340a6a54348060da60427
+          created: 1782695388145
+          modified: 1787291303158
+          isPrivate: false
+          description: ""
+          sortKey: -14.0625
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "codigo": "{{ _.SERVICO_COD }}",
+              "quantidade": 1.0
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico"
+        name: Listar ordens
+        meta:
+          id: req_1715e1265b03408d89194b1c6bf1e7e1
+          created: 1782695388145
+          modified: 1787291286945
+          isPrivate: false
+          description: ""
+          sortKey: -25
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico"
+        name: Criar ordem de serviço
+        meta:
+          id: req_5e4a526521e04d3e9fce9cdce09fb77e
+          created: 1782695388145
+          modified: 1787291290987
+          isPrivate: false
+          description: ""
+          sortKey: -37.5
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "clienteId": "{{ _.CLIENTE_ID }}",
+              "veiculoId": "{{ _.VEICULO_ID }}",
+              "servicos": [
+                { "codigo": "{{ _.SERVICO_COD }}", "quantidade": 1.0 }
+              ],
+              "pecas": [],
+              "anotacoes": "Revisão geral"
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        scripts:
+          afterResponse: |-
+            const body = insomnia.response.json();
+
+            if (body.id) {
+              insomnia.environment.set("ORDEM_ID", body.id);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/recusa"
+        name: Recusar orçamento
+        meta:
+          id: req_6a15b6f4ebd84f51a28c4d58946d2018
+          created: 1782695388145
+          modified: 1785697234614
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: POST
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/status"
+        name: Acompanhamento da ordem
+        meta:
+          id: req_839b8e4559dc45ceb1fcf632373326b0
+          created: 1782695388145
+          modified: 1787291413917
+          isPrivate: false
+          description: ""
+          sortKey: 0.0091552734375
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico?status=RECEBIDA"
+        name: Listar ordens por status RECEBIDA
+        meta:
+          id: req_aeacd541269043b0bba83d2d7ae8b880
+          created: 1782695388145
+          modified: 1787291300240
+          isPrivate: false
+          description: ""
+          sortKey: -15.625
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}"
+        name: Buscar ordem por ID
+        meta:
+          id: req_c5ea2de7ecd74c62bd829fe6d91125e5
+          created: 1782695388145
+          modified: 1787291297023
+          isPrivate: false
+          description: ""
+          sortKey: -18.75
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        scripts:
+          afterResponse: |-
+            const body = insomnia.response.json();
+
+            if (body.orcamento.id) {
+              insomnia.environment.set("ORCAMENTO_ID", body.orcamento.id);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico?clienteId={{ _.CLIENTE_ID }}"
+        name: Histórico de atendimentos do cliente
+        meta:
+          id: req_cc7edf8e9a214632908c87395eb3fde5
+          created: 1782695388145
+          modified: 1787291376062
+          isPrivate: false
+          description: ""
+          sortKey: 6.298828125
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/diagnostico"
+        name: Registrar diagnóstico
+        meta:
+          id: req_fba908c2ed944ad2930a6446f1498106
+          created: 1782695388145
+          modified: 1787291401093
+          isPrivate: false
+          description: ""
+          sortKey: -9.375
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "descricao": "-mecanico descreve diagnostico-"
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/tempo-medio-execucao"
+        name: Acompanhar tempo médio de atendimento
+        meta:
+          id: req_08153507745f43eeb7fc0344e9fd4304
+          created: 1782797586222
+          modified: 1787291444601
+          isPrivate: false
+          description: ""
+          sortKey: 17.1875
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/pecas"
+        name: Adicionar peça ao orçamento
+        meta:
+          id: req_e0b1bfa04800451fa61a2b140abd7170
+          created: 1787290972492
+          modified: 1787291294072
+          isPrivate: false
+          description: ""
+          sortKey: -12.5
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "codigo": "{{ _.ITEM_ESTOQUE_CODIGO }}",
+              "quantidade": 1.0
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/notificacoes-aprovacao"
+        name: Notificação de aprovação de orçamento
+        meta:
+          id: req_dc19c76e391f4f22b0807d09ee035522
+          created: 1787291063729
+          modified: 1787291405085
+          isPrivate: false
+          description: ""
+          sortKey: -3.125
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "decisao": "APROVADO",
+              "origem": "WHATSAPP",
+              "protocoloExterno": "PROTO-123"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/pagamento"
+        name: Registrar pagamento
+        meta:
+          id: req_a3a12a60da2d4064b246fabb2f49d73e
+          created: 1787291196174
+          modified: 1787291196174
+          isPrivate: false
+          description: ""
+          sortKey: 0.0244140625
+        method: POST
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/status"
+        name: Atualização de status OS
+        meta:
+          id: req_439d4e7f1ca94c029226e118e8e87f42
+          created: 1787291454482
+          modified: 1787291454482
+          isPrivate: false
+          description: ""
+          sortKey: 14.84375
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "status": "EM_DIAGNOSTICO"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Serviços
+    meta:
+      id: fld_58a73f21862340aea3a35ee9a03b51bd
+      created: 1782695388141
+      modified: 1787201224152
+      sortKey: 0
+      description: ""
+    children:
+      - url: "{{ _.BASE_URL }}/servicos/{{ _.SERVICO_ID }}"
+        name: Atualizar serviço
+        meta:
+          id: req_3554c8035e244bea9e030fde7683266c
+          created: 1782695388144
+          modified: 1785694209104
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "descricao": "Revisao completa",
+              "valorUnitario": 180.0,
+              "tempoEstimadoMinutos": 90
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/servicos"
+        name: Listar serviços
+        meta:
+          id: req_5b1478bc06824d34a11c15850f2875eb
+          created: 1782695388144
+          modified: 1782873529491
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/servicos"
+        name: Criar serviço
+        meta:
+          id: req_757e2b24d04e493e85290cb270c228cd
+          created: 1782695388144
+          modified: 1787197627422
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "codigo": "{{ _.SERVICO_COD }}",
+              "descricao": "Serviço 2",
+              "valorUnitario": 350.0,
+              "tempoEstimadoMinutos": 60
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        scripts:
+          afterResponse: |-
+            const body = insomnia.response.json();
+
+            if (body.id) {
+              insomnia.environment.set("SERVICO_ID", body.id);
+            }
+
+            if (body.codigo) {
+              insomnia.environment.set("SERVICO_COD", body.codigo);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/servicos/{{ _.SERVICO_ID }}"
+        name: Deletar serviço
+        meta:
+          id: req_900faf92314347039a947fd240406f54
+          created: 1782695388144
+          modified: 1785694212970
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/servicos/{{ _.SERVICO_ID }}"
+        name: Buscar serviço por ID
+        meta:
+          id: req_dc21c74d168e4b5a8a59730fd76297fc
+          created: 1782695388144
+          modified: 1785694223639
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Estoque
+    meta:
+      id: fld_b4577a9cad0d416c9c2bb2fee6ac260a
+      created: 1782695388141
+      modified: 1787201223632
+      sortKey: 0
+      description: ""
+    children:
+      - url: "{{ _.BASE_URL }}/estoque"
+        name: Listar estoque
+        meta:
+          id: req_02c2727e94734252a6bbc56c65658fd4
+          created: 1782695388144
+          modified: 1785693856418
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/estoque/codigo/{{ _.ITEM_ESTOQUE_CODIGO }}"
+        name: Buscar estoque por código
+        meta:
+          id: req_0891a91fdb0140f79b891b7e355bd8c8
+          created: 1782695388144
+          modified: 1785694097013
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/estoque/consulta/ativos"
+        name: Consultar ativos
+        meta:
+          id: req_4b47f4f78e68423399cd7b5eea19b81b
+          created: 1782695388144
+          modified: 1785693868326
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/estoque/{{ _.ITEM_ESTOQUE_ID }}"
+        name: Atualizar item de estoque
+        meta:
+          id: req_79f4bb693a0f485183b1f32a337e40a1
+          created: 1782695388144
+          modified: 1785693912960
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "descricao": "Filtro de oleo premium",
+              "valorUnitario": 30.0
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/estoque"
+        name: Criar item de estoque
+        meta:
+          id: req_9c964701ee204ecfbf672b2637f2e745
+          created: 1782695388144
+          modified: 1787116344826
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "codigo": "{{ _.ITEM_ESTOQUE_CODIGO }}",
+              "descricao": "Item 2",
+              "valorUnitario": 25.0,
+              "quantidadeInicial": 10.0
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        scripts:
+          afterResponse: |-
+            const body = insomnia.response.json();
+
+            if (body.id) {
+              insomnia.environment.set("ITEM_ESTOQUE_ID", body.id);
+            }
+
+            if (body.codigo) {
+              insomnia.environment.set("ITEM_ESTOQUE_CODIGO", body.codigo);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/estoque/{{ _.ITEM_ESTOQUE_CODIGO }}/baixas"
+        name: Baixar estoque
+        meta:
+          id: req_dc299c265b154682a23cb6b62ee0bf4a
+          created: 1782695388144
+          modified: 1785694121757
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "quantidade": 2.0
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/estoque/{{ _.ITEM_ESTOQUE_ID }}"
+        name: Deletar item de estoque
+        meta:
+          id: req_df1161c4bc1e4d2a99e5f5f2f8bcae42
+          created: 1782695388144
+          modified: 1785693918370
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/estoque/{{ _.ITEM_ESTOQUE_ID }}/inclusoes"
+        name: Incluir estoque
+        meta:
+          id: req_efa84e2acc434583945694ff30240fde
+          created: 1782695388144
+          modified: 1785694142202
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "quantidade": 5.0
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/estoque/{{ _.ITEM_ESTOQUE_ID }}"
+        name: Buscar item de estoque por ID
+        meta:
+          id: req_f2a59d5bfa2f454e9967896ccf818b81
+          created: 1782695388144
+          modified: 1785693970408
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Veículos
+    meta:
+      id: fld_d097057b0ed94caab227c30d07f81a1a
+      created: 1782695388141
+      modified: 1787201223159
+      sortKey: 0
+      description: ""
+    children:
+      - url: "{{ _.BASE_URL }}/veiculos/{{ _.VEICULO_ID }}"
+        name: Buscar veículo por ID
+        meta:
+          id: req_4dda2a8c0bac4f46b20d8873838788d1
+          created: 1782695388143
+          modified: 1785693797016
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/veiculos/{{ _.VEICULO_ID }}"
+        name: Atualizar veículo
+        meta:
+          id: req_98a8e21e398945a3818b0a262a772308
+          created: 1782695388143
+          modified: 1785693737175
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "marca": "Honda",
+              "modelo": "Civic",
+              "ano": 2021
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/veiculos/{{ _.VEICULO_ID }}"
+        name: Deletar veículo
+        meta:
+          id: req_e05d79288a8d4bf5a67ecb5b1ab8a003
+          created: 1782695388144
+          modified: 1785693743835
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/veiculos"
+        name: Listar veículos
+        meta:
+          id: req_b9aefca4b07d427d83b1b06f505ae379
+          created: 1785693586205
+          modified: 1785693803001
+          isPrivate: false
+          description: ""
+          sortKey: 25
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/veiculos"
+        name: Criar veículo
+        meta:
+          id: req_6bbec2716cb54a4894bf92b6afc066e7
+          created: 1787290545397
+          modified: 1787290545397
+          isPrivate: false
+          description: ""
+          sortKey: 0.78125
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "clienteId": "{{ _.CLIENTE_ID }}",
+              "placa": "{{ _.VEICULO_PLACA }}",
+              "marca": "Renault",
+              "modelo": "Sandero",
+              "ano": 2020
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        scripts:
+          afterResponse: |-
+            const body = insomnia.response.json();
+
+            if (body.id) {
+              insomnia.environment.set("VEICULO_ID", body.id);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Auth
+    meta:
+      id: fld_d66490c16c824516a7b6d448855f4c75
+      created: 1782695388141
+      modified: 1787201222605
+      sortKey: 0
+      description: ""
+    children:
+      - url: "{{ _.BASE_URL }}/auth/login"
+        name: Login
+        meta:
+          id: req_ab54b81f4ef64b0e992c14a77540e335
+          created: 1787290513779
+          modified: 1787290513779
+          isPrivate: false
+          description: ""
+          sortKey: 6.25
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "login": "admin",
+              "senha": "ad@456"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            description: ""
+        scripts:
+          afterResponse: |-
+            const body = insomnia.response.json();
+
+            if (body.token) {
+              insomnia.environment.set("TOKEN", body.token);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Clientes
+    meta:
+      id: fld_eeebb44f7ed54e4fa095985aeaef3a24
+      created: 1782695388141
+      modified: 1787201222813
+      sortKey: 0
+      description: ""
+    children:
+      - url: "{{ _.BASE_URL }}/clientes"
+        name: Criar cliente
+        meta:
+          id: req_01eb3c95f3084a72866f7688bc050839
+          created: 1782695388142
+          modified: 1787197524553
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "nome": "Tha Santos B",
+              "cpfCnpj": "{{ _.CLIENTE_DOC }}",
+              "email": "maria@email.com",
+              "telefone": "11999999999"
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        scripts:
+          afterResponse: |-
+            const body = insomnia.response.json();
+
+            if (body.id) {
+              insomnia.environment.set("CLIENTE_ID", body.id);
+            }
+
+            if (body.cpfCnpj) {
+              insomnia.environment.set("CLIENTE_DOC", body.cpfCnpj);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/clientes/{{ _.CLIENTE_ID }}"
+        name: Atualizar cliente
+        meta:
+          id: req_212fdc3db8e64964941fc6b71f473b83
+          created: 1782695388142
+          modified: 1785693343283
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "nome": "Thais",
+              "email": "tha@email.com",
+              "telefone": "11888888888"
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/clientes/{{ _.CLIENTE_ID }}"
+        name: Buscar cliente por ID
+        meta:
+          id: req_7bb49bb6af9748d7a94c779504bb0fb0
+          created: 1782695388142
+          modified: 1785693378333
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/clientes/documento/{{ _.CLIENTE_DOC }}"
+        name: Buscar cliente por documento
+        meta:
+          id: req_c26f25c331ce4ba0bc1a10729845b816
+          created: 1782695388142
+          modified: 1787195869619
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/clientes/{{ _.CLIENTE_ID }}"
+        name: Deletar cliente
+        meta:
+          id: req_129e4a3377004666b8dcb687d02d01f1
+          created: 1782695388143
+          modified: 1785693353129
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/clientes/{{ _.CLIENTE_ID }}/veiculos"
+        name: Listar veículos do cliente
+        meta:
+          id: req_367963cc84ca46a28829a0a2fe9b4d59
+          created: 1782695388143
+          modified: 1785693635034
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/clientes"
+        name: Listar clientes
+        meta:
+          id: req_a40e010322d643d6970d98def906b843
+          created: 1782695388143
+          modified: 1785693392639
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: FLUXO COMPLETO
+    meta:
+      id: fld_556613b54a4e4b4b892b64246417c621
+      created: 1787290360748
+      modified: 1787292293640
+      sortKey: -1787290360749
+      description: ""
+    children:
+      - url: "{{ _.BASE_URL }}/auth/login"
+        name: Login
+        meta:
+          id: req_fluxo_login
+          created: 1787290513779
+          modified: 1787290513779
+          isPrivate: false
+          description: ""
+          sortKey: 10
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "login": "admin",
+              "senha": "ad@456"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            description: ""
+        scripts:
+          afterResponse: |-
+            const body = insomnia.response.json();
+
+            if (body.token) {
+              insomnia.environment.set("TOKEN", body.token);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/clientes"
+        name: Criar cliente
+        meta:
+          id: req_fluxo_criar_cliente
+          created: 1782695388142
+          modified: 1787197524553
+          isPrivate: false
+          description: ""
+          sortKey: 20
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "nome": "Tha Santos B",
+              "cpfCnpj": "{{ _.CLIENTE_DOC }}",
+              "email": "maria@email.com",
+              "telefone": "11999999999"
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        scripts:
+          afterResponse: |-
+            const body = insomnia.response.json();
+
+            if (body.id) {
+              insomnia.environment.set("CLIENTE_ID", body.id);
+            }
+
+            if (body.cpfCnpj) {
+              insomnia.environment.set("CLIENTE_DOC", body.cpfCnpj);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/veiculos"
+        name: Criar veículo
+        meta:
+          id: req_fluxo_criar_veiculo
+          created: 1787290545397
+          modified: 1787290545397
+          isPrivate: false
+          description: ""
+          sortKey: 30
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "clienteId": "{{ _.CLIENTE_ID }}",
+              "placa": "{{ _.VEICULO_PLACA }}",
+              "marca": "Renault",
+              "modelo": "Sandero",
+              "ano": 2020
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        scripts:
+          afterResponse: |-
+            const body = insomnia.response.json();
+
+            if (body.id) {
+              insomnia.environment.set("VEICULO_ID", body.id);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/estoque"
+        name: Criar item de estoque
+        meta:
+          id: req_fluxo_criar_item_estoque
+          created: 1782695388144
+          modified: 1787116344826
+          isPrivate: false
+          description: ""
+          sortKey: 40
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "codigo": "{{ _.ITEM_ESTOQUE_CODIGO }}",
+              "descricao": "Item 2",
+              "valorUnitario": 25.0,
+              "quantidadeInicial": 10.0
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        scripts:
+          afterResponse: |-
+            const body = insomnia.response.json();
+
+            if (body.id) {
+              insomnia.environment.set("ITEM_ESTOQUE_ID", body.id);
+            }
+
+            if (body.codigo) {
+              insomnia.environment.set("ITEM_ESTOQUE_CODIGO", body.codigo);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/servicos"
+        name: Criar serviço
+        meta:
+          id: req_fluxo_criar_servico
+          created: 1782695388144
+          modified: 1787197627422
+          isPrivate: false
+          description: ""
+          sortKey: 50
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "codigo": "{{ _.SERVICO_COD }}",
+              "descricao": "Serviço 2",
+              "valorUnitario": 350.0,
+              "tempoEstimadoMinutos": 60
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        scripts:
+          afterResponse: |-
+            const body = insomnia.response.json();
+
+            if (body.id) {
+              insomnia.environment.set("SERVICO_ID", body.id);
+            }
+
+            if (body.codigo) {
+              insomnia.environment.set("SERVICO_COD", body.codigo);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico"
+        name: Criar ordem de serviço
+        meta:
+          id: req_fluxo_criar_ordem_servico
+          created: 1782695388145
+          modified: 1787291290987
+          isPrivate: false
+          description: ""
+          sortKey: 60
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "clienteId": "{{ _.CLIENTE_ID }}",
+              "veiculoId": "{{ _.VEICULO_ID }}",
+              "servicos": [
+                { "codigo": "{{ _.SERVICO_COD }}", "quantidade": 1.0 }
+              ],
+              "pecas": [],
+              "anotacoes": "Revisão geral"
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        scripts:
+          afterResponse: |-
+            const body = insomnia.response.json();
+
+            if (body.id) {
+              insomnia.environment.set("ORDEM_ID", body.id);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/status"
+        name: Alterar status da OS para EM_DIAGNOSTICO
+        meta:
+          id: req_fluxo_status_em_diagnostico
+          created: 1787293000001
+          modified: 1787293000001
+          isPrivate: false
+          description: ""
+          sortKey: 70
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "status": "EM_DIAGNOSTICO"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/servicos"
+        name: Adicionar serviço ao orçamento
+        meta:
+          id: req_fluxo_adicionar_servico_orcamento
+          created: 1782695388145
+          modified: 1787291303158
+          isPrivate: false
+          description: ""
+          sortKey: 80
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "codigo": "{{ _.SERVICO_COD }}",
+              "quantidade": 1.0
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/pecas"
+        name: Adicionar peça ao orçamento
+        meta:
+          id: req_fluxo_adicionar_peca_orcamento
+          created: 1787290972492
+          modified: 1787291294072
+          isPrivate: false
+          description: ""
+          sortKey: 90
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "codigo": "{{ _.ITEM_ESTOQUE_CODIGO }}",
+              "quantidade": 1.0
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/diagnostico"
+        name: Registrar diagnóstico
+        meta:
+          id: req_fluxo_registrar_diagnostico
+          created: 1782695388145
+          modified: 1787291401093
+          isPrivate: false
+          description: ""
+          sortKey: 100
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "descricao": "-mecanico descreve diagnostico-"
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+          - name: Content-Type
+            value: application/json
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/status"
+        name: Alterar status da OS para AGUARDANDO_APROVACAO
+        meta:
+          id: req_fluxo_status_aguardando_aprovacao
+          created: 1787293000002
+          modified: 1787293000002
+          isPrivate: false
+          description: ""
+          sortKey: 110
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "status": "AGUARDANDO_APROVACAO"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/orcamento/notificacoes-aprovacao"
+        name: Notificação de aprovação de orçamento
+        meta:
+          id: req_fluxo_notificacao_aprovacao_orcamento
+          created: 1787291063729
+          modified: 1787291405085
+          isPrivate: false
+          description: ""
+          sortKey: 120
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "decisao": "APROVADO",
+              "origem": "WHATSAPP",
+              "protocoloExterno": "PROTO-123"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/status"
+        name: Alterar status da OS para EM_EXECUCAO
+        meta:
+          id: req_fluxo_status_em_execucao
+          created: 1787293000003
+          modified: 1787293000003
+          isPrivate: false
+          description: ""
+          sortKey: 130
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "status": "EM_EXECUCAO"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/status"
+        name: Alterar status da OS para FINALIZADA
+        meta:
+          id: req_fluxo_status_finalizada
+          created: 1787293000004
+          modified: 1787293000004
+          isPrivate: false
+          description: ""
+          sortKey: 140
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "status": "FINALIZADA"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/pagamento"
+        name: Registrar pagamento
+        meta:
+          id: req_fluxo_registrar_pagamento
+          created: 1787291196174
+          modified: 1787291196174
+          isPrivate: false
+          description: ""
+          sortKey: 150
+        method: POST
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/status"
+        name: Alterar status da OS para ENTREGUE
+        meta:
+          id: req_fluxo_status_entregue
+          created: 1787293000005
+          modified: 1787293000005
+          isPrivate: false
+          description: ""
+          sortKey: 160
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "status": "ENTREGUE"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.BASE_URL }}/ordens-servico/{{ _.ORDEM_ID }}/status"
+        name: Acompanhamento da ordem
+        meta:
+          id: req_fluxo_acompanhamento_ordem
+          created: 1782695388145
+          modified: 1787291413917
+          isPrivate: false
+          description: ""
+          sortKey: 170
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.TOKEN }}
+            description: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_c66743e125959ed0dddd83ec77d2f15120be8dd1
+    created: 1782695526992
+    modified: 1787292293635
+environments:
+  name: Base Environment
+  meta:
+    id: env_c66743e125959ed0dddd83ec77d2f15120be8dd1
+    created: 1782695526990
+    modified: 1787292293638
+    isPrivate: false
+  data:
+    TOKEN: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJwYXBlbCI6IkFETUlOSVNUUkFET1IiLCJpYXQiOjE3ODcyOTIyODgsImV4cCI6MTc4NzI5NTg4OH0.woU2WyNoEepEv10p9c7yjbNE-SVzHuZ6SzCNHbncGSY
+    CLIENTE_ID: 405d6b8c-3057-4f70-814c-715855fe404b
+    VEICULO_ID: 0fcdf9a9-0076-4fb4-a273-dd9e94f5562a
+    SERVICO_ID: 8244e162-a8a6-46a4-97bc-f97222a74c3d
+    ITEM_ESTOQUE_ID: c431b903-184a-43dc-8059-ac961d99e7d2
+    ORDEM_ID: 4d97cd5c-ae14-46a3-9514-4576829f5414
+    ORCAMENTO_ID: 1fefd158-b0e4-43e8-a55a-9471028ec1cb
+    BASE_URL: http://localhost:18081
+    ITEM_ESTOQUE_CODIGO: JSM-007
+    SERVICO_COD: OEW-07
+    CLIENTE_DOC: "84349815547"
+    VEICULO_PLACA: iae1327
+    "": ""

@@ -8,11 +8,6 @@ import br.com.fiap.oficina.ordemservico.application.gateways.VerificadorEstoqueG
 import br.com.fiap.oficina.ordemservico.application.usecases.AtualizarStatusOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.ConsultarOrdemServicoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.CriarOrdemServicoUseCase;
-import br.com.fiap.oficina.ordemservico.application.usecases.EntregarOrdemServicoUseCase;
-import br.com.fiap.oficina.ordemservico.application.usecases.FinalizarExecucaoUseCase;
-import br.com.fiap.oficina.ordemservico.application.usecases.IniciarDiagnosticoUseCase;
-import br.com.fiap.oficina.ordemservico.application.usecases.IniciarExecucaoUseCase;
-import br.com.fiap.oficina.ordemservico.application.usecases.PedirAjusteOrcamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.RegistrarDiagnosticoUseCase;
 import br.com.fiap.oficina.ordemservico.application.usecases.RegistrarPagamentoUseCase;
 import br.com.fiap.oficina.ordemservico.application.gateways.OrcamentoGateway;
@@ -22,6 +17,7 @@ import br.com.fiap.oficina.ordemservico.domain.entities.ItemPeca;
 import br.com.fiap.oficina.ordemservico.domain.entities.OrcamentoItemServico;
 import br.com.fiap.oficina.ordemservico.domain.events.FaltaPecaEstoqueEvent;
 import br.com.fiap.oficina.ordemservico.domain.events.OrdemServicoFinalizadaEvent;
+import br.com.fiap.oficina.ordemservico.domain.events.OrcamentoFechadoEvent;
 import br.com.fiap.oficina.ordemservico.domain.entities.Diagnostico;
 import br.com.fiap.oficina.ordemservico.domain.entities.OrdemServico;
 import br.com.fiap.oficina.ordemservico.domain.valueobjects.OrdemServicoId;
@@ -39,13 +35,8 @@ import java.util.UUID;
 public class OrdemServicoApplicationService implements
         CriarOrdemServicoUseCase,
         ConsultarOrdemServicoUseCase,
-        IniciarDiagnosticoUseCase,
         RegistrarDiagnosticoUseCase,
-        IniciarExecucaoUseCase,
-        FinalizarExecucaoUseCase,
         RegistrarPagamentoUseCase,
-        EntregarOrdemServicoUseCase,
-        PedirAjusteOrcamentoUseCase,
         AtualizarStatusOrdemServicoUseCase {
 
     private final OrdemServicoGateway ordemServicoGateway;
@@ -130,8 +121,7 @@ public class OrdemServicoApplicationService implements
         return "%d:%02d".formatted(horas, minutos);
     }
 
-    @Override
-    public OrdemServico iniciarDiagnostico(OrdemServicoId ordemServicoId) {
+    private OrdemServico iniciarDiagnostico(OrdemServicoId ordemServicoId) {
         var ordemServico = buscarOrdemServico(ordemServicoId);
         ordemServico.iniciarDiagnostico();
         return ordemServicoGateway.salvar(ordemServico);
@@ -144,21 +134,15 @@ public class OrdemServicoApplicationService implements
         return ordemServicoGateway.salvar(ordemServico);
     }
 
-    @Override
-    public OrdemServico iniciarExecucao(UUID ordemId) {
+    private OrdemServico iniciarExecucao(UUID ordemId) {
         var ordemServicoId = new OrdemServicoId(ordemId);
         var ordemServico = buscarOrdemServico(ordemServicoId);
-        var orcamento = orcamentoGateway.buscarPorOrdemServicoId(ordemServicoId)
-                .orElseThrow(() -> new DomainException("Orcamento nao encontrado para a ordem: " + ordemId));
-        if (orcamento.status() != StatusOrcamento.APROVADO) {
-            throw new DomainException("Orcamento deve estar APROVADO para iniciar execucao. Status atual: " + orcamento.status());
-        }
+        validarOrcamentoAprovadoParaExecucao(ordemServico);
         ordemServico.iniciarExecucao();
         return ordemServicoGateway.salvar(ordemServico);
     }
 
-    @Override
-    public OrdemServico finalizar(UUID ordemId) {
+    private OrdemServico finalizar(UUID ordemId) {
         var ordemServico = buscarOrdemServico(new OrdemServicoId(ordemId));
         ordemServico.finalizar();
         var saved = ordemServicoGateway.salvar(ordemServico);
@@ -173,15 +157,13 @@ public class OrdemServicoApplicationService implements
         return ordemServicoGateway.salvar(ordemServico);
     }
 
-    @Override
-    public OrdemServico entregar(UUID ordemId) {
+    private OrdemServico entregar(UUID ordemId) {
         var ordemServico = buscarOrdemServico(new OrdemServicoId(ordemId));
         ordemServico.entregar();
         return ordemServicoGateway.salvar(ordemServico);
     }
 
-    @Override
-    public OrdemServico pedirAjuste(UUID ordemId) {
+    private OrdemServico pedirAjuste(UUID ordemId) {
         var ordemServicoId = new OrdemServicoId(ordemId);
         var ordemServico = buscarOrdemServico(ordemServicoId);
         ordemServico.pedirAjuste();
@@ -202,8 +184,8 @@ public class OrdemServicoApplicationService implements
             return ordemServico;
         }
         return switch (status) {
-            case EM_DIAGNOSTICO -> iniciarDiagnostico(ordemServico.id());
-            case AGUARDANDO_APROVACAO -> fecharOrdemParaAprovacao(ordemServico);
+            case EM_DIAGNOSTICO -> voltarParaDiagnostico(ordemServico);
+            case AGUARDANDO_APROVACAO -> enviarParaAprovacao(ordemServico);
             case EM_EXECUCAO -> iniciarExecucao(ordemId);
             case FINALIZADA -> finalizar(ordemId);
             case ENTREGUE -> entregar(ordemId);
@@ -216,15 +198,36 @@ public class OrdemServicoApplicationService implements
                 .orElseThrow(() -> new DomainException("Ordem de servico nao encontrada."));
     }
 
-    private OrdemServico fecharOrdemParaAprovacao(OrdemServico ordemServico) {
+    private OrdemServico enviarParaAprovacao(OrdemServico ordemServico) {
+        ordemServico.finalizarOrcamento();
+        var saved = ordemServicoGateway.salvar(ordemServico);
+        fecharOrcamentoAposAtualizacaoStatus(ordemServico);
+        publicadorEventoGateway.publicar(new OrcamentoFechadoEvent(ordemServico.id().value(), ordemServico.clienteId().value()));
+        return saved;
+    }
+
+    private OrdemServico voltarParaDiagnostico(OrdemServico ordemServico) {
+        if (ordemServico.status() == StatusOrdemServico.RECEBIDA) {
+            return iniciarDiagnostico(ordemServico.id());
+        }
+        return pedirAjuste(ordemServico.id().value());
+    }
+
+    private void validarOrcamentoAprovadoParaExecucao(OrdemServico ordemServico) {
+        var orcamento = orcamentoGateway.buscarPorOrdemServicoId(ordemServico.id())
+                .orElseThrow(() -> new DomainException("Orcamento nao encontrado para a ordem: " + ordemServico.id().value()));
+        if (orcamento.status() != StatusOrcamento.APROVADO) {
+            throw new DomainException("Orcamento deve estar APROVADO para iniciar execucao. Status atual: " + orcamento.status());
+        }
+    }
+
+    private void fecharOrcamentoAposAtualizacaoStatus(OrdemServico ordemServico) {
         var orcamento = orcamentoGateway.buscarPorOrdemServicoId(ordemServico.id())
                 .orElseThrow(() -> new DomainException("Orcamento nao encontrado para a ordem: " + ordemServico.id().value()));
         if (orcamento.status() != StatusOrcamento.ENVIADO) {
             orcamento.fechar();
             orcamentoGateway.salvar(orcamento);
         }
-        ordemServico.finalizarOrcamento();
-        return ordemServicoGateway.salvar(ordemServico);
     }
 
     private List<OrdemServico> ordenarOrdensAtivas(List<OrdemServico> ordens) {
