@@ -67,7 +67,7 @@ jobs:
             --body "Pull request criado automaticamente pelo GitHub Actions para validar e integrar a Fase 2."
 
   build-testes:
-    name: Build da aplicacao e testes automatizados
+    name: Build da aplicacao e execucao dos testes automatizados
     runs-on: ubuntu-latest
 
     services:
@@ -144,14 +144,14 @@ jobs:
           tags: ${{ steps.imagem.outputs.app_image }}
 
   deploy:
-    name: Continuous Deployment com Terraform e Kubernetes
-    runs-on: ubuntu-latest
+    name: Deploy no cluster Kubernetes
+    runs-on: [self-hosted, Windows]
     needs: imagem-docker
     if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
 
     env:
-      KUBECONFIG: /tmp/kubeconfig
-      TF_VAR_kubeconfig_path: /tmp/kubeconfig
+      KUBECONFIG: ${{ github.workspace }}\kubeconfig
+      TF_VAR_kubeconfig_path: ${{ github.workspace }}\kubeconfig
       TF_VAR_kubeconfig_context: ${{ vars.KUBE_CONTEXT }}
       TF_VAR_namespace: oficina
       TF_VAR_app_image: ${{ needs.imagem-docker.outputs.app_image }}
@@ -168,13 +168,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configurar acesso ao cluster Kubernetes
-        shell: bash
+        shell: powershell
         run: |
-          echo "${{ secrets.KUBE_CONFIG_BASE64 }}" | base64 --decode > "$KUBECONFIG"
-          chmod 600 "$KUBECONFIG"
-          if [ -n "${TF_VAR_kubeconfig_context}" ]; then
-            kubectl config use-context "${TF_VAR_kubeconfig_context}"
-          fi
+          [IO.File]::WriteAllBytes($env:KUBECONFIG, [Convert]::FromBase64String("${{ secrets.KUBE_CONFIG_BASE64 }}"))
+          if ($env:TF_VAR_kubeconfig_context) {
+            kubectl config use-context $env:TF_VAR_kubeconfig_context
+          }
           kubectl cluster-info
 
       - name: Configurar Terraform
@@ -194,11 +193,11 @@ jobs:
         working-directory: infra
         run: terraform validate
 
-      - name: Planejar deploy do banco e da aplicacao
+      - name: Planejar deploy no cluster Kubernetes
         working-directory: infra
         run: terraform plan -out=tfplan
 
-      - name: Deploy do banco de dados e da aplicacao com Terraform
+      - name: Deploy do banco de dados com Terraform
         working-directory: infra
         run: terraform apply -auto-approve tfplan
 
