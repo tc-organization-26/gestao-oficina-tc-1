@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   packages: write
   pull-requests: write
 
@@ -35,9 +35,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH_NAME: ${{ github.ref_name }}
+          BRANCH_OWNER: ${{ github.repository_owner }}
+          BASE_BRANCH: main
         shell: bash
         run: |
-          pr_number="$(gh pr list --head "${BRANCH_NAME}" --base main --state open --json number --jq '.[0].number')"
+          pr_number="$(gh pr list --head "${BRANCH_OWNER}:${BRANCH_NAME}" --base "${BASE_BRANCH}" --state open --json number --jq '.[0].number')"
 
           if [ -n "${pr_number}" ]; then
             echo "PR #${pr_number} ja existe para ${BRANCH_NAME}."
@@ -45,8 +47,8 @@ jobs:
           fi
 
           gh pr create \
-            --base main \
-            --head "${BRANCH_NAME}" \
+            --base "${BASE_BRANCH}" \
+            --head "${BRANCH_OWNER}:${BRANCH_NAME}" \
             --title "Fase 2" \
             --body "Pull request criado automaticamente pelo GitHub Actions para validar e integrar a Fase 2."
 
