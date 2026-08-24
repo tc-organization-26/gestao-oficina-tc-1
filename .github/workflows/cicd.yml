@@ -46,7 +46,7 @@ jobs:
           gh api "repos/${GITHUB_REPOSITORY}/branches/${BASE_BRANCH}" --jq '"Base OK: " + .name'
           gh api "repos/${GITHUB_REPOSITORY}/branches/${BRANCH_NAME}" --jq '"Origem OK: " + .name'
 
-          pr_number="$(gh pr list --head "${BRANCH_OWNER}:${BRANCH_NAME}" --base "${BASE_BRANCH}" --state open --json number --jq '.[0].number')"
+          pr_number="$(gh pr list --head "${BRANCH_NAME}" --base "${BASE_BRANCH}" --state open --json number --jq '.[0].number')"
 
           if [ -n "${pr_number}" ]; then
             echo "PR #${pr_number} ja existe para ${BRANCH_NAME}."
