@@ -276,6 +276,60 @@ O projeto possui duas formas de execução local:
 
 Nos dois casos, a aplicação usa PostgreSQL e executa as migrations do Flyway automaticamente ao iniciar.
 
+## Versões necessárias para execução local
+
+Estas são as versões identificadas no projeto ou no ambiente local usado para validar a execução.
+
+| Aplicação / dependência | Versão | Origem |
+| --- | --- | --- |
+| Java / JDK | 21 | Definido em `pom.xml` e usado nas imagens `eclipse-temurin:21-jdk-alpine` e `eclipse-temurin:21-jre-alpine` |
+| Java instalado nesta máquina | 21.0.11 | Saída local de `java -version` |
+| Maven Wrapper | 3.3.4 | Definido em `.mvn/wrapper/maven-wrapper.properties` |
+| Apache Maven usado pelo wrapper | 3.9.16 | Definido em `.mvn/wrapper/maven-wrapper.properties` |
+| Spring Boot | 4.0.7 | Definido no `parent` do `pom.xml` |
+| Springdoc OpenAPI / Swagger UI | 3.0.2 | Definido em `pom.xml` |
+| JJWT | 0.12.6 | Definido em `pom.xml` |
+| Build Helper Maven Plugin | 3.6.0 | Definido em `pom.xml` |
+| PostgreSQL | 16 Alpine | Definido em `docker-compose.yml` e nos manifestos Kubernetes |
+| Docker Desktop | 4.77.0 | Saída local de `docker version` |
+| Docker Engine | 29.5.3 | Saída local de `docker version` |
+| Docker Compose | v5.1.4 | Saída local de `docker compose version` |
+| Terraform | >= 1.6.0 | Definido em `infra/providers.tf` |
+| Terraform instalado nesta máquina | 1.15.9 | Saída local de `terraform version` |
+| Provider Kubernetes do Terraform | ~> 2.31, lockado em 2.38.0 | Definido em `infra/providers.tf` e `infra/.terraform.lock.hcl` |
+| kubectl instalado nesta máquina | v1.34.1 | Saída local de `kubectl version --client` |
+| Kustomize embutido no kubectl | v5.7.1 | Saída local de `kubectl version --client` |
+| Kubernetes local | v1.34.3 | Server Version do Kubernetes habilitado no Docker Desktop |
+| Git | 2.54.0.windows.1 | Saída local de `git --version` |
+| Insomnia | 13.1.0 | Versão local informada para importar e executar a collection de testes da API |
+
+Para conferir as versões em outra máquina, use:
+
+```bash
+git --version
+docker version
+docker compose version
+kubectl version --client
+kubectl version
+terraform version
+```
+
+Se for usar Docker Desktop com Kubernetes, confirme também a versão do Docker Desktop em `Settings > About` e a versão do cluster Kubernetes exibida em `Server Version` pelo comando `kubectl version`.
+
+## Configuração das variáveis da aplicação
+
+Não é necessário editar `src/main/resources/application.properties` para informar senha do banco, usuário, URL do banco ou segredo JWT.
+
+Esse arquivo já está configurado para ler os valores a partir de variáveis de ambiente, como `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `JWT_SECRET`, `SECURITY_JWT_SECRET` e `SECURITY_JWT_EXPIRATION_SECONDS`.
+
+Para Docker Compose, preencha o arquivo `.env`.
+
+Para Kubernetes com Terraform, preencha o arquivo `infra/terraform.tfvars` ou use variáveis de ambiente `TF_VAR_*`.
+
+Para execução sem Docker, configure essas variáveis diretamente no ambiente da máquina antes de iniciar a aplicação.
+
+Os arquivos `.env` e `infra/terraform.tfvars` não devem ser versionados, pois podem conter senhas e segredos.
+
 ## Opção 1 - Docker Compose
 
 Use esta opção quando quiser subir rapidamente a API e o banco localmente.
@@ -442,6 +496,7 @@ O Terraform provisiona:
 - `kubectl`.
 - Terraform.
 - Imagem local da aplicação criada com o nome `oficina-api:local`.
+- Opcional para HPA funcional: Metrics Server instalado no cluster local.
 
 ### Preparar Docker Desktop com Kubernetes
 
@@ -488,16 +543,18 @@ Se preferir instalar manualmente:
 
 ### Passo a passo com Terraform
 
-Sequência rápida:
+Use esta sequência a partir da raiz do projeto:
 
 ```powershell
 cd "C:\Users\thais\OneDrive\Área de Trabalho\proj-tc-1-fiap"
 kubectl config use-context docker-desktop
 kubectl cluster-info
 docker build -t oficina-api:local .
-cd infra
-copy terraform.tfvars.example terraform.tfvars
+copy infra\terraform.tfvars.example infra\terraform.tfvars
+notepad infra\terraform.tfvars
+cd .\infra
 terraform init
+terraform plan
 terraform apply
 kubectl get all -n oficina
 kubectl get pvc -n oficina
@@ -507,27 +564,28 @@ kubectl port-forward -n oficina service/oficina-api 18081:8081
 
 O caminho `C:\Users\thais\OneDrive\Área de Trabalho\proj-tc-1-fiap` representa a raiz do projeto nesta máquina. Em outra máquina, entre na pasta raiz onde o repositório foi clonado antes de executar os comandos.
 
+O que cada etapa faz:
+
+- `kubectl config use-context docker-desktop`: aponta o `kubectl` para o cluster local do Docker Desktop.
+- `kubectl cluster-info`: confirma que o cluster Kubernetes está acessível.
+- `docker build -t oficina-api:local .`: cria a imagem local usada pelo Deployment da API.
+- `copy infra\terraform.tfvars.example infra\terraform.tfvars`: cria o arquivo local de variáveis sensíveis.
+- `notepad infra\terraform.tfvars`: abre o arquivo para preencher usuário, senha do banco e segredo JWT.
+- `terraform init`: baixa e prepara o provider Kubernetes.
+- `terraform plan`: mostra o que será criado no cluster.
+- `terraform apply`: cria os recursos Kubernetes.
+- `kubectl get all`, `kubectl get pvc` e `kubectl get hpa`: verificam os recursos criados.
+- `kubectl port-forward`: libera acesso local à API pelo endereço `http://localhost:18081`.
+
+Antes do `terraform apply`, confira se `infra\terraform.tfvars` foi preenchido com valores válidos.
+
 Com o `port-forward` aberto, acesse:
 
 ```text
 http://localhost:18081/swagger-ui/index.html
 ```
 
-Na raiz do projeto, gere a imagem local da API:
-
-```powershell
-docker build -t oficina-api:local .
-```
-
-Essa imagem é usada pelo Deployment da API no Kubernetes.
-
-Crie o arquivo local de variáveis sensíveis do Terraform:
-
-```powershell
-copy infra\terraform.tfvars.example infra\terraform.tfvars
-```
-
-Edite `infra\terraform.tfvars` e ajuste as senhas e o segredo JWT.
+O arquivo `infra\terraform.tfvars` deve seguir este formato:
 
 Exemplo:
 
@@ -558,30 +616,13 @@ $env:TF_VAR_jwt_secret = "troque_por_uma_chave_segura_com_32_bytes_ou_mais"
 
 O Terraform só reconhece variáveis de ambiente quando elas começam com `TF_VAR_`.
 
-Depois aplique a infraestrutura:
-
-```powershell
-cd infra
-terraform init
-terraform plan
-terraform apply
-```
-
-Verifique os recursos criados:
-
-```powershell
-kubectl get all -n oficina
-kubectl get pvc -n oficina
-kubectl get hpa -n oficina
-```
-
-No Docker Desktop, a API deve ficar disponível em:
+No Docker Desktop, a API também pode ficar disponível pelo `NodePort`:
 
 ```text
 http://localhost:30081/swagger-ui/index.html
 ```
 
-Se o `NodePort` não responder em `localhost`, use `port-forward`:
+Se o `NodePort` não responder em `localhost`, use o `port-forward`, que é o caminho mais previsível para execução local:
 
 ```powershell
 kubectl port-forward -n oficina service/oficina-api 18081:8081
@@ -614,7 +655,38 @@ cd infra
 terraform destroy
 ```
 
-O HPA depende do metrics-server. Se o cluster local não tiver metrics-server, o recurso será criado, mas as métricas podem aparecer como indisponíveis até instalar esse componente.
+O HPA depende do Metrics Server. Se o cluster local não tiver Metrics Server, o recurso será criado, mas as métricas podem aparecer como indisponíveis até instalar esse componente opcional.
+
+### Opcional: instalar Metrics Server para HPA
+
+O HPA da API usa métricas de CPU e memória. Em clusters locais, como Docker Desktop, essas métricas só ficam disponíveis quando o Metrics Server está instalado.
+
+O Metrics Server não faz parte da infraestrutura atual provisionada pelo Terraform. Ele é um componente do cluster Kubernetes local e pode ser instalado separadamente usando o manifesto oficial:
+
+```powershell
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+```
+
+Depois confira se o Deployment ficou disponível:
+
+```powershell
+kubectl rollout status deployment/metrics-server -n kube-system
+kubectl top nodes
+kubectl top pods -n oficina
+```
+
+No Docker Desktop, se o Deployment do Metrics Server ficar sem disponibilidade e os logs mostrarem erro de certificado do kubelet, aplique o ajuste local abaixo:
+
+```powershell
+kubectl patch deployment metrics-server -n kube-system --type=strategic --patch-file k8s/metrics-server-docker-desktop-patch.json
+kubectl rollout status deployment/metrics-server -n kube-system
+```
+
+Se `kubectl top` retornar métricas, o HPA consegue calcular o autoscaling:
+
+```powershell
+kubectl get hpa -n oficina
+```
 
 ## Possíveis problemas
 
