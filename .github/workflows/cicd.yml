@@ -134,8 +134,8 @@ jobs:
     if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
 
     env:
-      KUBECONFIG: ${{ runner.temp }}/kubeconfig
-      TF_VAR_kubeconfig_path: ${{ runner.temp }}/kubeconfig
+      KUBECONFIG: /tmp/kubeconfig
+      TF_VAR_kubeconfig_path: /tmp/kubeconfig
       TF_VAR_kubeconfig_context: ${{ vars.KUBE_CONTEXT }}
       TF_VAR_namespace: oficina
       TF_VAR_app_image: ${{ needs.imagem-docker.outputs.app_image }}
