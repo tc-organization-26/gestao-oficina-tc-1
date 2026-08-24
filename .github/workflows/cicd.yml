@@ -1,10 +1,6 @@
 name: Continuous Deployment - Oficina API
 
 on:
-  pull_request:
-    branches:
-      - main
-      - master
   push:
     branches:
       - main
@@ -69,10 +65,6 @@ jobs:
   build-testes:
     name: Build da aplicacao e execucao dos testes automatizados
     runs-on: ubuntu-latest
-    if: >-
-      github.event_name == 'pull_request' ||
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master'))
 
     services:
       postgres:
