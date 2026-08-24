@@ -186,6 +186,29 @@ resource "kubernetes_secret_v1" "app" {
   }
 }
 
+resource "kubernetes_secret_v1" "registry" {
+  count = var.registry_username != "" && var.registry_password != "" ? 1 : 0
+
+  metadata {
+    name      = "ghcr-credentials"
+    namespace = kubernetes_namespace_v1.oficina.metadata[0].name
+  }
+
+  type = "kubernetes.io/dockerconfigjson"
+
+  data = {
+    ".dockerconfigjson" = jsonencode({
+      auths = {
+        (var.registry_server) = {
+          username = var.registry_username
+          password = var.registry_password
+          auth     = base64encode("${var.registry_username}:${var.registry_password}")
+        }
+      }
+    })
+  }
+}
+
 resource "kubernetes_deployment_v1" "app" {
   metadata {
     name      = "oficina-api"
@@ -205,6 +228,14 @@ resource "kubernetes_deployment_v1" "app" {
       }
 
       spec {
+        dynamic "image_pull_secrets" {
+          for_each = kubernetes_secret_v1.registry
+
+          content {
+            name = image_pull_secrets.value.metadata[0].name
+          }
+        }
+
         container {
           name              = "oficina-api"
           image             = var.app_image

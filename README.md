@@ -276,6 +276,8 @@ O projeto possui duas formas de execução local:
 
 Nos dois casos, a aplicação usa PostgreSQL e executa as migrations do Flyway automaticamente ao iniciar.
 
+Execução local é usada apenas para desenvolvimento, testes manuais e validação da infraestrutura. O deploy contínuo do projeto deve acontecer pelo GitHub Actions, usando runner do GitHub. Portanto, não é necessário executar localmente a sequência completa de Continuous Deployment.
+
 ## Versões necessárias para execução local
 
 Estas são as versões identificadas no projeto ou no ambiente local usado para validar a execução.
@@ -329,6 +331,42 @@ Para Kubernetes com Terraform, preencha o arquivo `infra/terraform.tfvars` ou us
 Para execução sem Docker, configure essas variáveis diretamente no ambiente da máquina antes de iniciar a aplicação.
 
 Os arquivos `.env` e `infra/terraform.tfvars` não devem ser versionados, pois podem conter senhas e segredos.
+
+## Continuous Deployment no GitHub Actions
+
+O workflow `.github/workflows/cicd.yml` configura Continuous Deployment. Em pull requests, ele executa build e testes. Em push nas branches `main` ou `master`, ele executa build, testes, build/push da imagem Docker e deploy automático no cluster Kubernetes.
+
+O deploy do banco de dados e da aplicação é feito pelo Terraform. A aplicação de manifestos YAML complementares é feita pelo `kubectl apply -f k8s/cd` no próprio runner do GitHub.
+
+Para o workflow funcionar, configure estes secrets no repositório GitHub:
+
+| Secret | Uso |
+| --- | --- |
+| `KUBE_CONFIG_BASE64` | Kubeconfig do cluster codificado em Base64, usado pelo runner do GitHub para acessar o Kubernetes |
+| `POSTGRES_USER` | Usuário do PostgreSQL criado no cluster |
+| `POSTGRES_PASSWORD` | Senha do PostgreSQL criada no cluster |
+| `JWT_SECRET` | Segredo usado para assinar os tokens JWT da aplicação |
+| `GHCR_USERNAME` | Usuário do GitHub Container Registry, necessário se a imagem estiver privada |
+| `GHCR_TOKEN` | Token com permissão de leitura no GitHub Container Registry, necessário se a imagem estiver privada |
+
+Configure também estas variables no repositório quando precisar sobrescrever os padrões:
+
+| Variable | Uso |
+| --- | --- |
+| `KUBE_CONTEXT` | Contexto Kubernetes existente no kubeconfig. Pode ficar vazio se o kubeconfig já tiver `current-context` correto |
+| `POSTGRES_STORAGE_CLASS_NAME` | StorageClass do PVC do PostgreSQL. Se não for informado, o workflow usa `hostpath` |
+
+Para gerar o valor de `KUBE_CONFIG_BASE64` no PowerShell:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\.kube\config"))
+```
+
+No GitHub, adicione esse valor em `Settings > Secrets and variables > Actions > Secrets`.
+
+O state do Terraform no Continuous Deployment usa backend Kubernetes, gravado como Secret no namespace `default` do cluster. Isso evita depender de arquivos locais no runner efêmero do GitHub Actions.
+
+Importante: para caracterizar Continuous Deployment, o workflow não possui aprovação manual de ambiente. Depois de um push em `main` ou `master`, passando build e testes, o deploy segue automaticamente.
 
 ## Opção 1 - Docker Compose
 
@@ -546,14 +584,14 @@ Se preferir instalar manualmente:
 Use esta sequência a partir da raiz do projeto:
 
 ```powershell
-cd "C:\Users\thais\OneDrive\Área de Trabalho\proj-tc-1-fiap"
+cd "<pasta raiz do seu projeto>"
 kubectl config use-context docker-desktop
 kubectl cluster-info
 docker build -t oficina-api:local .
 copy infra\terraform.tfvars.example infra\terraform.tfvars
 notepad infra\terraform.tfvars
 cd .\infra
-terraform init
+terraform init -backend-config="config_path=$env:USERPROFILE\.kube\config" -backend-config="namespace=default" -backend-config="secret_suffix=oficina-api-local"
 terraform plan
 terraform apply
 kubectl get all -n oficina
@@ -562,7 +600,16 @@ kubectl get hpa -n oficina
 kubectl port-forward -n oficina service/oficina-api 18081:8081
 ```
 
-O caminho `C:\Users\thais\OneDrive\Área de Trabalho\proj-tc-1-fiap` representa a raiz do projeto nesta máquina. Em outra máquina, entre na pasta raiz onde o repositório foi clonado antes de executar os comandos.
+Durante o `terraform apply`, o Terraform mostra o plano e pergunta se deve aplicar as mudanças. Quando aparecer a pergunta abaixo, digite exatamente `yes` e pressione `Enter`:
+
+```text
+Do you want to perform these actions?
+  Enter a value:
+```
+
+Digite `yes` somente nessa confirmação do `terraform apply`. Se aparecer uma pergunta sobre `secret_suffix`, interrompa com `Ctrl+C` e rode `terraform init -reconfigure`, conforme a seção de problemas deste README.
+
+O caminho `<pasta raiz do seu projeto>` representa a raiz do projeto nesta máquina. Em outra máquina, entre na pasta raiz onde o repositório foi clonado antes de executar os comandos.
 
 O que cada etapa faz:
 
@@ -571,9 +618,9 @@ O que cada etapa faz:
 - `docker build -t oficina-api:local .`: cria a imagem local usada pelo Deployment da API.
 - `copy infra\terraform.tfvars.example infra\terraform.tfvars`: cria o arquivo local de variáveis sensíveis.
 - `notepad infra\terraform.tfvars`: abre o arquivo para preencher usuário, senha do banco e segredo JWT.
-- `terraform init`: baixa e prepara o provider Kubernetes.
+- `terraform init`: baixa o provider Kubernetes e configura o backend Kubernetes para guardar o state local no cluster.
 - `terraform plan`: mostra o que será criado no cluster.
-- `terraform apply`: cria os recursos Kubernetes.
+- `terraform apply`: cria os recursos Kubernetes depois da confirmação manual com `yes`.
 - `kubectl get all`, `kubectl get pvc` e `kubectl get hpa`: verificam os recursos criados.
 - `kubectl port-forward`: libera acesso local à API pelo endereço `http://localhost:18081`.
 
@@ -615,6 +662,19 @@ $env:TF_VAR_jwt_secret = "troque_por_uma_chave_segura_com_32_bytes_ou_mais"
 ```
 
 O Terraform só reconhece variáveis de ambiente quando elas começam com `TF_VAR_`.
+
+Como o projeto usa backend Kubernetes, se você trocar de cluster ou quiser recriar a configuração local do backend, rode:
+
+```powershell
+cd "<pasta raiz do seu projeto>\infra"
+terraform init -reconfigure -backend-config="config_path=$env:USERPROFILE\.kube\config" -backend-config="namespace=default" -backend-config="secret_suffix=oficina-api-local"
+```
+
+Para Docker Desktop, o comando acima usa o kubeconfig padrão em `%USERPROFILE%\.kube\config`. Antes dele, confirme o contexto:
+
+```powershell
+kubectl config use-context docker-desktop
+```
 
 No Docker Desktop, a API também pode ficar disponível pelo `NodePort`:
 
@@ -753,7 +813,7 @@ $env:TF_VAR_jwt_secret = "troque_por_uma_chave_segura_com_32_bytes_ou_mais"
 Se `terraform init`, `terraform plan` ou `terraform apply` não encontrar arquivos `.tf`, confirme se você está na pasta `infra`:
 
 ```powershell
-cd "C:\Users\thais\OneDrive\Área de Trabalho\proj-tc-1-fiap\infra"
+cd "<pasta raiz do seu projeto>\infra"
 dir
 ```
 
@@ -780,6 +840,40 @@ Verifique a conexão com a internet, VPN ou proxy. Depois tente:
 ```powershell
 terraform init -upgrade
 ```
+
+### Terraform pede `secret_suffix` ou informa backend não inicializado
+
+Como o projeto usa backend Kubernetes para armazenar o state do Terraform, uma execução local de `terraform init` sem a configuração correta pode pedir um valor para `secret_suffix` ou falhar com mensagens parecidas com:
+
+```text
+secret_suffix
+Enter a value:
+```
+
+ou:
+
+```text
+Error: Backend initialization required, please run "terraform init"
+Reason: Initial configuration of the requested backend "kubernetes"
+```
+
+Se isso acontecer, confirme primeiro se o `kubectl` está apontando para o cluster local:
+
+```powershell
+kubectl config use-context docker-desktop
+kubectl cluster-info
+```
+
+Depois, dentro da pasta `infra`, reconfigure o backend:
+
+```powershell
+cd "<pasta raiz do seu projeto>\infra"
+terraform init -reconfigure
+terraform plan
+terraform apply
+```
+
+O `-reconfigure` força o Terraform a descartar a tentativa anterior de inicialização do backend e usar a configuração atual declarada em `infra/providers.tf`.
 
 ### Kubernetes sem contexto configurado
 
@@ -850,7 +944,7 @@ postgres_storage_class_name = "standard"
 Depois tente aplicar novamente:
 
 ```powershell
-cd "C:\Users\thais\OneDrive\Área de Trabalho\proj-tc-1-fiap\infra"
+cd "<pasta raiz do seu projeto>\infra"
 terraform apply
 ```
 
@@ -866,7 +960,7 @@ kubectl describe pvc postgres-data -n oficina
 Se o pod da API ficar com erro como `ImagePullBackOff` ou `ErrImageNeverPull`, gere a imagem local antes do `terraform apply`:
 
 ```powershell
-cd "C:\Users\thais\OneDrive\Área de Trabalho\proj-tc-1-fiap"
+cd "<pasta raiz do seu projeto>"
 docker build -t oficina-api:local .
 ```
 

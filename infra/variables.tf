@@ -5,9 +5,9 @@ variable "kubeconfig_path" {
 }
 
 variable "kubeconfig_context" {
-  description = "Contexto Kubernetes local. Exemplos: docker-desktop, kind-oficina ou minikube."
+  description = "Contexto Kubernetes. Exemplos locais: docker-desktop, kind-oficina ou minikube. Em CI/CD, pode ficar vazio para usar o current-context do kubeconfig."
   type        = string
-  default     = "docker-desktop"
+  default     = ""
 }
 
 variable "namespace" {
@@ -17,7 +17,7 @@ variable "namespace" {
 }
 
 variable "app_image" {
-  description = "Imagem Docker local da API."
+  description = "Imagem Docker da API."
   type        = string
   default     = "oficina-api:local"
 }
@@ -35,7 +35,7 @@ variable "postgres_db" {
 }
 
 variable "postgres_storage_class_name" {
-  description = "StorageClass usado pelo PVC do PostgreSQL. No Docker Desktop, o padrao costuma ser hostpath. No Minikube, costuma ser standard."
+  description = "StorageClass usado pelo PVC do PostgreSQL. No Docker Desktop, o padrao costuma ser hostpath. No Minikube e em alguns clusters remotos, costuma ser standard."
   type        = string
   default     = "hostpath"
 }
@@ -62,4 +62,24 @@ variable "jwt_expiration_seconds" {
   description = "Tempo de expiracao do JWT em segundos."
   type        = string
   default     = "3600"
+}
+
+variable "registry_server" {
+  description = "Servidor do registry usado pela imagem da aplicacao."
+  type        = string
+  default     = "ghcr.io"
+}
+
+variable "registry_username" {
+  description = "Usuario opcional do registry para criar imagePullSecret no cluster."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "registry_password" {
+  description = "Token opcional do registry para criar imagePullSecret no cluster."
+  type        = string
+  default     = ""
+  sensitive   = true
 }
