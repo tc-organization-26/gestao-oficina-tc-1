@@ -8,11 +8,12 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.HashMap;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -21,6 +22,7 @@ abstract class AbstractApiIntegrationSupport {
     private final RestTemplate restTemplate = new RestTemplate();
 
     protected AbstractApiIntegrationSupport() {
+        restTemplate.setRequestFactory(new JdkClientHttpRequestFactory());
         restTemplate.setErrorHandler(response -> false);
     }
 
@@ -50,6 +52,10 @@ abstract class AbstractApiIntegrationSupport {
 
     protected ResponseEntity<List> getList(String path) {
         return restTemplate.exchange(url(path), HttpMethod.GET, new HttpEntity<>(headersComAuth()), List.class);
+    }
+
+    protected ResponseEntity<Map> patchMap(String path, Object body) {
+        return restTemplate.exchange(url(path), HttpMethod.PATCH, new HttpEntity<>(body, headersComAuth()), Map.class);
     }
 
     protected ResponseEntity<Void> delete(String path) {

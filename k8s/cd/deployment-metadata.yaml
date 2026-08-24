@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oficina-cd-metadata
+  namespace: oficina
+  labels:
+    app: oficina-api
+    managed-by: github-actions
+data:
+  deployment: continuous
+  deploy-tool: github-actions
+  infrastructure-tool: terraform

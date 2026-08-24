@@ -34,3 +34,11 @@ build/
 
 .env
 docker-compose.override.yml
+
+### Terraform ###
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!.terraform.lock.hcl
+!terraform.tfvars.example
