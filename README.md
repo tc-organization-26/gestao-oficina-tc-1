@@ -334,15 +334,147 @@ Os arquivos `.env` e `infra/terraform.tfvars` não devem ser versionados, pois p
 
 ## Continuous Deployment no GitHub Actions
 
-O workflow `.github/workflows/cicd.yml` configura Continuous Deployment. Em pull requests, ele executa build e testes. Em push nas branches `main` ou `master`, ele executa build, testes, build/push da imagem Docker e deploy automático no cluster Kubernetes.
+O workflow `.github/workflows/cicd.yml` configura Continuous Deployment. 
 
-O deploy do banco de dados e da aplicação é feito pelo Terraform. A aplicação de manifestos YAML complementares é feita pelo `kubectl apply -f k8s/cd` no próprio runner do GitHub.
+O fluxo esperado é:
+
+- Push na branch `fase-2`: executa build da aplicação, testes automatizados e cria o pull request para a branch principal quando ainda não existir.
+- Pull request aberto ou sincronizado: não dispara este workflow novamente.
+- Merge/push em `main` ou `master`: executa build da aplicação, testes automatizados, build e publicação da imagem Docker, deploy no cluster Kubernetes, deploy do banco de dados com Terraform e aplicação dos manifestos YAML complementares.
+
+O deploy do banco de dados e da aplicação é feito pelo Terraform. A aplicação de manifestos YAML complementares é feita pelo `kubectl apply -f k8s/cd`.
+
+### Runner self-hosted para deploy
+
+O job de deploy usa um runner próprio Windows:
+
+```yaml
+runs-on: [self-hosted, Windows]
+```
+
+Por isso, depois do merge em `main` ou `master`, é normal o GitHub Actions mostrar uma mensagem parecida com:
+
+```text
+Waiting for a runner to pick up this job...
+Requested labels: self-hosted, Windows
+```
+
+Essa mensagem significa que o GitHub já decidiu executar o deploy, mas está esperando uma máquina Windows com o runner self-hosted online e registrada no repositório ou na organização.
+
+Para configurar esse runner:
+
+1. No GitHub, abra o repositório.
+2. Acesse `Settings > Actions > Runners`.
+3. Clique em `New self-hosted runner`.
+4. Escolha `Windows`.
+5. Selecione a arquitetura `x64`.
+6. Abra o PowerShell na pasta onde deseja instalar o runner.
+7. Crie uma pasta para o runner:
+
+```powershell
+mkdir actions-runner
+cd actions-runner
+```
+
+8. Baixe o pacote do runner. O GitHub mostra o link atualizado na tela de configuração. Exemplo:
+
+```powershell
+Invoke-WebRequest -Uri https://github.com/actions/runner/releases/download/v2.336.0/actions-runner-win-x64-2.336.0.zip -OutFile actions-runner-win-x64-2.336.0.zip
+```
+
+9. Opcionalmente, valide o hash do arquivo usando o comando exibido pelo GitHub.
+10. Extraia o pacote:
+
+```powershell
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::ExtractToDirectory("$PWD/actions-runner-win-x64-2.336.0.zip", "$PWD")
+```
+
+11. Configure o runner usando a URL do repositório e o token temporário exibido pelo GitHub:
+
+```powershell
+.\config.cmd --url https://github.com/<organizacao-ou-usuario>/<repositorio> --token <TOKEN_GERADO_PELO_GITHUB>
+```
+
+No momento da configuração, aceite ou informe os labels do runner. Para este projeto, o runner precisa atender aos labels usados no workflow:
+
+```yaml
+runs-on: [self-hosted, Windows]
+```
+
+12. Inicie o runner com:
+
+```powershell
+.\run.cmd
+```
+
+Enquanto esse comando estiver aberto, o GitHub consegue executar jobs que pedem os labels `self-hosted` e `Windows`.
+
+Se quiser deixar o runner sempre disponível no Windows, responda `Y` quando o `config.cmd` perguntar:
+
+```text
+Would you like to run the runner as service? (Y/N)
+```
+
+Se o serviço for instalado, mas não iniciar automaticamente, abra o PowerShell como Administrador e execute:
+
+```powershell
+Start-Service -Name "actions.runner.tc-organization-26-gestao-oficina-tc-1.THAPC26"
+```
+
+Também é possível abrir `services.msc`, localizar `GitHub Actions Runner (...)` e iniciar o serviço pela interface do Windows.
+
+Se o deploy ficar parado esperando runner por muito tempo, verifique se:
+
+- O runner self-hosted está ligado.
+- O runner aparece como `Online` em `Settings > Actions > Runners`.
+- O runner possui os labels `self-hosted` e `Windows`.
+- O runner foi registrado no repositório ou organização correta.
+- A máquina do runner tem acesso ao cluster Kubernetes usado no deploy.
+
+A máquina Windows usada como runner self-hosted precisa ter as ferramentas do deploy instaladas:
+
+```powershell
+kubectl version --client
+terraform version
+docker version
+```
+
+Neste projeto, o workflow chama o Terraform pelo valor da variable `TERRAFORM_EXE` configurada no GitHub Actions. Para esta máquina, o valor usado pode ser:
+
+```text
+C:\Program Files\Terraform\terraform.exe
+```
+
+Se essa variable não for configurada, o workflow usa `terraform`, esperando que o executável esteja disponível no `PATH` do runner.
+
+Se o Windows mostrar erro `1068` ao iniciar o serviço do runner, como:
+
+```text
+Não foi possível iniciar o serviço ou grupo de dependência.
+```
+
+verifique com qual conta o serviço foi instalado. Quando ele fica configurado como `AUTORIDADE NT\SERVIÇO DE REDE`, pode faltar permissão para acessar a pasta `C:\Users\<usuario>\actions-runner`, Docker Desktop, kubeconfig ou ferramentas locais.
+
+Para ajustar pela interface do Windows:
+
+1. Abra `services.msc`.
+2. Localize `GitHub Actions Runner (...)`.
+3. Abra `Propriedades`.
+4. Acesse a aba `Logon`.
+5. Selecione `Esta conta`.
+6. Informe seu usuário Windows, por exemplo `.\thais` ou `NOME_DO_COMPUTADOR\thais`.
+7. Informe a senha do Windows.
+8. Clique em `Aplicar`.
+9. Inicie o serviço novamente.
+
+Também é possível manter o runner rodando manualmente com `.\run.cmd`. Nesse modo, ele fica online apenas enquanto o terminal estiver aberto.
 
 Para o workflow funcionar, configure estes secrets no repositório GitHub:
 
 | Secret | Uso |
 | --- | --- |
-| `KUBE_CONFIG_BASE64` | Kubeconfig do cluster codificado em Base64, usado pelo runner do GitHub para acessar o Kubernetes |
+| `KUBE_CONFIG_BASE64` | Kubeconfig do cluster codificado em Base64, usado pelo runner self-hosted para acessar o Kubernetes |
 | `POSTGRES_USER` | Usuário do PostgreSQL criado no cluster |
 | `POSTGRES_PASSWORD` | Senha do PostgreSQL criada no cluster |
 | `JWT_SECRET` | Segredo usado para assinar os tokens JWT da aplicação |
@@ -355,6 +487,7 @@ Configure também estas variables no repositório quando precisar sobrescrever o
 | --- | --- |
 | `KUBE_CONTEXT` | Contexto Kubernetes existente no kubeconfig. Pode ficar vazio se o kubeconfig já tiver `current-context` correto |
 | `POSTGRES_STORAGE_CLASS_NAME` | StorageClass do PVC do PostgreSQL. Se não for informado, o workflow usa `hostpath` |
+| `TERRAFORM_EXE` | Caminho do executável Terraform no runner self-hosted. Exemplo: `C:\Program Files\Terraform\terraform.exe`. Se não for informado, o workflow usa `terraform` |
 
 Para gerar o valor de `KUBE_CONFIG_BASE64` no PowerShell:
 
@@ -364,7 +497,7 @@ Para gerar o valor de `KUBE_CONFIG_BASE64` no PowerShell:
 
 No GitHub, adicione esse valor em `Settings > Secrets and variables > Actions > Secrets`.
 
-O state do Terraform no Continuous Deployment usa backend Kubernetes, gravado como Secret no namespace `default` do cluster. Isso evita depender de arquivos locais no runner efêmero do GitHub Actions.
+O state do Terraform no Continuous Deployment usa backend Kubernetes, gravado como Secret no namespace `default` do cluster. Isso evita depender de arquivos locais do runner.
 
 Importante: para caracterizar Continuous Deployment, o workflow não possui aprovação manual de ambiente. Depois de um push em `main` ou `master`, passando build e testes, o deploy segue automaticamente.
 
