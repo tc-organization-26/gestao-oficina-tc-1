@@ -182,7 +182,7 @@ jobs:
 
       - name: Inicializar Terraform
         working-directory: infra
-        run: '& "$env:TERRAFORM_EXE" init -backend-config="config_path=${KUBECONFIG}" -backend-config="namespace=default" -backend-config="secret_suffix=oficina-api"'
+        run: '& "$env:TERRAFORM_EXE" init -backend-config="config_path=$env:KUBECONFIG" -backend-config="namespace=default" -backend-config="secret_suffix=oficina-api"'
 
       - name: Validar Terraform
         working-directory: infra
