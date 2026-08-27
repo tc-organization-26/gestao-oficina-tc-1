@@ -158,6 +158,7 @@ jobs:
       TF_VAR_registry_server: ghcr.io
       TF_VAR_registry_username: ${{ secrets.GHCR_USERNAME }}
       TF_VAR_registry_password: ${{ secrets.GHCR_TOKEN }}
+      TERRAFORM_EXE: ${{ vars.TERRAFORM_EXE || 'terraform' }}
 
     steps:
       - name: Baixar codigo do repositorio
@@ -172,30 +173,28 @@ jobs:
           }
           kubectl cluster-info
 
-      - name: Configurar Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
+      - name: Verificar Terraform instalado no runner
+        run: '& "$env:TERRAFORM_EXE" version'
 
       - name: Validar formatacao do Terraform
         working-directory: infra
-        run: terraform fmt -check
+        run: '& "$env:TERRAFORM_EXE" fmt -check'
 
       - name: Inicializar Terraform
         working-directory: infra
-        run: terraform init -backend-config="config_path=${KUBECONFIG}" -backend-config="namespace=default" -backend-config="secret_suffix=oficina-api"
+        run: '& "$env:TERRAFORM_EXE" init -backend-config="config_path=${KUBECONFIG}" -backend-config="namespace=default" -backend-config="secret_suffix=oficina-api"'
 
       - name: Validar Terraform
         working-directory: infra
-        run: terraform validate
+        run: '& "$env:TERRAFORM_EXE" validate'
 
       - name: Planejar deploy no cluster Kubernetes
         working-directory: infra
-        run: terraform plan -out=tfplan
+        run: '& "$env:TERRAFORM_EXE" plan -out=tfplan'
 
       - name: Deploy do banco de dados com Terraform
         working-directory: infra
-        run: terraform apply -auto-approve tfplan
+        run: '& "$env:TERRAFORM_EXE" apply -auto-approve tfplan'
 
       - name: Aplicar manifestos YAML complementares no cluster
         run: kubectl apply -f k8s/cd
