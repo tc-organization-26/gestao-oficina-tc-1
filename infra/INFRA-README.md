@@ -1,67 +1,74 @@
-# INFRA-README - Infraestrutura Local com Terraform e Kubernetes
+# Infraestrutura com Terraform e Kubernetes
 
-Este diretorio provisiona os recursos Kubernetes locais da Oficina API usando Terraform.
+Este diretório provisiona os recursos Kubernetes da Oficina API usando Terraform.
 
-O Terraform cria recursos individuais do provider Kubernetes. Ele nao usa `local-exec` nem chama `kubectl apply`.
+O Terraform cria recursos individuais pelo provider Kubernetes.
 
-Para o passo a passo completo de execucao local, consulte tambem o `README.md` principal do projeto.
+Para instruções de execução, consulte [`../docs/EXECUCAO.md`](../docs/EXECUCAO.md). Para problemas comuns, consulte [`../docs/TROUBLESHOOTING.md`](../docs/TROUBLESHOOTING.md).
 
-## Recursos Criados
+## Recursos criados
 
 - Namespace `oficina`.
 - ConfigMap e Secret do PostgreSQL.
-- PVC para persistencia dos dados do PostgreSQL.
+- PVC `postgres-data` para persistência dos dados do PostgreSQL.
 - Deployment e Service interno do PostgreSQL.
 - ConfigMap e Secret da API.
+- Secret opcional `ghcr-credentials` para pull de imagem privada no GHCR.
 - Deployment e Service `NodePort` da API.
-- HPA da API por CPU e memoria.
+- HPA da API por CPU e memória.
 
 ## Arquivos Terraform
 
-- `providers.tf`: configura a versao do Terraform, o provider Kubernetes e o kubeconfig local.
-- `variables.tf`: declara as variaveis usadas pela infraestrutura, incluindo dados sensiveis.
-- `main.tf`: cria os recursos Kubernetes individualmente.
-- `outputs.tf`: mostra informacoes uteis apos o `terraform apply`, como namespace, service e URL local.
+- `providers.tf`: configura a versão do Terraform, o provider Kubernetes e o backend Kubernetes.
+- `variables.tf`: declara variáveis da infraestrutura, incluindo valores sensíveis.
+- `main.tf`: cria os recursos Kubernetes.
+- `outputs.tf`: expõe informações úteis após o `terraform apply`.
 - `terraform.tfvars.example`: exemplo para criar o arquivo local `terraform.tfvars`.
 
-O arquivo `terraform.tfvars` nao deve ser versionado, pois contem senha do banco e segredo JWT.
+O arquivo `terraform.tfvars` não deve ser versionado, pois pode conter senha do banco e segredo JWT.
 
-## Continuous Deployment com GitHub Actions
+## Desenho da infraestrutura
 
-O workflow `.github/workflows/cicd.yml` executa build, testes, build/push da imagem Docker e deploy automatico pelo runner do GitHub.
+```text
+Namespace oficina
+  |
+  |-- Deployment oficina-api
+  |     |-- ConfigMap oficina-api-config
+  |     |-- Secret oficina-api-secret
+  |     |-- Secret ghcr-credentials, quando configurado
+  |     |-- Service oficina-api, NodePort 30081
+  |     |-- HPA oficina-api
+  |
+  |-- Deployment postgres
+        |-- ConfigMap postgres-config
+        |-- Secret postgres-secret
+        |-- PVC postgres-data
+        |-- Service postgres, ClusterIP
+```
 
-Quando ha push nas branches `main` ou `master`, o deploy acontece automaticamente apos a pipeline passar. Nao ha etapa de aprovacao manual configurada no workflow, caracterizando Continuous Deployment.
+## Backend do Terraform
 
-Para nao depender da maquina local, o Terraform usa backend Kubernetes e grava o state em um Secret no namespace `default` do cluster. O workflow inicializa esse backend com o kubeconfig recebido por secret.
+O projeto usa backend Kubernetes para armazenar o state em um Secret no namespace `default` do cluster.
 
-Configure estes secrets no repositorio:
+Na execução local:
 
-- `KUBE_CONFIG_BASE64`: kubeconfig do cluster codificado em Base64.
-- `POSTGRES_USER`: usuario do PostgreSQL.
-- `POSTGRES_PASSWORD`: senha do PostgreSQL.
-- `JWT_SECRET`: segredo JWT da aplicacao.
-- `GHCR_USERNAME`: usuario do GitHub Container Registry, necessario se a imagem estiver privada.
-- `GHCR_TOKEN`: token com permissao de leitura no GitHub Container Registry, necessario se a imagem estiver privada.
+```powershell
+terraform init -backend-config="config_path=$env:USERPROFILE\.kube\config" -backend-config="namespace=default" -backend-config="secret_suffix=oficina-api-local"
+```
 
-Configure estas variables no repositorio quando precisar sobrescrever os valores padrao:
+No Continuous Deployment, o workflow usa o kubeconfig recebido pelo secret `KUBE_CONFIG_BASE64` e inicializa o backend com `secret_suffix=oficina-api`.
 
-- `KUBE_CONTEXT`: contexto Kubernetes do kubeconfig.
-- `POSTGRES_STORAGE_CLASS_NAME`: StorageClass usado pelo PVC do PostgreSQL. O padrao do workflow e `hostpath`.
+## Relação com os manifestos YAML
 
-O deploy do banco de dados e da aplicacao e feito pelo Terraform. Os manifestos YAML aplicados pelo workflow ficam em `k8s/cd` e devem ser usados apenas para recursos complementares, evitando duplicar no `kubectl apply` os recursos que ja sao gerenciados pelo Terraform.
+Os recursos principais da API e do banco são gerenciados pelo Terraform.
 
-## Execucao local
+Os manifestos em `k8s/cd` são complementares e aplicados pelo GitHub Actions após o `terraform apply`. Isso evita duplicar via `kubectl apply` os recursos que já são controlados pelo Terraform.
 
-O passo a passo de execucao local fica centralizado no `README.md` principal, na secao `Como executar localmente`.
+## Observações
 
-La estao os comandos de Docker Compose, Kubernetes com Terraform, criacao de `terraform.tfvars`, confirmacao com `yes` no `terraform apply`, uso de `terraform init -reconfigure` quando o backend precisar ser reinicializado, verificacoes com `kubectl` e acesso ao Swagger.
-
-Este arquivo é referencia tecnica dos recursos Terraform presentes no diretorio `infra/`.
-
-## Observacoes
-
-- O banco roda dentro do Kubernetes usando PostgreSQL.
+- O banco roda dentro do Kubernetes usando PostgreSQL 16 Alpine.
 - Os dados do banco ficam no PVC `postgres-data`.
-- ConfigMaps guardam configuracoes nao sensiveis.
-- Secrets guardam usuarios, senhas e tokens.
-- O HPA depende do metrics-server no cluster local. Se o cluster nao tiver metrics-server, o HPA sera criado, mas pode nao coletar metricas ate esse componente ser instalado.
+- ConfigMaps guardam configurações não sensíveis.
+- Secrets guardam usuários, senhas, tokens e credenciais de registry.
+- O HPA depende do Metrics Server instalado no cluster.
+
