@@ -1,5 +1,7 @@
 # Arquitetura da Oficina API
 
+[Voltar ao README principal](../README.md)
+
 ## Contexto do desafio
 
 A oficina precisa de um sistema back-end para organizar o fluxo de atendimento, diagnóstico, orçamento, execução e entrega dos veículos. O objetivo do MVP é oferecer uma base funcional, segura e documentada para que clientes, atendentes, mecânicos e gestores acompanhem o ciclo completo de uma ordem de serviço.
@@ -151,3 +153,4 @@ A escolha faz sentido porque:
 - É fácil de executar com Docker e Kubernetes.
 - É uma opção sólida para evoluir do MVP para ambientes mais próximos de produção.
 
+[Voltar ao README principal](../README.md)

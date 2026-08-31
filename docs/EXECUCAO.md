@@ -1,5 +1,7 @@
 # Execução, Terraform e Deploy
 
+[Voltar ao README principal](../README.md)
+
 Este documento concentra as instruções práticas para executar a Oficina API localmente, provisionar a infraestrutura e fazer deploy em Kubernetes.
 
 ## Tecnologias e versões usadas ou definidas no projeto
@@ -8,6 +10,8 @@ Este documento concentra as instruções práticas para executar a Oficina API l
 - Docker Desktop.
 - Java 21, apenas se for executar ou compilar fora do Docker.
 - `kubectl`, para Kubernetes.
+- AWS CLI, para autenticar na AWS, ECR e EKS.
+- `eksctl`, para criar e remover cluster Amazon EKS.
 - Terraform `>= 1.6.0`, para provisionamento.
 
 | Dependência | Versão / referência |
@@ -39,6 +43,10 @@ Este documento concentra as instruções práticas para executar a Oficina API l
 | Provider Kubernetes Terraform | `~> 2.31`, lockado em `2.38.0` |
 | GitHub Actions | Actions oficiais v3/v4/v6 |
 | GitHub Container Registry | `ghcr.io` |
+| Amazon EKS | Kubernetes gerenciado na AWS |
+| Amazon ECR | Registry Docker privado da AWS |
+| AWS CLI | v2 recomendada |
+| `eksctl` | 0.230.0 validado no laboratório |
 | Insomnia | Collection YAML |
 
 Versões validadas no ambiente local usado durante a documentação:
@@ -447,3 +455,558 @@ Kubernetes com port-forward: http://localhost:18081
 ```
 
 Para executar o fluxo principal, use `Run folder` na pasta `FLUXO COMPLETO`.
+
+## Deploy em cloud AWS Academy com EKS e ECR
+
+Este fluxo foi validado em laboratório AWS Academy usando Amazon EKS para executar o cluster Kubernetes e Amazon ECR para armazenar a imagem Docker da API.
+
+O fluxo completo é:
+
+```text
+AWS Academy Start Lab
+  -> criar cluster EKS com eksctl
+  -> conferir nodes Ready com kubectl
+  -> criar repositório no ECR
+  -> fazer build Docker local
+  -> publicar imagem no ECR
+  -> aplicar recursos Kubernetes
+  -> expor a API com LoadBalancer
+  -> validar chamada HTTP/Swagger
+  -> remover tudo ao final do laboratório
+```
+
+### Diferença entre AWS Academy e conta pessoal
+
+No AWS Academy, a conta é temporária e pode ter restrições de permissão. No laboratório validado, o usuário não podia criar novas IAM Roles com `iam:CreateRole`, então o cluster precisou usar a role já existente `LabRole`.
+
+Em uma conta pessoal AWS, o usuário administrador normalmente pode deixar o `eksctl` criar as roles automaticamente. Também é possível configurar roles específicas com boas práticas de IAM, mas isso exige mais preparação.
+
+Resumo:
+
+| Ambiente | O que muda |
+| --- | --- |
+| AWS Academy | Usa credenciais temporárias, pode exigir `LabRole`, pode bloquear `sudo docker`, tem tempo limitado e orçamento do lab |
+| Conta pessoal AWS | Usa credenciais permanentes ou SSO, cobra recursos reais, permite criar IAM Roles se o usuário tiver permissão |
+
+### Preparar uma conta pessoal AWS
+
+Em uma conta pessoal, antes de criar o EKS:
+
+1. Configure MFA no usuário ou use AWS IAM Identity Center/SSO.
+2. Defina uma região para todo o exercício, por exemplo `us-east-1`.
+3. Crie um alerta de orçamento no AWS Billing para evitar surpresa de custo.
+4. Use um usuário ou role com permissão para EKS, EC2, CloudFormation, IAM, ECR e Elastic Load Balancing.
+5. Instale localmente AWS CLI, Docker, `kubectl` e `eksctl`.
+
+Configure a AWS CLI:
+
+```powershell
+aws configure
+```
+
+Valide:
+
+```powershell
+aws sts get-caller-identity
+aws configure get region
+```
+
+Em conta pessoal, o `eksctl` cria stacks CloudFormation que, por sua vez, criam VPC, subnets, security groups, IAM Roles, cluster EKS e nodegroup. Por isso, permissões parciais podem gerar falhas durante a criação.
+
+Para reduzir custo durante testes:
+
+- Use `desiredCapacity: 1` se a demonstração não exigir dois nodes.
+- Delete o cluster assim que terminar.
+- Delete o repositório ECR se não precisar manter a imagem.
+- Confira se não sobrou Load Balancer.
+- Evite deixar NAT Gateway e EC2 rodando fora do horário de teste.
+
+### Recursos AWS usados
+
+Durante o deploy em cloud, foram usados:
+
+- Amazon EKS: cluster Kubernetes gerenciado.
+- EC2 Managed Nodes: instâncias EC2 criadas pelo nodegroup do EKS.
+- CloudFormation: stacks criadas pelo `eksctl`.
+- IAM Role: role de serviço e nodes; no lab foi usada a `LabRole`.
+- VPC, subnets, security groups, internet gateway e NAT: rede criada pelo `eksctl`.
+- Amazon ECR: repositório privado `oficina-api` para a imagem Docker.
+- Elastic Load Balancing: criado automaticamente pelo Service Kubernetes do tipo `LoadBalancer`.
+- Kubernetes Namespace, Deployments, Services, ConfigMaps e Secrets.
+
+### Preparar ferramentas no terminal do AWS Academy
+
+No laboratório, clique em `Start Lab`, aguarde a bolinha `AWS` ficar verde, abra `AWS Details` e confirme que o terminal tem credenciais AWS ativas:
+
+```bash
+aws sts get-caller-identity
+```
+
+Instale `kubectl` no usuário do lab:
+
+```bash
+mkdir -p $HOME/bin
+export PATH=$HOME/bin:$PATH
+echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+
+curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.34.9/2026-07-05/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+mv ./kubectl $HOME/bin/kubectl
+
+kubectl version --client
+```
+
+Instale `eksctl`:
+
+```bash
+ARCH=amd64
+PLATFORM=$(uname -s)_$ARCH
+curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
+tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp
+mv /tmp/eksctl $HOME/bin/eksctl
+chmod +x $HOME/bin/eksctl
+rm eksctl_$PLATFORM.tar.gz
+
+eksctl version
+```
+
+Se o `kubectl get nodes` falhar depois com erro de `ExecCredential` em `v1alpha1`, instale a AWS CLI v2 no usuário do lab:
+
+```bash
+cd ~
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -oq awscliv2.zip
+./aws/install -i $HOME/aws-cli -b $HOME/bin --update
+export PATH=$HOME/bin:$PATH
+
+aws --version
+```
+
+### Criar cluster EKS no AWS Academy
+
+Primeiro descubra a role disponível no lab:
+
+```bash
+aws iam list-roles --query "Roles[?contains(RoleName, 'LabRole')].[RoleName,Arn]" --output table
+```
+
+Crie `cluster.yaml`:
+
+```bash
+nano cluster.yaml
+```
+
+Conteúdo do arquivo, substituindo `ACCOUNT_ID` pelo ID da conta do lab:
+
+```yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: oficina-cluster
+  region: us-east-1
+  version: "1.34"
+
+iam:
+  serviceRoleARN: arn:aws:iam::ACCOUNT_ID:role/LabRole
+
+managedNodeGroups:
+  - name: oficina-ng
+    instanceType: t3.medium
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 2
+    iam:
+      instanceRoleARN: arn:aws:iam::ACCOUNT_ID:role/LabRole
+```
+
+Crie o cluster:
+
+```bash
+eksctl create cluster -f cluster.yaml
+```
+
+Configure o kubeconfig:
+
+```bash
+aws eks update-kubeconfig \
+  --region us-east-1 \
+  --name oficina-cluster
+```
+
+Valide:
+
+```bash
+kubectl get nodes
+kubectl get pods -A
+```
+
+Os nodes devem aparecer com status `Ready`.
+
+### Criar cluster EKS em conta pessoal AWS
+
+Em uma conta pessoal com permissão administrativa, é possível criar o cluster sem informar `LabRole`:
+
+```bash
+eksctl create cluster \
+  --name oficina-cluster \
+  --region us-east-1 \
+  --nodes 2 \
+  --node-type t3.medium \
+  --managed
+```
+
+Depois:
+
+```bash
+aws eks update-kubeconfig \
+  --region us-east-1 \
+  --name oficina-cluster
+
+kubectl get nodes
+```
+
+Atenção: em conta pessoal, EKS, EC2, NAT Gateway, EBS e Load Balancer podem gerar cobrança real enquanto existirem.
+
+Se quiser um cluster mais econômico para uma validação rápida, use apenas um node:
+
+```bash
+eksctl create cluster \
+  --name oficina-cluster \
+  --region us-east-1 \
+  --nodes 1 \
+  --node-type t3.medium \
+  --managed
+```
+
+Para um ambiente de demonstração com maior disponibilidade, mantenha dois nodes, como no exemplo anterior.
+
+### Criar ECR e publicar a imagem
+
+Crie o repositório:
+
+```bash
+aws ecr create-repository \
+  --repository-name oficina-api \
+  --region us-east-1
+```
+
+Pegue o ID da conta:
+
+```bash
+aws sts get-caller-identity --query Account --output text
+```
+
+No computador local, configure as credenciais da AWS. No AWS Academy, copie `AWS Access Key ID`, `AWS Secret Access Key` e `AWS Session Token` em `AWS Details`:
+
+```powershell
+aws configure set aws_access_key_id "ACCESS_KEY"
+aws configure set aws_secret_access_key "SECRET_KEY"
+aws configure set aws_session_token "SESSION_TOKEN"
+aws configure set region "us-east-1"
+```
+
+Em conta pessoal, use as credenciais do seu usuário ou perfil AWS:
+
+```powershell
+aws configure
+```
+
+Confirme a conta:
+
+```powershell
+aws sts get-caller-identity
+```
+
+Entre na raiz do projeto e publique a imagem:
+
+```powershell
+cd [pasta raiz do seu projeto]
+
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+
+docker build -t oficina-api .
+docker tag oficina-api:latest ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest
+docker push ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest
+```
+
+No laboratório validado, o terminal do AWS Academy não tinha permissão para acessar o Docker daemon com o usuário padrão. Por isso, o build e push foram feitos no computador local usando as credenciais temporárias do lab.
+
+### Deploy manual no EKS com kubectl
+
+Defina a imagem no terminal do lab ou no terminal que aponta para o EKS:
+
+```bash
+export IMAGE=ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest
+```
+
+Crie namespace, Secrets e ConfigMaps:
+
+```bash
+kubectl create namespace oficina
+
+kubectl create secret generic postgres-secret \
+  -n oficina \
+  --from-literal=POSTGRES_USER=postgres \
+  --from-literal=POSTGRES_PASSWORD=oficina123
+
+kubectl create configmap postgres-config \
+  -n oficina \
+  --from-literal=POSTGRES_DB=oficina_db_2 \
+  --from-literal=PGDATA=/var/lib/postgresql/data/pgdata
+
+kubectl create secret generic oficina-api-secret \
+  -n oficina \
+  --from-literal=SPRING_DATASOURCE_USERNAME=postgres \
+  --from-literal=SPRING_DATASOURCE_PASSWORD=oficina123 \
+  --from-literal=SECURITY_JWT_SECRET=chave_jwt_segura_com_32_bytes_ou_mais_aqui
+
+kubectl create configmap oficina-api-config \
+  -n oficina \
+  --from-literal=SERVER_PORT=8081 \
+  --from-literal=SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/oficina_db_2 \
+  --from-literal=SPRING_JPA_HIBERNATE_DDL_AUTO=none \
+  --from-literal=SPRING_FLYWAY_BASELINE_ON_MIGRATE=true \
+  --from-literal=SPRING_FLYWAY_BASELINE_VERSION=0 \
+  --from-literal=SPRING_FLYWAY_VALIDATE_ON_MIGRATE=true \
+  --from-literal=SECURITY_JWT_EXPIRATION_SECONDS=3600
+```
+
+Suba o PostgreSQL. Para demonstração no AWS Academy, foi usado `emptyDir`, que simplifica o lab e evita travas de PVC/EBS. Essa opção não persiste dados se o pod for recriado:
+
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: oficina
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: postgres-config
+            - secretRef:
+                name: postgres-secret
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: oficina
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+EOF
+```
+
+Suba a API:
+
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oficina-api
+  namespace: oficina
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oficina-api
+  template:
+    metadata:
+      labels:
+        app: oficina-api
+    spec:
+      containers:
+        - name: oficina-api
+          image: $IMAGE
+          ports:
+            - containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: oficina-api-config
+            - secretRef:
+                name: oficina-api-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oficina-api
+  namespace: oficina
+spec:
+  type: LoadBalancer
+  selector:
+    app: oficina-api
+  ports:
+    - port: 8081
+      targetPort: 8081
+EOF
+```
+
+Acompanhe:
+
+```bash
+kubectl get pods -n oficina
+kubectl logs deployment/oficina-api -n oficina --tail=50
+kubectl get service oficina-api -n oficina
+```
+
+Quando o Service mostrar um endereço externo, acesse:
+
+```text
+http://ENDERECO_DA_AWS:8081/swagger-ui/index.html
+```
+
+Também é possível testar com `port-forward`:
+
+```bash
+kubectl port-forward service/oficina-api 18081:8081 -n oficina
+```
+
+```text
+http://localhost:18081/swagger-ui/index.html
+```
+
+### Deploy no EKS usando Terraform
+
+O Terraform deste projeto já cria os recursos Kubernetes principais. Para usar em EKS, publique a imagem no ECR e ajuste `infra/terraform.tfvars`:
+
+```hcl
+kubeconfig_context = "arn:aws:eks:us-east-1:ACCOUNT_ID:cluster/oficina-cluster"
+postgres_storage_class_name = "gp2"
+
+app_image = "ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest"
+
+postgres_user     = "postgres"
+postgres_password = "troque_aqui"
+jwt_secret        = "troque_por_uma_chave_segura_com_32_bytes_ou_mais"
+```
+
+Confira o StorageClass disponível:
+
+```bash
+kubectl get storageclass
+```
+
+Em EKS, use normalmente `gp2` ou `gp3`. Para PVC em EBS, pode ser necessário instalar o add-on:
+
+```bash
+eksctl create addon \
+  --cluster oficina-cluster \
+  --name aws-ebs-csi-driver \
+  --region us-east-1
+```
+
+Execute o Terraform:
+
+```bash
+cd infra
+terraform init -reconfigure \
+  -backend-config="config_path=$HOME/.kube/config" \
+  -backend-config="namespace=default" \
+  -backend-config="secret_suffix=oficina-api-aws"
+
+terraform plan
+terraform apply
+```
+
+Para exposição pública na AWS, o Service da API precisa ser `LoadBalancer`. O código atual do Terraform usa `NodePort` para compatibilidade com Kubernetes local. Em demonstração cloud, use o manifesto manual acima ou adapte o Service da API para `LoadBalancer`.
+
+### Evidências recomendadas para entrega
+
+Capture prints ou logs dos comandos:
+
+```bash
+kubectl get nodes
+kubectl get pods -n oficina
+kubectl get service oficina-api -n oficina
+kubectl logs deployment/oficina-api -n oficina --tail=50
+```
+
+Também registre:
+
+- URL pública ou `port-forward` usado.
+- Swagger aberto.
+- Chamada de API funcionando.
+- Repositório ECR com a imagem publicada.
+- Cluster EKS criado e depois removido.
+
+### Limpeza para evitar custos
+
+Antes de sair do AWS Academy ou de encerrar testes em conta pessoal, remova os recursos:
+
+```bash
+kubectl delete namespace oficina --ignore-not-found=true
+```
+
+Delete o cluster:
+
+```bash
+eksctl delete cluster \
+  --name oficina-cluster \
+  --region us-east-1 \
+  --wait \
+  --disable-nodegroup-eviction
+```
+
+Delete o ECR:
+
+```bash
+aws ecr delete-repository \
+  --repository-name oficina-api \
+  --region us-east-1 \
+  --force
+```
+
+Confira se não sobrou nada:
+
+```bash
+aws eks list-clusters --region us-east-1
+
+aws ec2 describe-instances \
+  --region us-east-1 \
+  --query "Reservations[].Instances[].[InstanceId,State.Name,Tags[?Key=='Name'].Value|[0]]" \
+  --output table
+
+aws elbv2 describe-load-balancers \
+  --region us-east-1
+
+aws ecr describe-repositories \
+  --region us-east-1
+```
+
+Resultado esperado:
+
+```text
+EKS: nenhum cluster
+EC2: instâncias do nodegroup em terminated ou ausentes
+LoadBalancers: []
+ECR repositories: []
+```
+
+[Voltar ao README principal](../README.md)
