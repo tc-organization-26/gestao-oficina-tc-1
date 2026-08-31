@@ -10,7 +10,9 @@ O objetivo do projeto é reduzir processos espalhados em anotações manuais e p
 - [Objetivo desta fase](#objetivo-desta-fase)
 - [Solução](#solução)
 - [Recursos da API](#recursos-da-api)
-- [Arquitetura proposta](docs/ARQUITETURA.md)
+- [Arquitetura proposta](#arquitetura-proposta)
+  - [Clean Architecture](#clean-architecture)
+  - [Arquitetura AWS](#arquitetura-aws)
   - [Componentes da aplicação](docs/ARQUITETURA.md#organização-dos-pacotes)
   - [Infraestrutura provisionada](#infraestrutura-provisionada)
   - [Fluxo de deploy](#fluxo-de-deploy)
@@ -101,6 +103,18 @@ Com isso, a entrega cobre tanto o funcionamento da oficina quanto o caminho nece
 - `/ordens-servico/{id}/orcamento`: composição, aprovação e recusa de orçamento.
 - `/ordens-servico/{id}/pagamento`: registro de pagamento.
 - `/swagger-ui/index.html`: documentação interativa da API (Swagger local: `http://localhost:8081/swagger-ui/index.html`)
+
+## Arquitetura proposta
+
+O desenho detalhado da arquitetura da aplicação está em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md). Abaixo estão os diagramas usados como referência para a organização em Clean Architecture e para a implantação em AWS.
+
+### Clean Architecture
+
+![Diagrama de Clean Architecture usado no projeto](src/main/resources/clean-arq.png)
+
+### Arquitetura AWS
+
+![Diagrama da arquitetura AWS proposta para o projeto](src/main/resources/arq-aws.jpg)
 
 ### Infraestrutura provisionada
 
