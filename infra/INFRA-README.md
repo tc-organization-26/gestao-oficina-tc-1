@@ -1,5 +1,7 @@
 # Infraestrutura com Terraform e Kubernetes
 
+[Voltar ao README principal](../README.md)
+
 Este diretório provisiona os recursos Kubernetes da Oficina API usando Terraform.
 
 O Terraform cria recursos individuais pelo provider Kubernetes.
@@ -72,3 +74,4 @@ Os manifestos em `k8s/cd` são complementares e aplicados pelo GitHub Actions ap
 - Secrets guardam usuários, senhas, tokens e credenciais de registry.
 - O HPA depende do Metrics Server instalado no cluster.
 
+[Voltar ao README principal](../README.md)

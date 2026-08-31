@@ -10,7 +10,7 @@ O objetivo do projeto é reduzir processos espalhados em anotações manuais e p
 - [Objetivo desta fase](#objetivo-desta-fase)
 - [Solução](#solução)
 - [Recursos da API](#recursos-da-api)
-- [Arquitetura proposta][`docs/ARQUITETURA.md`](docs/ARQUITETURA.md)
+- [Arquitetura proposta](docs/ARQUITETURA.md)
   - [Componentes da aplicação](docs/ARQUITETURA.md#organização-dos-pacotes)
   - [Infraestrutura provisionada](#infraestrutura-provisionada)
   - [Fluxo de deploy](#fluxo-de-deploy)
@@ -45,25 +45,25 @@ Com isso, a entrega cobre tanto o funcionamento da oficina quanto o caminho nece
 
 ## Solução
 
-O fluxo começa quando o cliente entra em contato com a oficina solicitando atendimento.
+- O fluxo começa quando o cliente entra em contato com a oficina solicitando atendimento.
 
-O atendente localiza o cliente no sistema usando CPF ou CNPJ. Se o cliente já existir, o sistema exibe seus dados, veículos vinculados e histórico de atendimentos. Se o cliente ainda não existir, o atendente realiza o cadastro.
+- O atendente localiza o cliente no sistema usando CPF ou CNPJ. Se o cliente já existir, o sistema exibe seus dados, veículos vinculados e histórico de atendimentos. Se o cliente ainda não existir, o atendente realiza o cadastro.
 
-Em seguida, o atendente verifica se o veículo já está registrado para aquele cliente. Se estiver, seleciona o veículo. Caso contrário, cadastra o veículo e o associa ao cliente.
+- Em seguida, o atendente verifica se o veículo já está registrado para aquele cliente. Se estiver, seleciona o veículo. Caso contrário, cadastra o veículo e o associa ao cliente.
 
-Com cliente e veículo identificados, o atendente registra os serviços solicitados. O sistema cria uma ordem de serviço com código único, cliente, veículo, serviços solicitados, data de abertura, observações técnicas e status inicial `Recebida`.
+- Com cliente e veículo identificados, o atendente registra os serviços solicitados. O sistema cria uma ordem de serviço com código único, cliente, veículo, serviços solicitados, data de abertura, observações técnicas e status inicial `Recebida`.
 
-O mecânico inicia a avaliação do veículo, e a OS passa para `Em diagnóstico`. Durante a avaliação, registra diagnóstico, serviços necessários, observações técnicas e peças que serão utilizadas.
+- O mecânico inicia a avaliação do veículo, e a OS passa para `Em diagnóstico`. Durante a avaliação, registra diagnóstico, serviços necessários, observações técnicas e peças que serão utilizadas.
 
-O sistema consulta o estoque. Se as peças estiverem disponíveis, elas compõem o orçamento. Se alguma peça não estiver disponível, o sistema registra a necessidade para decisão do gestor.
+- O sistema consulta o estoque. Se as peças estiverem disponíveis, elas compõem o orçamento. Se alguma peça não estiver disponível, o sistema registra a necessidade para decisão do gestor.
 
-Quando os serviços e peças estão definidos, o orçamento é fechado. A OS passa para `Aguardando aprovação`.
+- Quando os serviços e peças estão definidos, o orçamento é fechado. A OS passa para `Aguardando aprovação`.
 
-Se o cliente aprovar, o mecânico inicia a execução e a OS passa para `Em execução`. Conforme peças são retiradas do estoque, o sistema registra a baixa.
+- Se o cliente aprovar, o mecânico inicia a execução e a OS passa para `Em execução`. Conforme peças são retiradas do estoque, o sistema registra a baixa.
 
-Se durante a execução for necessário alterar o orçamento, ele é atualizado e a OS retorna para `Aguardando aprovação`.
+- Se durante a execução for necessário alterar o orçamento, ele é atualizado e a OS retorna para `Aguardando aprovação`.
 
-Quando os serviços são concluídos, a OS passa para `Finalizada`. Após pagamento e retirada do veículo, a OS é alterada para `Entregue`.
+- Quando os serviços são concluídos, a OS passa para `Finalizada`. Após pagamento e retirada do veículo, a OS é alterada para `Entregue`.
 
 ## Status da ordem de serviço
 

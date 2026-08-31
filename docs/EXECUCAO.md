@@ -1,5 +1,7 @@
 # Execução, Terraform e Deploy
 
+[Voltar ao README principal](../README.md)
+
 Este documento concentra as instruções práticas para executar a Oficina API localmente, provisionar a infraestrutura e fazer deploy em Kubernetes.
 
 ## Tecnologias e versões usadas ou definidas no projeto
@@ -447,3 +449,5 @@ Kubernetes com port-forward: http://localhost:18081
 ```
 
 Para executar o fluxo principal, use `Run folder` na pasta `FLUXO COMPLETO`.
+
+[Voltar ao README principal](../README.md)
