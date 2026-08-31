@@ -992,6 +992,32 @@ terraform init -upgrade
 
 Verifique internet, VPN ou proxy.
 
+### Terraform informa `Error acquiring the state lock`
+
+Erro comum no GitHub Actions:
+
+```text
+Error: Error acquiring the state lock
+Error message: the state is already locked by another terraform client
+Operation: OperationTypeApply
+```
+
+Isso significa que o backend do Terraform está bloqueado para evitar que duas execuções alterem o mesmo state ao mesmo tempo.
+
+Antes de desbloquear, confira se não existe outro workflow de deploy ainda rodando no GitHub Actions. Se houver uma execução ativa, aguarde terminar ou cancele a execução pelo GitHub.
+
+Se não houver nenhuma execução ativa, o lock provavelmente ficou preso por uma execução interrompida. Nesse caso, inicialize o backend usado pelo CI/CD e desbloqueie usando o ID mostrado no erro:
+
+```powershell
+cd infra
+terraform init -reconfigure -backend-config="config_path=$env:USERPROFILE\.kube\config" -backend-config="namespace=default" -backend-config="secret_suffix=oficina-api"
+terraform force-unlock 98859b52-0b40-8eac-fcc6-1ce40672c3f4
+```
+
+Digite `yes` quando o Terraform pedir confirmação.
+
+Use `force-unlock` apenas quando tiver certeza de que não há outro `terraform plan` ou `terraform apply` em execução. Não use `-lock=false` no workflow, porque isso remove a proteção contra duas execuções modificando o mesmo state ao mesmo tempo.
+
 ### PVC do PostgreSQL travado
 
 Se o Terraform ficar criando o PVC por muito tempo, confira os StorageClasses:
