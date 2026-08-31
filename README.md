@@ -16,6 +16,7 @@ O objetivo do projeto é reduzir processos espalhados em anotações manuais e p
   - [Fluxo de deploy](#fluxo-de-deploy)
 - [Como executar, provisionar e fazer deploy](#como-executar-provisionar-e-fazer-deploy)
 - [Tecnologias e versões](docs/EXECUCAO.md#tecnologias-e-versões-usadas-ou-definidas-no-projeto)
+- [Execução em cloud AWS com EKS](docs/EXECUCAO.md#deploy-em-cloud-aws-academy-com-eks-e-ecr)
 - [Validação da API](#validação-da-api)
 - [Documentação complementar](#documentação-complementar)
 
@@ -38,6 +39,7 @@ Nesta fase, a solução deixa de ser apenas uma API executável localmente e pas
 - API Spring Boot organizada em Clean Architecture.
 - Execução local com Docker Compose.
 - Deploy da aplicação e do banco em Kubernetes.
+- Deploy validado em cloud AWS Academy usando Amazon EKS, Amazon ECR e Service `LoadBalancer`.
 - Provisionamento da infraestrutura com Terraform.
 - Pipeline de Continuous Deployment com GitHub Actions.
 
@@ -124,12 +126,27 @@ Merge/push em main ou master
 
 O job de deploy usa runner self-hosted Windows com acesso ao cluster Kubernetes. A configuração desse fluxo está em [`.github/workflows/cicd.yml`](.github/workflows/cicd.yml) e o passo a passo está documentado em [`docs/EXECUCAO.md`](docs/EXECUCAO.md).
 
+Também foi validado um fluxo manual em laboratório AWS Academy:
+
+```text
+Start Lab
+  -> criação do cluster Amazon EKS com eksctl
+  -> build local da imagem Docker
+  -> publicação da imagem no Amazon ECR
+  -> deploy da API e PostgreSQL no EKS com kubectl
+  -> exposição da API por LoadBalancer
+  -> validação via chamada HTTP/Swagger
+  -> limpeza do EKS, EC2, Load Balancer e ECR ao final do laboratório
+```
+
 ## Como executar, provisionar e fazer deploy
 
 - Execução local com Docker Compose: [`docs/EXECUCAO.md#execução-local-com-docker-compose`](docs/EXECUCAO.md#execução-local-com-docker-compose)
 
 - Deploy em Kubernetes local com Terraform: [`docs/EXECUCAO.md#deploy-em-kubernetes-com-terraform`](docs/EXECUCAO.md#deploy-em-kubernetes-com-terraform)
 - Provisionamento da infraestrutura com Terraform: [`docs/EXECUCAO.md#provisionamento-com-terraform`](docs/EXECUCAO.md#provisionamento-com-terraform)
+
+- Deploy em cloud AWS Academy com EKS e ECR: [`docs/EXECUCAO.md#deploy-em-cloud-aws-academy-com-eks-e-ecr`](docs/EXECUCAO.md#deploy-em-cloud-aws-academy-com-eks-e-ecr)
 
 - Continuous Deployment com GitHub Actions: [`docs/EXECUCAO.md#continuous-deployment-com-github-actions`](docs/EXECUCAO.md#continuous-deployment-com-github-actions)
 
@@ -141,6 +158,15 @@ A API pode ser validada de duas formas:
 
 - Swagger: `http://localhost:8081/swagger-ui/index.html`
 - Insomnia: importe a collection [`src/main/resources/collection-insomnia.yaml`](src/main/resources/collection-insomnia.yaml)
+
+Para gerar um token JWT, use o endpoint `POST /auth/login` com a credencial administrativa fictícia usada neste MVP:
+
+```json
+{
+  "login": "admin",
+  "senha": "ad@456"
+}
+```
 
 Ao usar Kubernetes com `port-forward`, ajuste a base URL da collection para `http://localhost:18081`.
 

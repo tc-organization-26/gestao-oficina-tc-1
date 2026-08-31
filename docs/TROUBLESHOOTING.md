@@ -14,6 +14,7 @@ A ordem começa pelos problemas mais simples e avança para os mais complexos. E
 - [Java e Maven](#java-e-maven)
 - [API, Swagger e autenticação](#api-swagger-e-autenticação)
 - [Kubernetes](#kubernetes)
+- [AWS Academy, EKS e ECR](#aws-academy-eks-e-ecr)
 - [Terraform](#terraform)
 - [GitHub Actions e runner](#github-actions-e-runner)
 
@@ -588,6 +589,319 @@ No Docker Desktop, se houver erro de certificado do kubelet:
 kubectl patch deployment metrics-server -n kube-system --type=strategic --patch-file k8s/metrics-server-docker-desktop-patch.json
 kubectl rollout status deployment/metrics-server -n kube-system
 ```
+
+## AWS Academy, EKS e ECR
+
+### `eksctl create cluster` falha com `iam:CreateRole`
+
+Erro observado no AWS Academy:
+
+```text
+User is not authorized to perform: iam:CreateRole
+Encountered a permissions error performing a tagging operation
+```
+
+O `eksctl create cluster` padrão tenta criar IAM Roles automaticamente para o control plane e para os nodes. Em alguns laboratórios AWS Academy, o usuário temporário não tem permissão para `iam:CreateRole`.
+
+Verifique se existe uma role pronta do laboratório:
+
+```bash
+aws iam list-roles --query "Roles[?contains(RoleName, 'LabRole')].[RoleName,Arn]" --output table
+```
+
+Se existir `LabRole`, crie o cluster com um arquivo `cluster.yaml` usando a role existente:
+
+```yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: oficina-cluster
+  region: us-east-1
+  version: "1.34"
+
+iam:
+  serviceRoleARN: arn:aws:iam::ACCOUNT_ID:role/LabRole
+
+managedNodeGroups:
+  - name: oficina-ng
+    instanceType: t3.medium
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 2
+    iam:
+      instanceRoleARN: arn:aws:iam::ACCOUNT_ID:role/LabRole
+```
+
+Depois:
+
+```bash
+eksctl create cluster -f cluster.yaml
+```
+
+Se ainda falhar com `iam:PassRole` ou `eks:CreateCluster`, o laboratório não tem permissão suficiente para EKS. Nesse caso, use outro laboratório com EKS habilitado ou peça ajuste de permissão ao instrutor.
+
+### Stack `eksctl-oficina-cluster-cluster` já existe
+
+Erro comum após uma tentativa falha:
+
+```text
+AlreadyExistsException: Stack [eksctl-oficina-cluster-cluster] already exists
+```
+
+Isso significa que o cluster não existe, mas a stack do CloudFormation ficou em `ROLLBACK_COMPLETE`.
+
+Liste as stacks:
+
+```bash
+aws cloudformation list-stacks \
+  --region us-east-1 \
+  --stack-status-filter CREATE_FAILED ROLLBACK_COMPLETE DELETE_FAILED \
+  --query "StackSummaries[?contains(StackName, 'oficina')].[StackName,StackStatus]" \
+  --output table
+```
+
+Apague a stack:
+
+```bash
+aws cloudformation delete-stack \
+  --region us-east-1 \
+  --stack-name eksctl-oficina-cluster-cluster
+```
+
+Depois tente novamente:
+
+```bash
+eksctl create cluster -f cluster.yaml
+```
+
+### Stack não apaga por `TerminationProtection`
+
+Erro observado:
+
+```text
+Stack cannot be deleted while TerminationProtection is enabled
+```
+
+Desative a proteção:
+
+```bash
+aws cloudformation update-termination-protection \
+  --region us-east-1 \
+  --stack-name eksctl-oficina-cluster-cluster \
+  --no-enable-termination-protection
+```
+
+Depois apague:
+
+```bash
+aws cloudformation delete-stack \
+  --region us-east-1 \
+  --stack-name eksctl-oficina-cluster-cluster
+```
+
+### `kubectl get nodes` falha com `ExecCredential v1alpha1`
+
+Erro observado:
+
+```text
+invalid apiVersion "client.authentication.k8s.io/v1alpha1"
+no kind "ExecCredential" is registered for version "client.authentication.k8s.io/v1alpha1"
+```
+
+Esse erro normalmente indica incompatibilidade entre `kubectl`, AWS CLI e o kubeconfig gerado.
+
+Instale uma versão nova do `kubectl`:
+
+```bash
+mkdir -p $HOME/bin
+export PATH=$HOME/bin:$PATH
+
+curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.34.9/2026-07-05/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+mv ./kubectl $HOME/bin/kubectl
+
+kubectl version --client
+```
+
+Instale AWS CLI v2 no usuário do lab:
+
+```bash
+cd ~
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -oq awscliv2.zip
+./aws/install -i $HOME/aws-cli -b $HOME/bin --update
+export PATH=$HOME/bin:$PATH
+
+aws --version
+```
+
+Recrie o kubeconfig:
+
+```bash
+aws eks update-kubeconfig \
+  --region us-east-1 \
+  --name oficina-cluster
+```
+
+Teste:
+
+```bash
+kubectl get nodes
+```
+
+Se ainda aparecer `v1alpha1`, corrija temporariamente o kubeconfig:
+
+```bash
+sed -i 's/client.authentication.k8s.io\/v1alpha1/client.authentication.k8s.io\/v1beta1/g' ~/.kube/config
+kubectl get nodes
+```
+
+### Docker no terminal do AWS Academy pede senha de `sudo`
+
+Erro observado:
+
+```text
+permission denied while trying to connect to the Docker daemon socket
+```
+
+O terminal do AWS Academy pode não permitir acesso ao Docker daemon pelo usuário do lab. Se `sudo docker ps` pedir senha, faça o build e push da imagem no computador local usando as credenciais temporárias do laboratório.
+
+No PowerShell local:
+
+```powershell
+aws configure set aws_access_key_id "ACCESS_KEY_DO_LAB"
+aws configure set aws_secret_access_key "SECRET_KEY_DO_LAB"
+aws configure set aws_session_token "SESSION_TOKEN_DO_LAB"
+aws configure set region "us-east-1"
+
+aws sts get-caller-identity
+```
+
+Depois publique a imagem no ECR a partir da raiz do projeto:
+
+```powershell
+cd [pasta raiz do seu projeto]
+
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+
+docker build -t oficina-api .
+docker tag oficina-api:latest ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest
+docker push ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest
+```
+
+### `docker build` falha com `Dockerfile: no such file or directory`
+
+Erro observado:
+
+```text
+failed to read dockerfile: open Dockerfile: no such file or directory
+```
+
+O comando foi executado fora da raiz do projeto. Entre na pasta correta:
+
+```powershell
+cd [pasta raiz do seu projeto]
+dir Dockerfile
+docker build -t oficina-api .
+```
+
+### Push para o ECR falha porque a imagem não existe
+
+Erros comuns:
+
+```text
+No such image: oficina-api:latest
+tag does not exist
+```
+
+Isso acontece quando o `docker build` falhou antes. Faça novamente a sequência completa:
+
+```powershell
+docker build -t oficina-api .
+docker tag oficina-api:latest ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest
+docker push ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest
+```
+
+### Pod da API fica em `ImagePullBackOff` no EKS
+
+Investigue:
+
+```bash
+kubectl describe pod -n oficina -l app=oficina-api
+```
+
+Causas comuns:
+
+- Imagem não foi enviada para o ECR.
+- `ACCOUNT_ID` ou região no nome da imagem estão incorretos.
+- Repositório ECR foi apagado.
+- Node não tem permissão para puxar a imagem.
+
+Confira o repositório:
+
+```bash
+aws ecr describe-repositories --region us-east-1
+```
+
+Confira a imagem configurada no deployment:
+
+```bash
+kubectl get deployment oficina-api -n oficina -o jsonpath="{.spec.template.spec.containers[0].image}"
+```
+
+### Service `LoadBalancer` não mostra endereço externo
+
+Confira:
+
+```bash
+kubectl get service oficina-api -n oficina
+kubectl describe service oficina-api -n oficina
+```
+
+Em EKS, o Service do tipo `LoadBalancer` cria um Elastic Load Balancer. Pode levar alguns minutos para aparecer o endereço externo.
+
+Se o endereço não aparecer e houver eventos de erro, verifique permissões do laboratório ou use `port-forward` para validação:
+
+```bash
+kubectl port-forward service/oficina-api 18081:8081 -n oficina
+```
+
+Depois acesse:
+
+```text
+http://localhost:18081/swagger-ui/index.html
+```
+
+### Conferir se nada ficou cobrando na AWS
+
+Após remover o ambiente, confira:
+
+```bash
+aws eks list-clusters --region us-east-1
+
+aws ec2 describe-instances \
+  --region us-east-1 \
+  --query "Reservations[].Instances[].[InstanceId,State.Name,Tags[?Key=='Name'].Value|[0]]" \
+  --output table
+
+aws elbv2 describe-load-balancers \
+  --region us-east-1
+
+aws ecr describe-repositories \
+  --region us-east-1
+```
+
+Resultado esperado:
+
+```text
+EKS: []
+EC2: instâncias do nodegroup terminated ou ausentes
+LoadBalancers: []
+ECR repositories: []
+```
+
+Instâncias EC2 com estado `terminated` não ficam cobrando computação, mas podem aparecer no histórico por algum tempo.
 
 ## Terraform
 
