@@ -144,6 +144,9 @@ jobs:
     runs-on: [self-hosted, Windows]
     needs: imagem-docker
     if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
+    concurrency:
+      group: terraform-deploy-oficina-api
+      cancel-in-progress: false
 
     env:
       KUBECONFIG: ${{ github.workspace }}\kubeconfig
