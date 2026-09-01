@@ -921,6 +921,24 @@ eksctl create addon \
   --region us-east-1
 ```
 
+Se o `eksctl` não estiver disponível, use a AWS CLI:
+
+```bash
+aws eks create-addon \
+  --cluster-name oficina-cluster \
+  --addon-name aws-ebs-csi-driver \
+  --region us-east-1
+```
+
+Para conferir:
+
+```bash
+aws eks describe-addon \
+  --cluster-name oficina-cluster \
+  --addon-name aws-ebs-csi-driver \
+  --region us-east-1
+```
+
 Execute o Terraform:
 
 ```bash
