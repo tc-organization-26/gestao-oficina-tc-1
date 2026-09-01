@@ -367,48 +367,13 @@ Fluxo esperado:
 - Pull request aberto ou sincronizado: não dispara o workflow novamente.
 - Merge ou push em `main` ou `master`: executa build, testes, build da imagem Docker, publicação no GHCR e deploy no Kubernetes.
 
-O job de deploy usa runner self-hosted Windows:
+O job de deploy usa runner GitHub-hosted Ubuntu:
 
 ```yaml
-runs-on: [self-hosted, Windows]
+runs-on: ubuntu-latest
 ```
 
-Se o GitHub Actions mostrar `Waiting for a runner to pick up this job`, o workflow está aguardando uma máquina Windows com o runner online e registrado no repositório ou organização.
-
-### Configuração do runner self-hosted
-
-No GitHub:
-
-1. Acesse `Settings > Actions > Runners`.
-2. Clique em `New self-hosted runner`.
-3. Escolha `Windows` e arquitetura `x64`.
-4. Siga os comandos exibidos pelo GitHub para baixar, extrair e configurar o runner.
-
-Exemplo de instalação:
-
-```powershell
-mkdir actions-runner
-cd actions-runner
-Invoke-WebRequest -Uri https://github.com/actions/runner/releases/download/v2.336.0/actions-runner-win-x64-2.336.0.zip -OutFile actions-runner-win-x64-2.336.0.zip
-Add-Type -AssemblyName System.IO.Compression.FileSystem
-[System.IO.Compression.ZipFile]::ExtractToDirectory("$PWD/actions-runner-win-x64-2.336.0.zip", "$PWD")
-.\config.cmd --url https://github.com/<organizacao-ou-usuario>/<repositorio> --token <TOKEN_GERADO_PELO_GITHUB>
-.\run.cmd
-```
-
-A máquina do runner precisa ter:
-
-```powershell
-kubectl version --client
-terraform version
-docker version
-```
-
-Se o Terraform não estiver no `PATH`, configure a variable `TERRAFORM_EXE` no GitHub Actions. Exemplo:
-
-```text
-C:\Program Files\Terraform\terraform.exe
-```
+O workflow instala/configura `kubectl` e Terraform durante a execução e usa os secrets AWS para autenticar no EKS. Portanto, não é necessário manter uma máquina local com runner self-hosted ligada.
 
 ### Secrets e variables do GitHub Actions
 
@@ -430,7 +395,6 @@ Variables opcionais:
 | `KUBE_CONTEXT` | Contexto Kubernetes do kubeconfig |
 | `POSTGRES_STORAGE_CLASS_NAME` | StorageClass do PVC. No CD para EKS, padrão `gp2` |
 | `APP_SERVICE_TYPE` | Tipo do Service da API. No CD para EKS, padrão `LoadBalancer` |
-| `TERRAFORM_EXE` | Caminho do executável Terraform no runner |
 
 Para gerar `KUBE_CONFIG_BASE64` no PowerShell:
 
@@ -471,7 +435,7 @@ Variables recomendadas:
 
 O workflow já define `AWS_REGION` como `us-east-1`, `APP_SERVICE_TYPE` como `LoadBalancer` e `POSTGRES_STORAGE_CLASS_NAME` como `gp2` quando essas variables não existem. Mesmo assim, cadastrar as variables no GitHub deixa a configuração explícita para apresentação e manutenção.
 
-O kubeconfig do EKS usa autenticação via AWS CLI. Por isso, o runner self-hosted precisa ter `aws`, `kubectl` e `terraform` instalados, e os secrets AWS acima precisam estar atualizados. No AWS Academy, as credenciais mudam a cada sessão do laboratório.
+O kubeconfig do EKS usa autenticação via AWS CLI. Por isso, os secrets AWS acima precisam estar atualizados. No AWS Academy, as credenciais mudam a cada sessão do laboratório.
 
 ## Collection da API
 

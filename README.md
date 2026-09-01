@@ -138,7 +138,7 @@ Merge/push em main ou master
   -> verificação do rollout da aplicação
 ```
 
-O job de deploy usa runner self-hosted Windows com acesso ao cluster Amazon EKS. A imagem da aplicação é publicada no GitHub Container Registry e o Service da API usa `LoadBalancer` no CD para expor uma URL pública da AWS na porta `8081`. A configuração desse fluxo está em [`.github/workflows/cicd.yml`](.github/workflows/cicd.yml) e o passo a passo está documentado em [`docs/EXECUCAO.md`](docs/EXECUCAO.md).
+O job de deploy usa runner GitHub-hosted `ubuntu-latest` com credenciais AWS para acessar o cluster Amazon EKS. A imagem da aplicação é publicada no GitHub Container Registry e o Service da API usa `LoadBalancer` no CD para expor uma URL pública da AWS na porta `8081`. A configuração desse fluxo está em [`.github/workflows/cicd.yml`](.github/workflows/cicd.yml) e o passo a passo está documentado em [`docs/EXECUCAO.md`](docs/EXECUCAO.md).
 
 Também foi validado um fluxo manual em laboratório AWS Academy:
 
