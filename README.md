@@ -10,13 +10,13 @@ O objetivo do projeto é reduzir processos espalhados em anotações manuais e p
 - [Objetivo desta fase](#objetivo-desta-fase)
 - [Solução](#solução)
 - [Recursos da API](#recursos-da-api)
+- [Como executar local e cloud, provisionar e fazer deploy](#como-executar-local-e-cloud-provisionar-e-fazer-deploy)
 - [Arquitetura proposta](#arquitetura-proposta)
   - [Clean Architecture](#clean-architecture)
   - [Arquitetura AWS](#arquitetura-aws)
   - [Componentes da aplicação](docs/ARQUITETURA.md#organização-dos-pacotes)
   - [Infraestrutura provisionada](#infraestrutura-provisionada)
   - [Fluxo de deploy](#fluxo-de-deploy)
-- [Como executar, provisionar e fazer deploy](#como-executar-provisionar-e-fazer-deploy)
 - [Tecnologias e versões](docs/EXECUCAO.md#tecnologias-e-versões-usadas-ou-definidas-no-projeto)
 - [Execução em cloud AWS com EKS](docs/EXECUCAO.md#deploy-em-cloud-aws-academy-com-eks-e-ecr)
 - [Validação da API](#validação-da-api)
@@ -133,12 +133,12 @@ Merge/push em main ou master
   -> build e testes
   -> build da imagem Docker
   -> publicação da imagem no GHCR
-  -> Terraform plan/apply no cluster Kubernetes
+  -> Terraform plan/apply no cluster Amazon EKS
   -> kubectl apply dos manifestos complementares em k8s/cd
   -> verificação do rollout da aplicação
 ```
 
-O job de deploy usa runner self-hosted Windows com acesso ao cluster Kubernetes. A configuração desse fluxo está em [`.github/workflows/cicd.yml`](.github/workflows/cicd.yml) e o passo a passo está documentado em [`docs/EXECUCAO.md`](docs/EXECUCAO.md).
+O job de deploy usa runner self-hosted Windows com acesso ao cluster Amazon EKS. A imagem da aplicação é publicada no GitHub Container Registry e o Service da API usa `LoadBalancer` no CD para expor uma URL pública da AWS na porta `8081`. A configuração desse fluxo está em [`.github/workflows/cicd.yml`](.github/workflows/cicd.yml) e o passo a passo está documentado em [`docs/EXECUCAO.md`](docs/EXECUCAO.md).
 
 Também foi validado um fluxo manual em laboratório AWS Academy:
 
@@ -153,11 +153,12 @@ Start Lab
   -> limpeza do EKS, EC2, Load Balancer e ECR ao final do laboratório
 ```
 
-## Como executar, provisionar e fazer deploy
+## Como executar local e cloud, provisionar e fazer deploy
 
 - Execução local com Docker Compose: [`docs/EXECUCAO.md#execução-local-com-docker-compose`](docs/EXECUCAO.md#execução-local-com-docker-compose)
 
-- Deploy em Kubernetes local com Terraform: [`docs/EXECUCAO.md#deploy-em-kubernetes-com-terraform`](docs/EXECUCAO.md#deploy-em-kubernetes-com-terraform)
+- Deploy local em Kubernetes com Terraform: [`docs/EXECUCAO.md#deploy-em-kubernetes-com-terraform`](docs/EXECUCAO.md#deploy-em-kubernetes-com-terraform)
+
 - Provisionamento da infraestrutura com Terraform: [`docs/EXECUCAO.md#provisionamento-com-terraform`](docs/EXECUCAO.md#provisionamento-com-terraform)
 
 - Deploy em cloud AWS Academy com EKS e ECR: [`docs/EXECUCAO.md#deploy-em-cloud-aws-academy-com-eks-e-ecr`](docs/EXECUCAO.md#deploy-em-cloud-aws-academy-com-eks-e-ecr)

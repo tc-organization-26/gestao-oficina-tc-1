@@ -428,7 +428,8 @@ Variables opcionais:
 | Variable | Uso |
 | --- | --- |
 | `KUBE_CONTEXT` | Contexto Kubernetes do kubeconfig |
-| `POSTGRES_STORAGE_CLASS_NAME` | StorageClass do PVC, padrão `hostpath` |
+| `POSTGRES_STORAGE_CLASS_NAME` | StorageClass do PVC. No CD para EKS, padrão `gp2` |
+| `APP_SERVICE_TYPE` | Tipo do Service da API. No CD para EKS, padrão `LoadBalancer` |
 | `TERRAFORM_EXE` | Caminho do executável Terraform no runner |
 
 Para gerar `KUBE_CONFIG_BASE64` no PowerShell:
@@ -438,6 +439,39 @@ Para gerar `KUBE_CONFIG_BASE64` no PowerShell:
 ```
 
 O state do Terraform no CD usa backend Kubernetes, gravado como Secret no namespace `default`. O workflow não possui aprovação manual de ambiente; após push em `main` ou `master`, passando build e testes, o deploy segue automaticamente.
+
+No fluxo atual de CD, a aplicação roda no Amazon EKS e a imagem é publicada no GitHub Container Registry (`ghcr.io`). O workflow passa `app_service_type = "LoadBalancer"` para o Terraform, então a AWS cria uma URL pública para acessar a API na porta `8081`.
+
+### Configurar GitHub Actions para EKS com imagem no GHCR
+
+Para manter o cluster na AWS e a imagem no GitHub Container Registry, configure o GitHub em `Settings > Secrets and variables > Actions`.
+
+Secrets necessários:
+
+| Secret | Valor esperado |
+| --- | --- |
+| `KUBE_CONFIG_BASE64` | Conteúdo do kubeconfig do EKS codificado em Base64 |
+| `POSTGRES_USER` | Usuário do PostgreSQL da aplicação |
+| `POSTGRES_PASSWORD` | Senha do PostgreSQL da aplicação |
+| `JWT_SECRET` | Chave JWT com 32 bytes ou mais |
+| `GHCR_USERNAME` | Usuário do GitHub que consegue ler a imagem no GHCR |
+| `GHCR_TOKEN` | Token do GitHub com permissão de leitura de packages |
+| `AWS_ACCESS_KEY_ID` | Access key da AWS usada para autenticar no EKS |
+| `AWS_SECRET_ACCESS_KEY` | Secret key da AWS usada para autenticar no EKS |
+| `AWS_SESSION_TOKEN` | Session token da AWS Academy, quando estiver usando o laboratório |
+
+Variables recomendadas:
+
+| Variable | Valor recomendado para EKS |
+| --- | --- |
+| `AWS_REGION` | Região do cluster, por exemplo `us-east-1` |
+| `KUBE_CONTEXT` | Contexto do EKS, por exemplo `arn:aws:eks:us-east-1:ACCOUNT_ID:cluster/oficina-cluster` |
+| `POSTGRES_STORAGE_CLASS_NAME` | `gp2` ou `gp3`, conforme `kubectl get storageclass` |
+| `APP_SERVICE_TYPE` | `LoadBalancer` |
+
+O workflow já define `AWS_REGION` como `us-east-1`, `APP_SERVICE_TYPE` como `LoadBalancer` e `POSTGRES_STORAGE_CLASS_NAME` como `gp2` quando essas variables não existem. Mesmo assim, cadastrar as variables no GitHub deixa a configuração explícita para apresentação e manutenção.
+
+O kubeconfig do EKS usa autenticação via AWS CLI. Por isso, o runner self-hosted precisa ter `aws`, `kubectl` e `terraform` instalados, e os secrets AWS acima precisam estar atualizados. No AWS Academy, as credenciais mudam a cada sessão do laboratório.
 
 ## Collection da API
 
@@ -899,6 +933,7 @@ O Terraform deste projeto já cria os recursos Kubernetes principais. Para usar 
 ```hcl
 kubeconfig_context = "arn:aws:eks:us-east-1:ACCOUNT_ID:cluster/oficina-cluster"
 postgres_storage_class_name = "gp2"
+app_service_type = "LoadBalancer"
 
 app_image = "ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/oficina-api:latest"
 
@@ -935,7 +970,9 @@ terraform plan
 terraform apply
 ```
 
-Para exposição pública na AWS, o Service da API precisa ser `LoadBalancer`. O código atual do Terraform usa `NodePort` para compatibilidade com Kubernetes local. Em demonstração cloud, use o manifesto manual acima ou adapte o Service da API para `LoadBalancer`.
+Para exposição pública na AWS, o Service da API precisa ser `LoadBalancer`. No Terraform deste projeto, configure `app_service_type = "LoadBalancer"` ou, no GitHub Actions, use a variable `APP_SERVICE_TYPE` com valor `LoadBalancer`.
+
+No CD automatizado deste repositório, a imagem publicada pelo GitHub Actions fica no GHCR. Nesse caso, não é necessário usar ECR: o Terraform recebe a imagem `ghcr.io/OWNER/REPOSITORY:SHA` diretamente do workflow e cria o `imagePullSecret` `ghcr-credentials` quando `GHCR_USERNAME` e `GHCR_TOKEN` estão configurados.
 
 ### Evidências recomendadas para entrega
 

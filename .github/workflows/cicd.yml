@@ -157,10 +157,15 @@ jobs:
       TF_VAR_postgres_user: ${{ secrets.POSTGRES_USER }}
       TF_VAR_postgres_password: ${{ secrets.POSTGRES_PASSWORD }}
       TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
-      TF_VAR_postgres_storage_class_name: ${{ vars.POSTGRES_STORAGE_CLASS_NAME || 'hostpath' }}
+      TF_VAR_postgres_storage_class_name: ${{ vars.POSTGRES_STORAGE_CLASS_NAME || 'gp2' }}
+      TF_VAR_app_service_type: ${{ vars.APP_SERVICE_TYPE || 'LoadBalancer' }}
       TF_VAR_registry_server: ghcr.io
       TF_VAR_registry_username: ${{ secrets.GHCR_USERNAME }}
       TF_VAR_registry_password: ${{ secrets.GHCR_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
       TERRAFORM_EXE: ${{ vars.TERRAFORM_EXE || 'terraform' }}
 
     steps:
