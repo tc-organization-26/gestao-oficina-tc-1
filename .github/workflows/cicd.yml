@@ -141,7 +141,7 @@ jobs:
 
   deploy:
     name: Deploy no cluster Kubernetes
-    runs-on: [self-hosted, Windows]
+    runs-on: ubuntu-latest
     needs: imagem-docker
     if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
     concurrency:
@@ -149,8 +149,8 @@ jobs:
       cancel-in-progress: false
 
     env:
-      KUBECONFIG: ${{ github.workspace }}\kubeconfig
-      TF_VAR_kubeconfig_path: ${{ github.workspace }}\kubeconfig
+      KUBECONFIG: ${{ github.workspace }}/kubeconfig
+      TF_VAR_kubeconfig_path: ${{ github.workspace }}/kubeconfig
       TF_VAR_kubeconfig_context: ${{ vars.KUBE_CONTEXT }}
       TF_VAR_namespace: oficina
       TF_VAR_app_image: ${{ needs.imagem-docker.outputs.app_image }}
@@ -166,43 +166,59 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
       AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
-      TERRAFORM_EXE: ${{ vars.TERRAFORM_EXE || 'terraform' }}
 
     steps:
       - name: Baixar codigo do repositorio
         uses: actions/checkout@v4
 
+      - name: Configurar credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      - name: Configurar kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configurar Terraform
+        uses: hashicorp/setup-terraform@v3
+
       - name: Configurar acesso ao cluster Kubernetes
-        shell: powershell
+        shell: bash
         run: |
-          [IO.File]::WriteAllBytes($env:KUBECONFIG, [Convert]::FromBase64String("${{ secrets.KUBE_CONFIG_BASE64 }}"))
-          if ($env:TF_VAR_kubeconfig_context) {
-            kubectl config use-context $env:TF_VAR_kubeconfig_context
-          }
+          echo "${{ secrets.KUBE_CONFIG_BASE64 }}" | base64 --decode > "$KUBECONFIG"
+          if [ -n "$TF_VAR_kubeconfig_context" ]; then
+            kubectl config use-context "$TF_VAR_kubeconfig_context"
+          fi
           kubectl cluster-info
 
-      - name: Verificar Terraform instalado no runner
-        run: '& "$env:TERRAFORM_EXE" version'
+      - name: Verificar ferramentas do runner
+        run: |
+          aws --version
+          kubectl version --client
+          terraform version
 
       - name: Validar formatacao do Terraform
         working-directory: infra
-        run: '& "$env:TERRAFORM_EXE" fmt -check'
+        run: terraform fmt -check
 
       - name: Inicializar Terraform
         working-directory: infra
-        run: '& "$env:TERRAFORM_EXE" init -backend-config="config_path=$env:KUBECONFIG" -backend-config="namespace=default" -backend-config="secret_suffix=oficina-api"'
+        run: terraform init -backend-config="config_path=$KUBECONFIG" -backend-config="namespace=default" -backend-config="secret_suffix=oficina-api"
 
       - name: Validar Terraform
         working-directory: infra
-        run: '& "$env:TERRAFORM_EXE" validate'
+        run: terraform validate
 
       - name: Planejar deploy no cluster Kubernetes
         working-directory: infra
-        run: '& "$env:TERRAFORM_EXE" plan -out=tfplan'
+        run: terraform plan -out=tfplan
 
       - name: Deploy do banco de dados com Terraform
         working-directory: infra
-        run: '& "$env:TERRAFORM_EXE" apply -auto-approve tfplan'
+        run: terraform apply -auto-approve tfplan
 
       - name: Aplicar manifestos YAML complementares no cluster
         run: kubectl apply -f k8s/cd
