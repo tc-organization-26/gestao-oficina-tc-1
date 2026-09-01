@@ -40,6 +40,17 @@ variable "postgres_storage_class_name" {
   default     = "hostpath"
 }
 
+variable "app_service_type" {
+  description = "Tipo do Service Kubernetes da API. Use NodePort localmente e LoadBalancer em EKS para obter URL publica da AWS."
+  type        = string
+  default     = "NodePort"
+
+  validation {
+    condition     = contains(["NodePort", "LoadBalancer"], var.app_service_type)
+    error_message = "app_service_type deve ser NodePort ou LoadBalancer."
+  }
+}
+
 variable "postgres_user" {
   description = "Usuario do banco de dados."
   type        = string

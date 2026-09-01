@@ -16,7 +16,7 @@ Para instruções de execução, consulte [`../docs/EXECUCAO.md`](../docs/EXECUC
 - Deployment e Service interno do PostgreSQL.
 - ConfigMap e Secret da API.
 - Secret opcional `ghcr-credentials` para pull de imagem privada no GHCR.
-- Deployment e Service `NodePort` da API.
+- Deployment e Service da API. Localmente pode usar `NodePort`; em EKS o CD usa `LoadBalancer`.
 - HPA da API por CPU e memória.
 
 Em cloud AWS com Amazon EKS, o cluster Kubernetes é criado fora deste diretório, normalmente com `eksctl`. Depois que o `kubectl` aponta para o EKS, este Terraform pode criar os recursos da aplicação dentro do cluster.
@@ -40,7 +40,7 @@ Namespace oficina
   |     |-- ConfigMap oficina-api-config
   |     |-- Secret oficina-api-secret
   |     |-- Secret ghcr-credentials, quando configurado
-  |     |-- Service oficina-api, NodePort 30081
+  |     |-- Service oficina-api, NodePort 30081 localmente ou LoadBalancer em EKS
   |     |-- HPA oficina-api
   |
   |-- Deployment postgres
@@ -102,7 +102,7 @@ docker build
 
 ## Service local e Service em cloud
 
-O código atual usa `NodePort` para facilitar execução em Kubernetes local:
+O Terraform permite escolher o tipo do Service com `app_service_type`. O valor padrão é `NodePort` para facilitar execução em Kubernetes local:
 
 ```text
 http://localhost:30081/swagger-ui/index.html
@@ -110,9 +110,8 @@ http://localhost:30081/swagger-ui/index.html
 
 Em Amazon EKS, para acesso público, use Service do tipo `LoadBalancer`. Isso cria automaticamente um Elastic Load Balancer na AWS:
 
-```yaml
-spec:
-  type: LoadBalancer
+```hcl
+app_service_type = "LoadBalancer"
 ```
 
 Em laboratório, também é possível validar sem exposição pública usando:

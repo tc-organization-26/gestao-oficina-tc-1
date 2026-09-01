@@ -1,5 +1,6 @@
 kubeconfig_context = "docker-desktop"
 postgres_storage_class_name = "hostpath"
+app_service_type = "NodePort"
 
 postgres_user     = "troque_aqui"
 postgres_password = "troque_aqui"

@@ -306,14 +306,14 @@ resource "kubernetes_service_v1" "app" {
   }
 
   spec {
-    type     = "NodePort"
+    type     = var.app_service_type
     selector = local.app_labels
 
     port {
       name        = "http"
       port        = 8081
       target_port = 8081
-      node_port   = 30081
+      node_port   = var.app_service_type == "NodePort" ? 30081 : null
     }
   }
 }
