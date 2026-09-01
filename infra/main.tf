@@ -181,7 +181,7 @@ resource "kubernetes_secret_v1" "app" {
 
   data = {
     SPRING_DATASOURCE_USERNAME = var.postgres_user
-    SPRING_DATASOURCE_PASSWORD = var.postgres_password
+    POSTGRES_PASSWORD           = var.postgres_password
     SECURITY_JWT_SECRET        = var.jwt_secret
   }
 }
