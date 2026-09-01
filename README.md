@@ -27,7 +27,7 @@ O objetivo do projeto é reduzir processos espalhados em anotações manuais e p
 - Vídeo de apresentação da fase 2: https://youtu.be/JMrTZXY2hYE
 - Collection da API: [`src/main/resources/collection-insomnia.yaml`](src/main/resources/collection-insomnia.yaml)
 
-## Objetivo desta fase
+## Objetivo desta fase 
 
 A proposta da fase 2 é evoluir a aplicação para lidar com o recente aumento da demanda, expansão para novas unidades e necessidade de garantir alta disponibilidade. Agora, a oficina busca:
 
