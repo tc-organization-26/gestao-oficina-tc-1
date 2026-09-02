@@ -26,7 +26,7 @@ O objetivo do projeto é reduzir processos espalhados em anotações manuais e p
 ## Entregáveis
 
 - Vídeo de apresentação da fase 2: https://youtu.be/JMrTZXY2hYE
-- Collection da API: [`src/main/resources/collection-insomnia.yaml`](src/main/resources/collection-insomnia.yaml)
+- Collection da API: [collection-insomnia.yaml](src/main/resources/collection-insomnia.yaml)
 
 ## Execução local
 
@@ -112,7 +112,7 @@ Com isso, a entrega cobre tanto o funcionamento da oficina quanto o caminho nece
 - `/ordens-servico/{id}/status`: consulta e atualização de status da OS.
 - `/ordens-servico/{id}/orcamento`: composição, aprovação e recusa de orçamento.
 - `/ordens-servico/{id}/pagamento`: registro de pagamento.
-- `/swagger-ui/index.html`: documentação interativa da API (Swagger local: `http://localhost:8081/swagger-ui/index.html`). Também é possível validar pelo Insomnia importando [`src/main/resources/collection-insomnia.yaml`](src/main/resources/collection-insomnia.yaml) e ajustando apenas a base URL.
+- `/swagger-ui/index.html`: documentação interativa da API (Swagger local: `http://localhost:8081/swagger-ui/index.html`). Também é possível validar pelo Insomnia importando [collection-insomnia.yaml](src/main/resources/collection-insomnia.yaml) e ajustando apenas a base URL.
 
 ## Arquitetura proposta
 
@@ -182,7 +182,7 @@ Start Lab
 A API pode ser validada de duas formas:
 
 - Swagger: `http://localhost:8081/swagger-ui/index.html`
-- Insomnia: importe a collection [`src/main/resources/collection-insomnia.yaml`](src/main/resources/collection-insomnia.yaml) e ajuste apenas a base URL para o ambiente usado.
+- Insomnia: importe a collection [collection-insomnia.yaml](src/main/resources/collection-insomnia.yaml) e ajuste apenas a base URL para o ambiente usado.
 
 Para gerar um token JWT, use o endpoint `POST /auth/login` com a credencial administrativa fictícia usada neste MVP:
 

@@ -36,7 +36,7 @@ Swagger: http://localhost:8081/swagger-ui/index.html
 API base URL: http://localhost:8081
 ```
 
-Como alternativa ao Swagger, importe a collection `src/main/resources/collection-insomnia.yaml` no Insomnia e ajuste apenas a base URL para `http://localhost:8081`.
+Como alternativa ao Swagger, importe a collection [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) no Insomnia e ajuste apenas a base URL para `http://localhost:8081`.
 
 ### Opção 2: Kubernetes local com Terraform
 
@@ -72,7 +72,7 @@ Swagger: http://localhost:18081/swagger-ui/index.html
 API base URL: http://localhost:18081
 ```
 
-Como alternativa ao Swagger, importe a collection `src/main/resources/collection-insomnia.yaml` no Insomnia e ajuste apenas a base URL para `http://localhost:18081`.
+Como alternativa ao Swagger, importe a collection [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) no Insomnia e ajuste apenas a base URL para `http://localhost:18081`.
 
 Para remover o ambiente Kubernetes local:
 
@@ -153,6 +153,7 @@ Versões validadas no ambiente local usado durante a documentação:
 
 | Ferramenta local | Versão validada |
 | --- | --- |
+| Sistema operacional | Windows 11 |
 | Java instalado na máquina | 21.0.11 |
 | Docker Desktop | 4.77.0 |
 | Docker Engine | 29.5.3 |
@@ -161,6 +162,10 @@ Versões validadas no ambiente local usado durante a documentação:
 | `kubectl` | v1.34.1 |
 | Kustomize embutido no `kubectl` | v5.7.1 |
 | Kubernetes local Docker Desktop | v1.34.3 |
+| AWS CLI local | aws-cli/2.36.34 Python/3.14.6 Windows/11 |
+| Amazon EKS no laboratório | Kubernetes 1.34 |
+| Região AWS validada | us-east-1 |
+| `kubectl` instalado no AWS Academy | 1.34.9 |
 | Git | 2.54.0.windows.1 |
 | Insomnia | 13.1.0 |
 
@@ -259,7 +264,7 @@ O Swagger fica disponível em:
 http://localhost:8081/swagger-ui/index.html
 ```
 
-Também é possível validar pelo Insomnia importando `src/main/resources/collection-insomnia.yaml` e ajustando apenas a base URL para `http://localhost:8081`.
+Também é possível validar pelo Insomnia importando [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) e ajustando apenas a base URL para `http://localhost:8081`.
 
 Comandos úteis:
 
@@ -369,7 +374,7 @@ Com o `port-forward` aberto, acesse:
 http://localhost:18081/swagger-ui/index.html
 ```
 
-Também é possível validar pelo Insomnia importando `src/main/resources/collection-insomnia.yaml` e ajustando apenas a base URL para `http://localhost:18081`.
+Também é possível validar pelo Insomnia importando [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) e ajustando apenas a base URL para `http://localhost:18081`.
 
 Exemplo de `infra/terraform.tfvars`:
 
@@ -420,7 +425,7 @@ No Docker Desktop, a API pode ficar disponível pelo NodePort:
 http://localhost:30081/swagger-ui/index.html
 ```
 
-No Insomnia, importe `src/main/resources/collection-insomnia.yaml` e ajuste apenas a base URL para `http://localhost:30081`.
+No Insomnia, importe [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) e ajuste apenas a base URL para `http://localhost:30081`.
 
 O caminho mais previsível localmente é o `port-forward`:
 
@@ -544,11 +549,7 @@ O kubeconfig do EKS usa autenticação via AWS CLI. Por isso, os secrets AWS aci
 
 ## Collection da API
 
-Importe no Insomnia:
-
-```text
-src/main/resources/collection-insomnia.yaml
-```
+Importe no Insomnia a collection [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml).
 
 Base URLs recomendadas:
 
@@ -986,7 +987,7 @@ Quando o Service mostrar um endereço externo, acesse:
 http://ENDERECO_DA_AWS:8081/swagger-ui/index.html
 ```
 
-Também é possível validar pelo Insomnia importando `src/main/resources/collection-insomnia.yaml` e ajustando apenas a base URL para `http://ENDERECO_DA_AWS:8081`.
+Também é possível validar pelo Insomnia importando [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) e ajustando apenas a base URL para `http://ENDERECO_DA_AWS:8081`.
 
 Também é possível testar com `port-forward`:
 

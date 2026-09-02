@@ -82,7 +82,7 @@ Depois acesse:
 http://localhost:8082/swagger-ui/index.html
 ```
 
-No Insomnia, importe `src/main/resources/collection-insomnia.yaml` e ajuste apenas a base URL para `http://localhost:8082`.
+No Insomnia, importe [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) e ajuste apenas a base URL para `http://localhost:8082`.
 
 ### Porta do PostgreSQL já está em uso
 
@@ -405,7 +405,7 @@ URL padrão no Docker Compose:
 http://localhost:8081/swagger-ui/index.html
 ```
 
-Como alternativa ao Swagger, importe `src/main/resources/collection-insomnia.yaml` no Insomnia e ajuste apenas a base URL para `http://localhost:8081`.
+Como alternativa ao Swagger, importe [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) no Insomnia e ajuste apenas a base URL para `http://localhost:8081`.
 
 Se você mudou a porta no `docker-compose.yml`, use a nova porta.
 
@@ -548,7 +548,7 @@ Depois acesse:
 http://localhost:18081/swagger-ui/index.html
 ```
 
-No Insomnia, importe `src/main/resources/collection-insomnia.yaml` e ajuste apenas a base URL para `http://localhost:18081`.
+No Insomnia, importe [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) e ajuste apenas a base URL para `http://localhost:18081`.
 
 Para confirmar o Service:
 
