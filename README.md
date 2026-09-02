@@ -154,7 +154,7 @@ Também foi validado um fluxo manual em laboratório AWS Academy:
 
 ```text
 Start Lab
-  -> criação do cluster Amazon EKS com eksctl
+  -> criação do cluster Amazon EKS com eksctl conforme cluster.yaml
   -> build local da imagem Docker
   -> publicação da imagem no Amazon ECR
   -> deploy da API e PostgreSQL no EKS com kubectl

@@ -1,0 +1,22 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: oficina-cluster
+  region: us-east-1
+  version: "1.34"
+
+iam:
+  serviceRoleARN: arn:aws:iam::773097521787:role/LabRole
+
+managedNodeGroups:
+  - name: oficina-ng
+    instanceType: t3.medium
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 2
+    iam:
+      instanceRoleARN: arn:aws:iam::773097521787:role/LabRole
+
+addons:
+  - name: aws-ebs-csi-driver
