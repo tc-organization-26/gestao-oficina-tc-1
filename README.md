@@ -25,7 +25,7 @@ O objetivo do projeto é reduzir processos espalhados em anotações manuais e p
 
 ## Entregáveis
 
-- Vídeo de apresentação da fase 2: https://youtu.be/JMrTZXY2hYE
+- Vídeo de apresentação da fase 2: https://youtu.be/lCDW-gqZr6I
 - Collection da API: [collection-insomnia.yaml](src/main/resources/collection-insomnia.yaml)
 
 ## Execução local
