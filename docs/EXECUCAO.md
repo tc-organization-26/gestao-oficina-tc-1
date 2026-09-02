@@ -4,6 +4,106 @@
 
 Este documento concentra as instruções práticas para executar a Oficina API localmente, provisionar a infraestrutura e fazer deploy em Kubernetes.
 
+## Opções de execução local
+
+A aplicação pode ser executada localmente de duas formas:
+
+- Docker Compose: caminho mais rápido para subir API e PostgreSQL.
+- Kubernetes local com Terraform: caminho mais próximo do deploy em cluster, usando Docker Desktop Kubernetes.
+
+### Opção 1: Docker Compose
+
+Use a partir da raiz do projeto:
+
+```bash
+cp .env.example .env
+# edite o .env e defina POSTGRES_PASSWORD e JWT_SECRET
+docker compose up --build
+```
+
+No Windows PowerShell:
+
+```powershell
+copy .env.example .env
+# edite o .env e defina POSTGRES_PASSWORD e JWT_SECRET
+docker compose up --build
+```
+
+Depois acesse:
+
+```text
+Swagger: http://localhost:8081/swagger-ui/index.html
+API base URL: http://localhost:8081
+```
+
+Como alternativa ao Swagger, importe a collection [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) no Insomnia e ajuste apenas a base URL para `http://localhost:8081`.
+
+### Opção 2: Kubernetes local com Terraform
+
+Pré-requisitos:
+
+- Docker Desktop com Kubernetes habilitado.
+- `kubectl` apontando para o contexto `docker-desktop`.
+- Terraform instalado.
+
+[Informações sobre versões](#tecnologias-e-versões-usadas-ou-definidas-no-projeto)
+
+Use a partir da raiz do projeto:
+
+```powershell
+kubectl config use-context docker-desktop
+kubectl cluster-info
+docker build -t oficina-api:local .
+copy infra\terraform.tfvars.example infra\terraform.tfvars
+# edite infra\terraform.tfvars e defina postgres_user, postgres_password e jwt_secret
+cd .\infra
+terraform init -backend-config="config_path=$env:USERPROFILE\.kube\config" -backend-config="namespace=default" -backend-config="secret_suffix=oficina-api-local"
+terraform apply
+kubectl get all -n oficina
+kubectl port-forward -n oficina service/oficina-api 18081:8081
+```
+
+Durante o `terraform apply`, confirme digitando `yes`.
+
+Com o `port-forward` aberto:
+
+```text
+Swagger: http://localhost:18081/swagger-ui/index.html
+API base URL: http://localhost:18081
+```
+
+Como alternativa ao Swagger, importe a collection [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) no Insomnia e ajuste apenas a base URL para `http://localhost:18081`.
+
+Para remover o ambiente Kubernetes local:
+
+```powershell
+cd infra
+terraform destroy
+```
+
+Para conferir o ambiente Kubernetes local:
+
+```powershell
+kubectl get all -n oficina
+kubectl get pvc -n oficina
+kubectl get hpa -n oficina
+```
+
+Credencial administrativa fictícia para gerar token JWT em `POST /auth/login`:
+
+```json
+{
+  "login": "admin",
+  "senha": "ad@456"
+}
+```
+
+As credenciais do `.env` e de `infra/terraform.tfvars` configuram infraestrutura da aplicação, como senha do PostgreSQL e segredo JWT. Elas podem ser definidas por quem estiver executando o projeto.
+
+O login da API é separado dessas variáveis. Neste MVP, o usuário administrativo fictício é fixo na aplicação: `admin` / `ad@456`. Outros logins não autenticam enquanto não houver cadastro ou persistência real de usuários.
+
+Os detalhes, comandos de diagnóstico e alternativas de execução aparecem nas seções abaixo.
+
 ## Tecnologias e versões usadas ou definidas no projeto
 
 - Git.
@@ -53,6 +153,7 @@ Versões validadas no ambiente local usado durante a documentação:
 
 | Ferramenta local | Versão validada |
 | --- | --- |
+| Sistema operacional | Windows 11 |
 | Java instalado na máquina | 21.0.11 |
 | Docker Desktop | 4.77.0 |
 | Docker Engine | 29.5.3 |
@@ -61,6 +162,10 @@ Versões validadas no ambiente local usado durante a documentação:
 | `kubectl` | v1.34.1 |
 | Kustomize embutido no `kubectl` | v5.7.1 |
 | Kubernetes local Docker Desktop | v1.34.3 |
+| AWS CLI local | aws-cli/2.36.34 Python/3.14.6 Windows/11 |
+| Amazon EKS no laboratório | Kubernetes 1.34 |
+| Região AWS validada | us-east-1 |
+| `kubectl` instalado no AWS Academy | 1.34.9 |
 | Git | 2.54.0.windows.1 |
 | Insomnia | 13.1.0 |
 
@@ -82,7 +187,7 @@ A aplicação lê configurações por variáveis de ambiente, incluindo:
 
 - `SPRING_DATASOURCE_URL`
 - `SPRING_DATASOURCE_USERNAME`
-- `SPRING_DATASOURCE_PASSWORD`
+- `POSTGRES_PASSWORD`
 - `JWT_SECRET`
 - `SECURITY_JWT_SECRET`
 - `SECURITY_JWT_EXPIRATION_SECONDS`
@@ -129,13 +234,10 @@ POSTGRES_PASSWORD=troque_aqui
 
 SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/oficina_db_2
 SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=troque_aqui
 
 JWT_SECRET=troque_por_uma_chave_segura_com_32_bytes_ou_mais
 JWT_EXPIRATION_SECONDS=3600
 ```
-
-`POSTGRES_PASSWORD` e `SPRING_DATASOURCE_PASSWORD` devem ter o mesmo valor.
 
 Suba os containers:
 
@@ -161,6 +263,8 @@ O Swagger fica disponível em:
 ```text
 http://localhost:8081/swagger-ui/index.html
 ```
+
+Também é possível validar pelo Insomnia importando [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) e ajustando apenas a base URL para `http://localhost:8081`.
 
 Comandos úteis:
 
@@ -270,6 +374,8 @@ Com o `port-forward` aberto, acesse:
 http://localhost:18081/swagger-ui/index.html
 ```
 
+Também é possível validar pelo Insomnia importando [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) e ajustando apenas a base URL para `http://localhost:18081`.
+
 Exemplo de `infra/terraform.tfvars`:
 
 ```hcl
@@ -319,6 +425,8 @@ No Docker Desktop, a API pode ficar disponível pelo NodePort:
 http://localhost:30081/swagger-ui/index.html
 ```
 
+No Insomnia, importe [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) e ajuste apenas a base URL para `http://localhost:30081`.
+
 O caminho mais previsível localmente é o `port-forward`:
 
 ```powershell
@@ -336,6 +444,8 @@ Nesse caso, use:
 ```text
 http://localhost:18082/swagger-ui/index.html
 ```
+
+No Insomnia, ajuste apenas a base URL da collection para `http://localhost:18082`.
 
 ## Metrics Server e HPA
 
@@ -439,17 +549,14 @@ O kubeconfig do EKS usa autenticação via AWS CLI. Por isso, os secrets AWS aci
 
 ## Collection da API
 
-Importe no Insomnia:
-
-```text
-src/main/resources/collection-insomnia.yaml
-```
+Importe no Insomnia a collection [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml).
 
 Base URLs recomendadas:
 
 ```text
 Docker Compose: http://localhost:8081
 Kubernetes com port-forward: http://localhost:18081
+Kubernetes com NodePort: http://localhost:30081
 ```
 
 Para executar o fluxo principal, use `Run folder` na pasta `FLUXO COMPLETO`.
@@ -469,7 +576,7 @@ AWS Academy Start Lab
   -> publicar imagem no ECR
   -> aplicar recursos Kubernetes
   -> expor a API com LoadBalancer
-  -> validar chamada HTTP/Swagger
+  -> validar chamada HTTP, Swagger ou Insomnia
   -> remover tudo ao final do laboratório
 ```
 
@@ -746,7 +853,7 @@ kubectl create namespace oficina
 kubectl create secret generic postgres-secret \
   -n oficina \
   --from-literal=POSTGRES_USER=postgres \
-  --from-literal=POSTGRES_PASSWORD=oficina123
+  --from-literal=POSTGRES_PASSWORD=troque_aqui
 
 kubectl create configmap postgres-config \
   -n oficina \
@@ -756,8 +863,8 @@ kubectl create configmap postgres-config \
 kubectl create secret generic oficina-api-secret \
   -n oficina \
   --from-literal=SPRING_DATASOURCE_USERNAME=postgres \
-  --from-literal=SPRING_DATASOURCE_PASSWORD=oficina123 \
-  --from-literal=SECURITY_JWT_SECRET=chave_jwt_segura_com_32_bytes_ou_mais_aqui
+  --from-literal=POSTGRES_PASSWORD=troque_aqui \
+  --from-literal=SECURITY_JWT_SECRET=troque_por_uma_chave_segura_com_32_bytes_ou_mais
 
 kubectl create configmap oficina-api-config \
   -n oficina \
@@ -880,6 +987,8 @@ Quando o Service mostrar um endereço externo, acesse:
 http://ENDERECO_DA_AWS:8081/swagger-ui/index.html
 ```
 
+Também é possível validar pelo Insomnia importando [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) e ajustando apenas a base URL para `http://ENDERECO_DA_AWS:8081`.
+
 Também é possível testar com `port-forward`:
 
 ```bash
@@ -889,6 +998,8 @@ kubectl port-forward service/oficina-api 18081:8081 -n oficina
 ```text
 http://localhost:18081/swagger-ui/index.html
 ```
+
+No Insomnia, ajuste apenas a base URL da collection para `http://localhost:18081`.
 
 ### Deploy no EKS usando Terraform
 
@@ -970,7 +1081,7 @@ kubectl logs deployment/oficina-api -n oficina --tail=50
 Também registre:
 
 - URL pública ou `port-forward` usado.
-- Swagger aberto.
+- Swagger aberto ou collection do Insomnia executada com a base URL do ambiente.
 - Chamada de API funcionando.
 - Repositório ECR com a imagem publicada.
 - Cluster EKS criado e depois removido.

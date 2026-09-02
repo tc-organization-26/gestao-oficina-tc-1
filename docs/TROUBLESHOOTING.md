@@ -82,6 +82,8 @@ Depois acesse:
 http://localhost:8082/swagger-ui/index.html
 ```
 
+No Insomnia, importe [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) e ajuste apenas a base URL para `http://localhost:8082`.
+
 ### Porta do PostgreSQL já está em uso
 
 No `docker-compose.yml`, o PostgreSQL local está publicado como `5433:5432`.
@@ -143,7 +145,6 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=troque_aqui
 SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/oficina_db_2
 SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=troque_aqui
 JWT_SECRET=troque_por_uma_chave_segura_com_32_bytes_ou_mais
 JWT_EXPIRATION_SECONDS=3600
 ```
@@ -170,13 +171,12 @@ O nome precisa aparecer exatamente como:
 .env
 ```
 
-### Senha do banco diferente da senha da aplicação
+### Senha do banco incorreta
 
-Se aparecer autenticação recusada no PostgreSQL, confira se os valores abaixo são iguais:
+Se aparecer autenticação recusada no PostgreSQL, confira se `POSTGRES_PASSWORD` tem o valor correto:
 
 ```env
 POSTGRES_PASSWORD=troque_aqui
-SPRING_DATASOURCE_PASSWORD=troque_aqui
 ```
 
 Depois reinicie:
@@ -405,6 +405,8 @@ URL padrão no Docker Compose:
 http://localhost:8081/swagger-ui/index.html
 ```
 
+Como alternativa ao Swagger, importe [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) no Insomnia e ajuste apenas a base URL para `http://localhost:8081`.
+
 Se você mudou a porta no `docker-compose.yml`, use a nova porta.
 
 ### Endpoint retorna 401 Unauthorized
@@ -546,6 +548,8 @@ Depois acesse:
 http://localhost:18081/swagger-ui/index.html
 ```
 
+No Insomnia, importe [collection-insomnia.yaml](../src/main/resources/collection-insomnia.yaml) e ajuste apenas a base URL para `http://localhost:18081`.
+
 Para confirmar o Service:
 
 ```powershell
@@ -566,6 +570,8 @@ Depois use:
 ```text
 http://localhost:18082/swagger-ui/index.html
 ```
+
+No Insomnia, ajuste apenas a base URL da collection para `http://localhost:18082`.
 
 ### HPA sem métricas
 
@@ -872,6 +878,8 @@ Depois acesse:
 ```text
 http://localhost:18081/swagger-ui/index.html
 ```
+
+No Insomnia, ajuste apenas a base URL da collection para `http://localhost:18081`.
 
 ### Conferir se nada ficou cobrando na AWS
 

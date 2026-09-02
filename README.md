@@ -7,6 +7,7 @@ O objetivo do projeto é reduzir processos espalhados em anotações manuais e p
 ## Menu
 
 - [Entregáveis da fase 2](#entregáveis)
+- [Execução local](#execução-local)
 - [Objetivo desta fase](#objetivo-desta-fase)
 - [Solução](#solução)
 - [Recursos da API](#recursos-da-api)
@@ -25,7 +26,16 @@ O objetivo do projeto é reduzir processos espalhados em anotações manuais e p
 ## Entregáveis
 
 - Vídeo de apresentação da fase 2: https://youtu.be/JMrTZXY2hYE
-- Collection da API: [`src/main/resources/collection-insomnia.yaml`](src/main/resources/collection-insomnia.yaml)
+- Collection da API: [collection-insomnia.yaml](src/main/resources/collection-insomnia.yaml)
+
+## Execução local
+
+A aplicação pode ser validada localmente por Docker Compose ou por Kubernetes local com Terraform.
+
+- Docker Compose: [`docs/EXECUCAO.md#opção-1-docker-compose`](docs/EXECUCAO.md#opção-1-docker-compose)
+- Kubernetes local com Terraform: [`docs/EXECUCAO.md#opção-2-kubernetes-local-com-terraform`](docs/EXECUCAO.md#opção-2-kubernetes-local-com-terraform)
+
+As instruções completas de execução, variáveis, credencial fictícia de login, validação da API, Terraform e deploy em AWS estão em [`docs/EXECUCAO.md`](docs/EXECUCAO.md).
 
 ## Objetivo desta fase 
 
@@ -102,7 +112,7 @@ Com isso, a entrega cobre tanto o funcionamento da oficina quanto o caminho nece
 - `/ordens-servico/{id}/status`: consulta e atualização de status da OS.
 - `/ordens-servico/{id}/orcamento`: composição, aprovação e recusa de orçamento.
 - `/ordens-servico/{id}/pagamento`: registro de pagamento.
-- `/swagger-ui/index.html`: documentação interativa da API (Swagger local: `http://localhost:8081/swagger-ui/index.html`)
+- `/swagger-ui/index.html`: documentação interativa da API (Swagger local: `http://localhost:8081/swagger-ui/index.html`). Também é possível validar pelo Insomnia importando [collection-insomnia.yaml](src/main/resources/collection-insomnia.yaml) e ajustando apenas a base URL.
 
 ## Arquitetura proposta
 
@@ -149,7 +159,7 @@ Start Lab
   -> publicação da imagem no Amazon ECR
   -> deploy da API e PostgreSQL no EKS com kubectl
   -> exposição da API por LoadBalancer
-  -> validação via chamada HTTP/Swagger
+  -> validação via chamada HTTP, Swagger ou Insomnia
   -> limpeza do EKS, EC2, Load Balancer e ECR ao final do laboratório
 ```
 
@@ -172,7 +182,7 @@ Start Lab
 A API pode ser validada de duas formas:
 
 - Swagger: `http://localhost:8081/swagger-ui/index.html`
-- Insomnia: importe a collection [`src/main/resources/collection-insomnia.yaml`](src/main/resources/collection-insomnia.yaml)
+- Insomnia: importe a collection [collection-insomnia.yaml](src/main/resources/collection-insomnia.yaml) e ajuste apenas a base URL para o ambiente usado.
 
 Para gerar um token JWT, use o endpoint `POST /auth/login` com a credencial administrativa fictícia usada neste MVP:
 
@@ -183,7 +193,7 @@ Para gerar um token JWT, use o endpoint `POST /auth/login` com a credencial admi
 }
 ```
 
-Ao usar Kubernetes com `port-forward`, ajuste a base URL da collection para `http://localhost:18081`.
+Ao usar Kubernetes com `port-forward`, use o Swagger em `http://localhost:18081/swagger-ui/index.html` ou ajuste a base URL da collection do Insomnia para `http://localhost:18081`.
 
 Para executar o fluxo principal no Insomnia, use a opção `Run folder` na pasta `FLUXO COMPLETO`.
 
