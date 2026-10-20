@@ -1,71 +1,19 @@
-name: Continuous Deployment - Oficina API
-
+name: CI/CD - Oficina API
 on:
+  pull_request:
   push:
-    branches:
-      - main
-      - master
-      - fase-2
+    branches: [main, master, homologacao]
   workflow_dispatch:
-
 permissions:
-  contents: write
+  contents: read
   packages: write
-  pull-requests: write
-
+  id-token: write
 env:
   REGISTRY: ghcr.io
-  TF_IN_AUTOMATION: "true"
-
+  DEPLOY_ENV: ${{ (github.ref_name == 'main' || github.ref_name == 'master') && 'prod' || 'hom' }}
 jobs:
-  criar-pr:
-    name: Criar pull request da fase 2
+  testes:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref_name == 'fase-2'
-
-    steps:
-      - name: Baixar codigo do repositorio
-        uses: actions/checkout@v4
-
-      - name: Criar PR para main quando ainda nao existir
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH_NAME: ${{ github.ref_name }}
-          BRANCH_OWNER: ${{ github.repository_owner }}
-          BASE_BRANCH: ${{ github.event.repository.default_branch }}
-        shell: bash
-        run: |
-          echo "Repositorio: ${GITHUB_REPOSITORY}"
-          echo "Branch base: ${BASE_BRANCH}"
-          echo "Branch origem: ${BRANCH_OWNER}:${BRANCH_NAME}"
-
-          gh api "repos/${GITHUB_REPOSITORY}/branches/${BASE_BRANCH}" --jq '"Base OK: " + .name'
-          gh api "repos/${GITHUB_REPOSITORY}/branches/${BRANCH_NAME}" --jq '"Origem OK: " + .name'
-
-          pr_number="$(gh pr list --head "${BRANCH_NAME}" --base "${BASE_BRANCH}" --state open --json number --jq '.[0].number')"
-
-          if [ -n "${pr_number}" ]; then
-            echo "PR #${pr_number} ja existe para ${BRANCH_NAME}."
-            exit 0
-          fi
-
-          total_commits="$(gh api "repos/${GITHUB_REPOSITORY}/compare/${BASE_BRANCH}...${BRANCH_NAME}" --jq '.total_commits')"
-
-          if [ "${total_commits}" = "0" ]; then
-            echo "Nao ha commits entre ${BASE_BRANCH} e ${BRANCH_NAME}; PR nao sera criado."
-            exit 0
-          fi
-
-          gh pr create \
-            --base "${BASE_BRANCH}" \
-            --head "${BRANCH_OWNER}:${BRANCH_NAME}" \
-            --title "Fase 2" \
-            --body "Pull request criado automaticamente pelo GitHub Actions para validar e integrar a Fase 2."
-
-  build-testes:
-    name: Build da aplicacao e execucao dos testes automatizados
-    runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:16-alpine
@@ -73,158 +21,88 @@ jobs:
           POSTGRES_DB: oficina_db_2
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: oficina_local_password
-        ports:
-          - 5433:5432
+        ports: ["5433:5432"]
         options: >-
           --health-cmd "pg_isready -U postgres -d oficina_db_2"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
+          --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
-      - name: Baixar codigo do repositorio
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21", cache: maven }
+      - run: chmod +x mvnw
+      - run: ./mvnw -B clean verify
 
-      - name: Configurar Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: maven
-
-      - name: Permitir execucao do Maven Wrapper
-        run: chmod +x mvnw
-
-      - name: Build da aplicacao
-        run: ./mvnw -B clean package -DskipTests
-
-      - name: Execucao dos testes automatizados
-        run: ./mvnw -B test
-
-  imagem-docker:
-    name: Build e publicacao da imagem Docker
+  publicar:
+    if: github.event_name == 'push'
+    needs: testes
     runs-on: ubuntu-latest
-    needs: build-testes
-    if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
-
     outputs:
-      app_image: ${{ steps.imagem.outputs.app_image }}
-
+      image: ${{ steps.meta.outputs.image }}
     steps:
-      - name: Baixar codigo do repositorio
-        uses: actions/checkout@v4
-
-      - name: Definir nome da imagem
-        id: imagem
+      - uses: actions/checkout@v4
+      - id: meta
         shell: bash
-        run: |
-          image_repository="${GITHUB_REPOSITORY,,}"
-          app_image="${REGISTRY}/${image_repository}:${GITHUB_SHA}"
-          echo "app_image=${app_image}" >> "$GITHUB_OUTPUT"
-
-      - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Autenticar no GitHub Container Registry
-        uses: docker/login-action@v3
+        run: echo "image=${REGISTRY}/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build da imagem Docker
-        uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ${{ steps.imagem.outputs.app_image }}
+          tags: ${{ steps.meta.outputs.image }}
 
   deploy:
-    name: Deploy no cluster Kubernetes
+    if: github.event_name == 'push'
+    needs: publicar
     runs-on: ubuntu-latest
-    needs: imagem-docker
-    if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
+    environment: ${{ (github.ref_name == 'main' || github.ref_name == 'master') && 'producao' || 'homologacao' }}
     concurrency:
-      group: terraform-deploy-oficina-api
+      group: oficina-api-${{ github.ref_name }}
       cancel-in-progress: false
-
-    env:
-      KUBECONFIG: ${{ github.workspace }}/kubeconfig
-      TF_VAR_kubeconfig_path: ${{ github.workspace }}/kubeconfig
-      TF_VAR_kubeconfig_context: ${{ vars.KUBE_CONTEXT }}
-      TF_VAR_namespace: oficina
-      TF_VAR_app_image: ${{ needs.imagem-docker.outputs.app_image }}
-      TF_VAR_postgres_user: ${{ secrets.POSTGRES_USER }}
-      TF_VAR_postgres_password: ${{ secrets.POSTGRES_PASSWORD }}
-      TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
-      TF_VAR_postgres_storage_class_name: ${{ vars.POSTGRES_STORAGE_CLASS_NAME || 'gp2' }}
-      TF_VAR_app_service_type: ${{ vars.APP_SERVICE_TYPE || 'LoadBalancer' }}
-      TF_VAR_registry_server: ghcr.io
-      TF_VAR_registry_username: ${{ secrets.GHCR_USERNAME }}
-      TF_VAR_registry_password: ${{ secrets.GHCR_TOKEN }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
-      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
-
     steps:
-      - name: Baixar codigo do repositorio
-        uses: actions/checkout@v4
-
-      - name: Configurar credenciais AWS
-        uses: aws-actions/configure-aws-credentials@v4
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
-
-      - name: Configurar kubectl
-        uses: azure/setup-kubectl@v4
-
-      - name: Configurar Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Configurar acesso ao cluster Kubernetes
+      - uses: azure/setup-kubectl@v4
+      - name: Configurar cluster e segredos
+        env:
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
         shell: bash
         run: |
-          echo "${{ secrets.KUBE_CONFIG_BASE64 }}" | base64 --decode > "$KUBECONFIG"
-          if [ -n "$TF_VAR_kubeconfig_context" ]; then
-            kubectl config use-context "$TF_VAR_kubeconfig_context"
-          fi
-          kubectl cluster-info
-
-      - name: Verificar ferramentas do runner
+          prefix="/oficina/${DEPLOY_ENV}"
+          cluster_name="$(aws ssm get-parameter --name "$prefix/eks/cluster-name" --query 'Parameter.Value' --output text)"
+          db_host="$(aws ssm get-parameter --name "$prefix/database/endpoint" --query 'Parameter.Value' --output text)"
+          db_name="$(aws ssm get-parameter --name "$prefix/database/name" --query 'Parameter.Value' --output text)"
+          db_secret_arn="$(aws ssm get-parameter --name "$prefix/database/master-secret-arn" --query 'Parameter.Value' --output text)"
+          db_secret="$(aws secretsmanager get-secret-value --secret-id "$db_secret_arn" --query SecretString --output text)"
+          auth_secret="$(aws secretsmanager get-secret-value --secret-id "oficina-${DEPLOY_ENV}/auth" --query SecretString --output text)"
+          aws eks update-kubeconfig --name "$cluster_name" --region "${{ vars.AWS_REGION || 'us-east-1' }}"
+          kubectl apply -f k8s/cloud/namespace.yaml
+          kubectl -n oficina create configmap oficina-api-config \
+            --from-literal=SERVER_PORT=8081 \
+            --from-literal=SPRING_DATASOURCE_URL="jdbc:postgresql://${db_host}:5432/${db_name}" \
+            --from-literal=SPRING_JPA_HIBERNATE_DDL_AUTO=none \
+            --from-literal=SPRING_FLYWAY_BASELINE_ON_MIGRATE=true \
+            --from-literal=SPRING_FLYWAY_BASELINE_VERSION=0 \
+            --from-literal=SPRING_FLYWAY_VALIDATE_ON_MIGRATE=true \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl -n oficina create secret generic oficina-api-secret \
+            --from-literal=SPRING_DATASOURCE_USERNAME="$(jq -r .username <<<"$db_secret")" \
+            --from-literal=POSTGRES_PASSWORD="$(jq -r .password <<<"$db_secret")" \
+            --from-literal=SECURITY_JWT_SECRET="$(jq -r .jwtSecret <<<"$auth_secret")" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl -n oficina create secret docker-registry ghcr-credentials \
+            --docker-server=ghcr.io --docker-username="$GHCR_USERNAME" --docker-password="$GHCR_TOKEN" \
+            --dry-run=client -o yaml | kubectl apply -f -
+      - name: Implantar aplicacao
         run: |
-          aws --version
-          kubectl version --client
-          terraform version
-
-      - name: Validar formatacao do Terraform
-        working-directory: infra
-        run: terraform fmt -check
-
-      - name: Inicializar Terraform
-        working-directory: infra
-        run: terraform init -backend-config="config_path=$KUBECONFIG" -backend-config="namespace=default" -backend-config="secret_suffix=oficina-api"
-
-      - name: Validar Terraform
-        working-directory: infra
-        run: terraform validate
-
-      - name: Planejar deploy no cluster Kubernetes
-        working-directory: infra
-        run: terraform plan -out=tfplan
-
-      - name: Deploy do banco de dados com Terraform
-        working-directory: infra
-        run: terraform apply -auto-approve tfplan
-
-      - name: Aplicar manifestos YAML complementares no cluster
-        run: kubectl apply -f k8s/cd
-
-      - name: Aguardar rollout da aplicacao
-        run: kubectl rollout status deployment/oficina-api -n oficina --timeout=180s
-
-      - name: Verificar recursos implantados
-        run: kubectl get all,pvc,hpa,configmap,secret -n oficina
+          kubectl apply -f k8s/cloud/deployment.yaml -f k8s/cloud/service.yaml -f k8s/cloud/hpa.yaml
+          kubectl set image deployment/oficina-api oficina-api="${{ needs.publicar.outputs.image }}" -n oficina
+          kubectl rollout status deployment/oficina-api -n oficina --timeout=300s

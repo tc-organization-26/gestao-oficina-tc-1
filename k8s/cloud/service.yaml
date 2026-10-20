@@ -5,10 +5,10 @@ metadata:
   namespace: oficina
 spec:
   type: NodePort
-  selector:
-    app: oficina-api
+  selector: { app: oficina-api }
   ports:
     - name: http
       port: 8081
       targetPort: 8081
       nodePort: 30081
+
