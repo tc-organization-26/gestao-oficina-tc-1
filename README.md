@@ -1,206 +1,298 @@
 # Oficina API
 
-API REST para gestão integrada de atendimento e execução de serviços em uma oficina mecânica de médio porte.
+Aplicação principal do sistema de gestão de uma oficina mecânica. Este repositório concentra as regras de negócio, a API REST, as migrations do banco, a imagem Docker e os manifests Kubernetes usados para executar a aplicação no Amazon EKS.
 
-O objetivo do projeto é reduzir processos espalhados em anotações manuais e planilhas, perda de histórico, falhas no controle de estoque, dificuldade para acompanhar ordens de serviço e pouca rastreabilidade de orçamentos, aprovações e pagamentos.
+Este é um dos quatro repositórios da solução. Ele **não provisiona** VPC, EKS, API Gateway, RDS ou Lambda; essas responsabilidades pertencem aos repositórios de infraestrutura.
 
-## Menu
+> Para implantar no ambiente educacional com `LabRole` e credenciais temporárias, consulte [Execução no AWS Lab](docs/EXECUCAO-LAB.md).
 
-- [Entregáveis da fase 2](#entregáveis)
-- [Execução local](#execução-local)
-- [Objetivo desta fase](#objetivo-desta-fase)
-- [Solução](#solução)
-- [Recursos da API](#recursos-da-api)
-- [Como executar local e cloud, provisionar e fazer deploy](#como-executar-local-e-cloud-provisionar-e-fazer-deploy)
-- [Arquitetura proposta](#arquitetura-proposta)
-  - [Clean Architecture](#clean-architecture)
-  - [Arquitetura AWS](#arquitetura-aws)
-  - [Componentes da aplicação](docs/ARQUITETURA.md#organização-dos-pacotes)
-  - [Infraestrutura provisionada](#infraestrutura-provisionada)
-  - [Fluxo de deploy](#fluxo-de-deploy)
-- [Tecnologias e versões](docs/EXECUCAO.md#tecnologias-e-versões-usadas-ou-definidas-no-projeto)
-- [Execução em cloud AWS com EKS](docs/EXECUCAO.md#deploy-em-cloud-aws-academy-com-eks-e-ecr)
-- [Validação da API](#validação-da-api)
-- [Documentação complementar](#documentação-complementar)
+## Fluxo de branches e promoção
 
-## Entregáveis
-
-- Vídeo de apresentação da fase 2: https://youtu.be/lCDW-gqZr6I
-- Collection da API: [collection-insomnia.yaml](src/main/resources/collection-insomnia.yaml)
-
-## Execução local
-
-A aplicação pode ser validada localmente por Docker Compose ou por Kubernetes local com Terraform.
-
-- Docker Compose: [`docs/EXECUCAO.md#opção-1-docker-compose`](docs/EXECUCAO.md#opção-1-docker-compose)
-- Kubernetes local com Terraform: [`docs/EXECUCAO.md#opção-2-kubernetes-local-com-terraform`](docs/EXECUCAO.md#opção-2-kubernetes-local-com-terraform)
-
-As instruções completas de execução, variáveis, credencial fictícia de login, validação da API, Terraform e deploy em AWS estão em [`docs/EXECUCAO.md`](docs/EXECUCAO.md).
-
-## Objetivo desta fase 
-
-A proposta da fase 2 é evoluir a aplicação para lidar com o recente aumento da demanda, expansão para novas unidades e necessidade de garantir alta disponibilidade. Agora, a oficina busca:
-
-- Reduzir riscos operacionais por meio de infraestrutura escalável;
-- Automatizar provisionamento e deploy do ambiente;
-- Melhorar a qualidade e a organização do código para evolução sustentável;
-- Preparar a aplicação para suportar grandes volumes de ordens de serviço em horários de pico, com escalabilidade dinâmica.
-
-Nesta fase, a solução deixa de ser apenas uma API executável localmente e passa a demonstrar uma arquitetura completa de entrega:
-
-- API Spring Boot organizada em Clean Architecture.
-- Execução local com Docker Compose.
-- Deploy da aplicação e do banco em Kubernetes.
-- Deploy validado em cloud AWS Academy usando Amazon EKS, Amazon ECR e Service `LoadBalancer`.
-- Provisionamento da infraestrutura com Terraform.
-- Pipeline de Continuous Deployment com GitHub Actions.
-
-Com isso, a entrega cobre tanto o funcionamento da oficina quanto o caminho necessário para executar, provisionar e implantar a solução em um ambiente Kubernetes.
-
-## Solução
-
-- O fluxo começa quando o cliente entra em contato com a oficina solicitando atendimento.
-
-- O atendente localiza o cliente no sistema usando CPF ou CNPJ. Se o cliente já existir, o sistema exibe seus dados, veículos vinculados e histórico de atendimentos. Se o cliente ainda não existir, o atendente realiza o cadastro.
-
-- Em seguida, o atendente verifica se o veículo já está registrado para aquele cliente. Se estiver, seleciona o veículo. Caso contrário, cadastra o veículo e o associa ao cliente.
-
-- Com cliente e veículo identificados, o atendente registra os serviços solicitados. O sistema cria uma ordem de serviço com código único, cliente, veículo, serviços solicitados, data de abertura, observações técnicas e status inicial `Recebida`.
-
-- O mecânico inicia a avaliação do veículo, e a OS passa para `Em diagnóstico`. Durante a avaliação, registra diagnóstico, serviços necessários, observações técnicas e peças que serão utilizadas.
-
-- O sistema consulta o estoque. Se as peças estiverem disponíveis, elas compõem o orçamento. Se alguma peça não estiver disponível, o sistema registra a necessidade para decisão do gestor.
-
-- Quando os serviços e peças estão definidos, o orçamento é fechado. A OS passa para `Aguardando aprovação`.
-
-- Se o cliente aprovar, o mecânico inicia a execução e a OS passa para `Em execução`. Conforme peças são retiradas do estoque, o sistema registra a baixa.
-
-- Se durante a execução for necessário alterar o orçamento, ele é atualizado e a OS retorna para `Aguardando aprovação`.
-
-- Quando os serviços são concluídos, a OS passa para `Finalizada`. Após pagamento e retirada do veículo, a OS é alterada para `Entregue`.
-
-## Status da ordem de serviço
-
-- `Recebida`: OS criada após o atendimento inicial.
-- `Em diagnóstico`: mecânico iniciou a avaliação do veículo.
-- `Aguardando aprovação`: orçamento fechado ou ajustado, aguardando decisão do cliente.
-- `Em execução`: orçamento aprovado e serviços em andamento.
-- `Finalizada`: serviços concluídos e veículo pronto para retirada.
-- `Entregue`: pagamento e retirada realizados, encerrando o atendimento.
-
-## Valor gerado
-
-- Histórico de atendimentos completo e centralizado.
-- Menor risco de perda de dados de cliente, veículo, serviços, peças, datas e status.
-- Melhor controle do fluxo de orçamentos e aprovações.
-- Acompanhamento do status da OS por cliente, atendente e gestor.
-- Controle de estoque mais confiável.
-- Registro das peças utilizadas em cada atendimento.
-- Monitoramento do tempo médio de execução dos serviços.
-- Mais previsibilidade para a gestão da oficina.
-
-## Recursos da API
-
-- `POST /auth/login`: autenticação e geração de token JWT.
-- `/clientes`: CRUD de clientes e consulta por documento.
-- `/clientes/{id}/veiculos`: consulta de veículos vinculados ao cliente.
-- `/veiculos`: CRUD de veículos.
-- `/servicos`: CRUD de serviços oferecidos pela oficina.
-- `/estoque`: CRUD de peças e insumos, inclusões, baixas e consultas de disponibilidade.
-- `/ordens-servico`: criação, listagem, detalhamento e acompanhamento de ordens de serviço.
-- `/ordens-servico/{id}/diagnostico`: registro de diagnóstico.
-- `/ordens-servico/{id}/status`: consulta e atualização de status da OS.
-- `/ordens-servico/{id}/orcamento`: composição, aprovação e recusa de orçamento.
-- `/ordens-servico/{id}/pagamento`: registro de pagamento.
-- `/swagger-ui/index.html`: documentação interativa da API (Swagger local: `http://localhost:8081/swagger-ui/index.html`). Também é possível validar pelo Insomnia importando [collection-insomnia.yaml](src/main/resources/collection-insomnia.yaml) e ajustando apenas a base URL.
-
-## Arquitetura proposta
-
-O desenho detalhado da arquitetura da aplicação está em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md). Abaixo estão os diagramas usados como referência para a organização em Clean Architecture e para a implantação em AWS.
-
-### Clean Architecture
-
-![Diagrama de Clean Architecture usado no projeto](src/main/resources/clean-arq.png)
-
-### Arquitetura AWS
-
-![Diagrama da arquitetura AWS proposta para o projeto](src/main/resources/arq-aws.jpg)
-
-### Infraestrutura provisionada
-
-O Terraform provisiona recursos Kubernetes para a API e para o banco. O desenho detalhado da infraestrutura está em [`infra/INFRA-README.md`](infra/INFRA-README.md).
-
-### Fluxo de deploy
-
-O deploy contínuo acontece pelo GitHub Actions:
+O workflow `.github/workflows/promote.yml` usa o `GITHUB_TOKEN` nativo do GitHub para abrir os Pull Requests de promoção:
 
 ```text
-Push em fase-2
-  -> build e testes
-  -> criação automática de PR para a branch principal
-
-Merge/push em main ou master
-  -> build e testes
-  -> build da imagem Docker
-  -> publicação da imagem no GHCR
-  -> Terraform plan/apply no cluster Amazon EKS
-  -> kubectl apply dos manifestos complementares em k8s/cd
-  -> verificação do rollout da aplicação
+push em fase-3 → PR para homologacao
+merge em homologacao → PR para main
+merge em main → implantação em produção
 ```
 
-O job de deploy usa runner GitHub-hosted `ubuntu-latest` com credenciais AWS para acessar o cluster Amazon EKS. A imagem da aplicação é publicada no GitHub Container Registry e o Service da API usa `LoadBalancer` no CD para expor uma URL pública da AWS na porta `8081`. A configuração desse fluxo está em [`.github/workflows/cicd.yml`](.github/workflows/cicd.yml) e o passo a passo está documentado em [`docs/EXECUCAO.md`](docs/EXECUCAO.md).
+Os merges são manuais e devem ocorrer somente depois da aprovação e dos checks. Em **Settings → Actions → General → Workflow permissions**, mantenha **Read and write permissions** e **Allow GitHub Actions to create and approve pull requests** habilitados. Nenhum secret adicional é necessário para criar os PRs.
 
-Também foi validado um fluxo manual em laboratório AWS Academy:
+## Links de deploy e documentação da API
+
+- [Deployments ativos](https://github.com/tc-organization-26/gestao-oficina-tc-1/deployments): cada execução bem-sucedida registra a URL real do API Gateway para homologação ou produção.
+- [Pipeline CI/CD](https://github.com/tc-organization-26/gestao-oficina-tc-1/actions/workflows/cicd.yml).
+- Swagger local: [http://localhost:8081/swagger-ui/index.html](http://localhost:8081/swagger-ui/index.html).
+- OpenAPI local: [http://localhost:8081/v3/api-docs](http://localhost:8081/v3/api-docs).
+- Swagger publicado: use o link do deployment ativo e acrescente `/swagger-ui/index.html`.
+- [Collection Insomnia](src/main/resources/collection-insomnia.yaml), importável também no Postman.
+
+A URL AWS não é fixada no código porque o identificador do API Gateway muda entre contas e recriações. O workflow publica a URL efetivamente implantada no GitHub Deployment e no resumo da execução.
+
+## Dockerfile
+
+O Dockerfile é aplicável neste repositório e está em [`Dockerfile`](Dockerfile). Ele gera a imagem da aplicação usada tanto pelo Docker Compose local quanto pelo deploy no EKS.
+
+## Responsabilidades deste repositório
+
+- implementar os casos de uso de clientes, veículos, serviços, estoque e ordens de serviço;
+- expor a API REST e a documentação OpenAPI/Swagger;
+- versionar o schema do PostgreSQL com Flyway;
+- executar testes unitários e de integração;
+- construir a imagem Docker e publicá-la no GitHub Container Registry (GHCR);
+- aplicar os manifests da API no EKS e acompanhar o rollout.
+
+## Arquitetura da solução
+
+| Repositório | Responsabilidade |
+| --- | --- |
+| `gestao-oficina-tc-1` | Aplicação Spring Boot, Docker, GHCR e deploy no EKS |
+| `oficina-k8s-infra` | Bootstrap, backend Terraform, VPC, EKS, escalabilidade e API Gateway |
+| `oficina-db-infra` | Amazon RDS for PostgreSQL, rede do banco e credencial gerenciada |
+| `oficina-auth-lambda` | Login serverless, geração de JWT e Lambda Authorizer |
+
+Na nuvem, o tráfego segue este caminho:
 
 ```text
-Start Lab
-  -> criação do cluster Amazon EKS com eksctl conforme cluster.yaml
-  -> build local da imagem Docker
-  -> publicação da imagem no Amazon ECR
-  -> deploy da API e PostgreSQL no EKS com kubectl
-  -> exposição da API por LoadBalancer
-  -> validação via chamada HTTP, Swagger ou Insomnia
-  -> limpeza do EKS, EC2, Load Balancer e ECR ao final do laboratório
+Cliente
+  -> API Gateway
+     -> POST /auth/login -> Lambda de login
+     -> demais rotas -> Lambda Authorizer -> VPC Link -> NLB privado
+        -> Service NodePort 30081 -> Pods da Oficina API no EKS
+           -> RDS PostgreSQL privado
 ```
 
-## Como executar local e cloud, provisionar e fazer deploy
+O código da aplicação segue Clean Architecture. A organização dos pacotes está detalhada em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md).
 
-- Execução local com Docker Compose: [`docs/EXECUCAO.md#execução-local-com-docker-compose`](docs/EXECUCAO.md#execução-local-com-docker-compose)
+![Clean Architecture](src/main/resources/clean-arq.png)
 
-- Deploy local em Kubernetes com Terraform: [`docs/EXECUCAO.md#deploy-em-kubernetes-com-terraform`](docs/EXECUCAO.md#deploy-em-kubernetes-com-terraform)
+![Arquitetura AWS](src/main/resources/arq-aws.png)
 
-- Provisionamento da infraestrutura com Terraform: [`docs/EXECUCAO.md#provisionamento-com-terraform`](docs/EXECUCAO.md#provisionamento-com-terraform)
+## Funcionalidades
 
-- Deploy em cloud AWS Academy com EKS e ECR: [`docs/EXECUCAO.md#deploy-em-cloud-aws-academy-com-eks-e-ecr`](docs/EXECUCAO.md#deploy-em-cloud-aws-academy-com-eks-e-ecr)
+- cadastro, consulta, atualização e exclusão de clientes;
+- pesquisa de cliente por CPF ou CNPJ;
+- cadastro e consulta de veículos vinculados ao cliente;
+- catálogo de serviços da oficina;
+- cadastro e movimentação de peças e insumos do estoque;
+- abertura e acompanhamento de ordens de serviço;
+- registro de diagnóstico;
+- composição de orçamento com serviços e peças;
+- aprovação ou recusa de orçamento;
+- registro de pagamento;
+- acompanhamento do tempo médio de execução.
 
-- Continuous Deployment com GitHub Actions: [`docs/EXECUCAO.md#continuous-deployment-com-github-actions`](docs/EXECUCAO.md#continuous-deployment-com-github-actions)
+### Estados da ordem de serviço
 
-- Problemas comuns: [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)
+- `Recebida`: atendimento registrado;
+- `Em diagnóstico`: veículo em avaliação;
+- `Aguardando aprovação`: orçamento aguardando decisão do cliente;
+- `Em execução`: orçamento aprovado e serviço iniciado;
+- `Finalizada`: serviços concluídos;
+- `Entregue`: pagamento e retirada concluídos.
 
-## Validação da API
+## Principais rotas
 
-A API pode ser validada de duas formas:
+| Rota | Finalidade |
+| --- | --- |
+| `POST /auth/login` | Login local da aplicação; na nuvem o API Gateway direciona esta rota à Lambda |
+| `/clientes` | CRUD e listagem de clientes |
+| `/clientes/documento/{cpfCnpj}` | Consulta por documento |
+| `/clientes/{id}/veiculos` | Veículos de um cliente |
+| `/veiculos` | CRUD de veículos |
+| `/servicos` | CRUD de serviços |
+| `/estoque` | CRUD e consultas de estoque |
+| `/estoque/{id}/inclusoes` | Entrada de quantidade no estoque |
+| `/estoque/{codigo}/baixas` | Baixa de quantidade no estoque |
+| `/ordens-servico` | Criação, listagem e detalhamento de ordens |
+| `/ordens-servico/{id}/diagnostico` | Registro do diagnóstico |
+| `/ordens-servico/{id}/status` | Consulta ou atualização de status |
+| `/ordens-servico/{id}/orcamento/*` | Composição e decisão do orçamento |
+| `/ordens-servico/{id}/pagamento` | Registro do pagamento |
+| `/swagger-ui/index.html` | Interface Swagger |
 
+A collection para Insomnia está em [`src/main/resources/collection-insomnia.yaml`](src/main/resources/collection-insomnia.yaml).
+
+## Tecnologias principais
+
+- Java 21;
+- Spring Boot 4;
+- Spring Web MVC, Spring Data JPA e Spring Security;
+- PostgreSQL;
+- Flyway;
+- Maven;
+- Docker e Docker Compose;
+- Kubernetes;
+- GitHub Actions e GitHub Container Registry.
+
+## Execução local com Docker Compose
+
+Pré-requisitos:
+
+- Docker Desktop;
+- Docker Compose v2.
+
+Crie o arquivo de variáveis a partir do exemplo:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Preencha ao menos `POSTGRES_PASSWORD` e `JWT_SECRET`. Depois execute:
+
+```powershell
+docker compose up --build
+```
+
+Serviços locais:
+
+- API: `http://localhost:8081`
 - Swagger: `http://localhost:8081/swagger-ui/index.html`
-- Insomnia: importe a collection [collection-insomnia.yaml](src/main/resources/collection-insomnia.yaml) e ajuste apenas a base URL para o ambiente usado.
+- PostgreSQL: `localhost:5433`
 
-Para gerar um token JWT, use o endpoint `POST /auth/login` com a credencial administrativa fictícia usada neste MVP:
+Para encerrar:
 
-```json
-{
-  "login": "admin",
-  "senha": "ad@456"
-}
+```powershell
+docker compose down
 ```
 
-Ao usar Kubernetes com `port-forward`, use o Swagger em `http://localhost:18081/swagger-ui/index.html` ou ajuste a base URL da collection do Insomnia para `http://localhost:18081`.
+Para apagar também o volume do PostgreSQL local:
 
-Para executar o fluxo principal no Insomnia, use a opção `Run folder` na pasta `FLUXO COMPLETO`.
+```powershell
+docker compose down --volumes
+```
+
+O volume do Docker Compose existe apenas para desenvolvimento. O ambiente de nuvem usa RDS e não utiliza PVC para o banco.
+
+## Variáveis da aplicação
+
+| Variável | Uso | Exemplo local |
+| --- | --- | --- |
+| `SERVER_PORT` | Porta HTTP | `8081` |
+| `SPRING_DATASOURCE_URL` | JDBC do PostgreSQL | `jdbc:postgresql://postgres:5432/oficina_db_2` |
+| `SPRING_DATASOURCE_USERNAME` | Usuário do banco | `postgres` |
+| `POSTGRES_PASSWORD` | Senha do banco | Definida em `.env` |
+| `SPRING_JPA_HIBERNATE_DDL_AUTO` | Estratégia do Hibernate | `none` |
+| `SPRING_FLYWAY_BASELINE_ON_MIGRATE` | Habilita baseline | `true` |
+| `SPRING_FLYWAY_BASELINE_VERSION` | Versão do baseline | `0` |
+| `SPRING_FLYWAY_VALIDATE_ON_MIGRATE` | Valida migrations | `true` |
+| `SECURITY_JWT_SECRET` ou `JWT_SECRET` | Assinatura HS256 | Chave com pelo menos 32 bytes |
+| `SECURITY_JWT_EXPIRATION_SECONDS` | Validade do token | `3600` |
+
+Não versione o arquivo `.env`.
+
+## Build e testes
+
+Pré-requisitos para executar fora do Docker:
+
+- Java 21;
+- PostgreSQL disponível em `localhost:5433` para os testes de integração.
+
+```powershell
+docker compose up -d postgres
+./mvnw.cmd clean verify
+```
+
+O CI executa o mesmo ciclo Maven com um PostgreSQL 16 temporário.
+
+## Banco e migrations
+
+As migrations Flyway ficam em `src/main/resources/db/migration` e são executadas na inicialização da aplicação. A infraestrutura do RDS não cria tabelas de negócio; ela entrega somente a instância, a rede e a credencial.
+
+No deploy em nuvem, o workflow obtém:
+
+- endpoint e nome do banco pelo AWS Systems Manager Parameter Store;
+- usuário e senha pelo AWS Secrets Manager;
+- segredo JWT pelo Secrets Manager criado pelo repositório da Lambda.
+
+Esses valores são transformados em `ConfigMap` e `Secret` no namespace `oficina`.
+
+## Manifests Kubernetes
+
+O diretório `k8s/cloud` contém apenas os recursos da aplicação:
+
+- `namespace.yaml`: namespace `oficina`;
+- `deployment.yaml`: dois Pods iniciais, probes e limites de recursos;
+- `service.yaml`: Service `NodePort` na porta fixa `30081`;
+- `hpa.yaml`: escala a aplicação de 2 a 6 réplicas por CPU e memória.
+
+O cluster, o Metrics Server e o Cluster Autoscaler são criados pelo repositório `oficina-k8s-infra`.
+
+## CI/CD
+
+O workflow `.github/workflows/cicd.yml` possui três etapas:
+
+1. `testes`: inicia PostgreSQL 16 e executa `./mvnw clean verify`;
+2. `publicar`: constrói a imagem e publica `ghcr.io/OWNER/REPOSITORY:COMMIT_SHA`;
+3. `deploy`: carrega as credenciais temporárias do AWS Lab, monta a configuração da aplicação, aplica os manifests e aguarda o rollout.
+
+Mapeamento de branches:
+
+| Branch | Ambiente Terraform/SSM | GitHub Environment |
+| --- | --- | --- |
+| `homologacao` | `hom` | `homologacao` |
+| `main` ou `master` | `prod` | `producao` |
+
+### Configuração do GitHub
+
+Variables configuradas pelo bootstrap:
+
+- `AWS_REGION`
+
+Organization secrets usados no deploy:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN`
+
+Secrets necessários para baixar uma imagem privada no cluster:
+
+- `GHCR_USERNAME`
+- `GHCR_TOKEN`, com permissão `read:packages`
+
+O `GITHUB_TOKEN` fornecido pelo Actions é usado para publicar a imagem no GHCR.
+
+## Ordem de implantação
+
+1. Executar o bootstrap em `oficina-k8s-infra`.
+2. Provisionar `oficina-k8s-infra`.
+3. Provisionar `oficina-db-infra`.
+4. Publicar `oficina-auth-lambda`.
+5. Executar o CI/CD deste repositório.
+
+## Validação após o deploy
+
+```powershell
+kubectl get deployment,service,hpa -n oficina
+kubectl rollout status deployment/oficina-api -n oficina --timeout=300s
+```
+
+Para diagnóstico administrativo sem passar pelo API Gateway:
+
+```powershell
+kubectl port-forward -n oficina service/oficina-api 18081:8081
+```
+
+Abra `http://localhost:18081/swagger-ui/index.html`.
+
+## Estrutura relevante
+
+```text
+.
+├── .github/workflows/cicd.yml
+├── docs/
+├── k8s/cloud/
+├── src/main/java/
+├── src/main/resources/db/migration/
+├── src/test/
+├── src/integrationTest/
+├── docker-compose.yml
+├── Dockerfile
+└── pom.xml
+```
 
 ## Documentação complementar
 
-- Arquitetura detalhada: [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md)
-- Execução, Terraform e deploy: [`docs/EXECUCAO.md`](docs/EXECUCAO.md)
-- Troubleshooting: [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)
-- Infraestrutura Terraform: [`infra/INFRA-README.md`](infra/INFRA-README.md)
-- Miro: https://miro.com/app/board/uXjVHFKgYIc=/?share_link_id=451822825670
+- [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md): organização interna e decisões de arquitetura;
+- [`docs/EXECUCAO.md`](docs/EXECUCAO.md): roteiro resumido de execução e implantação;
+- [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md): diagnóstico dos problemas mais comuns.
