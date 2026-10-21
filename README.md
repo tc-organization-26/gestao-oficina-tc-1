@@ -4,6 +4,8 @@ Aplicação principal do sistema de gestão de uma oficina mecânica. Este repos
 
 Este é um dos quatro repositórios da solução. Ele **não provisiona** VPC, EKS, API Gateway, RDS ou Lambda; essas responsabilidades pertencem aos repositórios de infraestrutura.
 
+> Para implantar no ambiente educacional com `LabRole` e credenciais temporárias, consulte [Execução no AWS Lab](docs/EXECUCAO-LAB.md).
+
 ## Links de deploy e documentação da API
 
 - [Deployments ativos](https://github.com/tc-organization-26/gestao-oficina-tc-1/deployments): cada execução bem-sucedida registra a URL real do API Gateway para homologação ou produção.
