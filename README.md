@@ -212,7 +212,7 @@ O workflow `.github/workflows/cicd.yml` possui três etapas:
 
 1. `testes`: inicia PostgreSQL 16 e executa `./mvnw clean verify`;
 2. `publicar`: constrói a imagem e publica `ghcr.io/OWNER/REPOSITORY:COMMIT_SHA`;
-3. `deploy`: assume uma role AWS por OIDC, monta a configuração da aplicação, aplica os manifests e aguarda o rollout.
+3. `deploy`: carrega as credenciais temporárias do AWS Lab, monta a configuração da aplicação, aplica os manifests e aguarda o rollout.
 
 Mapeamento de branches:
 
@@ -225,8 +225,13 @@ Mapeamento de branches:
 
 Variables configuradas pelo bootstrap:
 
-- `AWS_ROLE_ARN`
 - `AWS_REGION`
+
+Organization secrets usados no deploy:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN`
 
 Secrets necessários para baixar uma imagem privada no cluster:
 
