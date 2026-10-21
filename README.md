@@ -6,6 +6,18 @@ Este é um dos quatro repositórios da solução. Ele **não provisiona** VPC, E
 
 > Para implantar no ambiente educacional com `LabRole` e credenciais temporárias, consulte [Execução no AWS Lab](docs/EXECUCAO-LAB.md).
 
+## Fluxo de branches e promoção
+
+O workflow `.github/workflows/promote.yml` usa o `GITHUB_TOKEN` nativo do GitHub para abrir os Pull Requests de promoção:
+
+```text
+push em fase-3 → PR para homologacao
+merge em homologacao → PR para main
+merge em main → implantação em produção
+```
+
+Os merges são manuais e devem ocorrer somente depois da aprovação e dos checks. Em **Settings → Actions → General → Workflow permissions**, mantenha **Read and write permissions** e **Allow GitHub Actions to create and approve pull requests** habilitados. Nenhum secret adicional é necessário para criar os PRs.
+
 ## Links de deploy e documentação da API
 
 - [Deployments ativos](https://github.com/tc-organization-26/gestao-oficina-tc-1/deployments): cada execução bem-sucedida registra a URL real do API Gateway para homologação ou produção.
