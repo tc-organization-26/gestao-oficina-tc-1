@@ -4,6 +4,21 @@ Aplicação principal do sistema de gestão de uma oficina mecânica. Este repos
 
 Este é um dos quatro repositórios da solução. Ele **não provisiona** VPC, EKS, API Gateway, RDS ou Lambda; essas responsabilidades pertencem aos repositórios de infraestrutura.
 
+## Links de deploy e documentação da API
+
+- [Deployments ativos](https://github.com/tc-organization-26/gestao-oficina-tc-1/deployments): cada execução bem-sucedida registra a URL real do API Gateway para homologação ou produção.
+- [Pipeline CI/CD](https://github.com/tc-organization-26/gestao-oficina-tc-1/actions/workflows/cicd.yml).
+- Swagger local: [http://localhost:8081/swagger-ui/index.html](http://localhost:8081/swagger-ui/index.html).
+- OpenAPI local: [http://localhost:8081/v3/api-docs](http://localhost:8081/v3/api-docs).
+- Swagger publicado: use o link do deployment ativo e acrescente `/swagger-ui/index.html`.
+- [Collection Insomnia](src/main/resources/collection-insomnia.yaml), importável também no Postman.
+
+A URL AWS não é fixada no código porque o identificador do API Gateway muda entre contas e recriações. O workflow publica a URL efetivamente implantada no GitHub Deployment e no resumo da execução.
+
+## Dockerfile
+
+O Dockerfile é aplicável neste repositório e está em [`Dockerfile`](Dockerfile). Ele gera a imagem da aplicação usada tanto pelo Docker Compose local quanto pelo deploy no EKS.
+
 ## Responsabilidades deste repositório
 
 - implementar os casos de uso de clientes, veículos, serviços, estoque e ordens de serviço;

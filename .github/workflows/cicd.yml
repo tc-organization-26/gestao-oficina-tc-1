@@ -33,7 +33,7 @@ jobs:
       - run: ./mvnw -B clean verify
 
   publicar:
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request'
     needs: testes
     runs-on: ubuntu-latest
     outputs:
@@ -56,10 +56,12 @@ jobs:
           tags: ${{ steps.meta.outputs.image }}
 
   deploy:
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request'
     needs: publicar
     runs-on: ubuntu-latest
-    environment: ${{ (github.ref_name == 'main' || github.ref_name == 'master') && 'producao' || 'homologacao' }}
+    environment:
+      name: ${{ (github.ref_name == 'main' || github.ref_name == 'master') && 'producao' || 'homologacao' }}
+      url: ${{ steps.endpoint.outputs.url }}
     concurrency:
       group: oficina-api-${{ github.ref_name }}
       cancel-in-progress: false
@@ -106,3 +108,17 @@ jobs:
           kubectl apply -f k8s/cloud/deployment.yaml -f k8s/cloud/service.yaml -f k8s/cloud/hpa.yaml
           kubectl set image deployment/oficina-api oficina-api="${{ needs.publicar.outputs.image }}" -n oficina
           kubectl rollout status deployment/oficina-api -n oficina --timeout=300s
+      - name: Registrar URL do deploy
+        id: endpoint
+        shell: bash
+        run: |
+          prefix="/oficina/${DEPLOY_ENV}"
+          api_id="$(aws ssm get-parameter --name "$prefix/edge/http-api-id" --query 'Parameter.Value' --output text)"
+          url="https://${api_id}.execute-api.${{ vars.AWS_REGION || 'us-east-1' }}.amazonaws.com"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Deploy concluido"
+            echo "- API: $url"
+            echo "- Swagger: $url/swagger-ui/index.html"
+            echo "- OpenAPI: $url/v3/api-docs"
+          } >> "$GITHUB_STEP_SUMMARY"
