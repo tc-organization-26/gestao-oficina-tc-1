@@ -2,14 +2,14 @@ name: CI/CD - Oficina API
 on:
   pull_request:
   push:
-    branches: [main, master, homologacao]
+    branches: [main, homologacao]
   workflow_dispatch:
 permissions:
   contents: read
   packages: write
 env:
   REGISTRY: ghcr.io
-  DEPLOY_ENV: ${{ (github.ref_name == 'main' || github.ref_name == 'master') && 'prod' || 'hom' }}
+  DEPLOY_ENV: ${{ github.ref_name == 'main' && 'prod' || 'hom' }}
 jobs:
   testes:
     runs-on: ubuntu-latest
@@ -59,7 +59,7 @@ jobs:
     needs: publicar
     runs-on: ubuntu-latest
     environment:
-      name: ${{ (github.ref_name == 'main' || github.ref_name == 'master') && 'producao' || 'homologacao' }}
+      name: ${{ github.ref_name == 'main' && 'producao' || 'homologacao' }}
       url: ${{ steps.endpoint.outputs.url }}
     concurrency:
       group: oficina-api-${{ github.ref_name }}

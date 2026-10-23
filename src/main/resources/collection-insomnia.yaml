@@ -979,8 +979,7 @@ collection:
           mimeType: application/json
           text: |-
             {
-              "login": "admin",
-              "senha": "ad@456"
+              "cpf": "{{ _.CLIENTE_DOC }}"
             }
         headers:
           - name: Content-Type
@@ -1220,8 +1219,7 @@ collection:
           mimeType: application/json
           text: |-
             {
-              "login": "admin",
-              "senha": "ad@456"
+              "cpf": "{{ _.CLIENTE_DOC }}"
             }
         headers:
           - name: Content-Type
@@ -1798,16 +1796,16 @@ environments:
     modified: 1787292293638
     isPrivate: false
   data:
-    TOKEN: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJwYXBlbCI6IkFETUlOSVNUUkFET1IiLCJpYXQiOjE3ODcyOTIyODgsImV4cCI6MTc4NzI5NTg4OH0.woU2WyNoEepEv10p9c7yjbNE-SVzHuZ6SzCNHbncGSY
-    CLIENTE_ID: 405d6b8c-3057-4f70-814c-715855fe404b
+    TOKEN: ""
+    CLIENTE_ID: 00000000-0000-0000-0000-000000000001
     VEICULO_ID: 0fcdf9a9-0076-4fb4-a273-dd9e94f5562a
     SERVICO_ID: 8244e162-a8a6-46a4-97bc-f97222a74c3d
     ITEM_ESTOQUE_ID: c431b903-184a-43dc-8059-ac961d99e7d2
     ORDEM_ID: 4d97cd5c-ae14-46a3-9514-4576829f5414
     ORCAMENTO_ID: 1fefd158-b0e4-43e8-a55a-9471028ec1cb
-    BASE_URL: http://localhost:18081
+    BASE_URL: https://SEU_API_ID.execute-api.us-east-1.amazonaws.com
     ITEM_ESTOQUE_CODIGO: JSM-007
     SERVICO_COD: OEW-07
-    CLIENTE_DOC: "84349815547"
+    CLIENTE_DOC: "003.619.370-40"
     VEICULO_PLACA: iae1327
     "": ""

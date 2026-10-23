@@ -49,14 +49,15 @@ O Dockerfile é aplicável neste repositório e está em [`Dockerfile`](Dockerfi
 | `gestao-oficina-tc-1` | Aplicação Spring Boot, Docker, GHCR e deploy no EKS |
 | `oficina-k8s-infra` | Bootstrap, backend Terraform, VPC, EKS, escalabilidade e API Gateway |
 | `oficina-db-infra` | Amazon RDS for PostgreSQL, rede do banco e credencial gerenciada |
-| `oficina-auth-lambda` | Login serverless, geração de JWT e Lambda Authorizer |
+| `oficina-auth-lambda` | Login por CPF, consulta de cliente ativo no RDS, geração de JWT e Lambda Authorizer |
 
 Na nuvem, o tráfego segue este caminho:
 
 ```text
 Cliente
   -> API Gateway
-     -> POST /auth/login -> Lambda de login
+     -> POST /auth/login { cpf } -> Lambda de login nas sub-redes privadas
+        -> valida CPF -> consulta cliente ativo no RDS -> emite JWT com papel CLIENTE
      -> demais rotas -> Lambda Authorizer -> VPC Link -> NLB privado
         -> Service NodePort 30081 -> Pods da Oficina API no EKS
            -> RDS PostgreSQL privado
@@ -64,9 +65,11 @@ Cliente
 
 O código da aplicação segue Clean Architecture. A organização dos pacotes está detalhada em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md).
 
+Como o ambiente ainda não possui cadastro de clientes, o schema inicial e a migration `V3__seed_cliente_autenticacao.sql` criam um cliente exclusivamente para teste com o CPF fictício `003.619.370-40`. Esse dado não pertence a um cliente real e deve ser usado somente em desenvolvimento e demonstrações. No banco, o documento é armazenado como `00361937040`, com UUID de teste e `ativo = true`.
+
 ![Clean Architecture](src/main/resources/clean-arq.png)
 
-![Arquitetura AWS](src/main/resources/arq-aws.png)
+![Arquitetura AWS com autenticação por CPF](src/main/resources/arq-aws-cpf.png)
 
 ## Funcionalidades
 
@@ -95,7 +98,7 @@ O código da aplicação segue Clean Architecture. A organização dos pacotes e
 
 | Rota | Finalidade |
 | --- | --- |
-| `POST /auth/login` | Login local da aplicação; na nuvem o API Gateway direciona esta rota à Lambda |
+| `POST /auth/login` | Na nuvem recebe `cpf`, valida o cliente ativo no RDS e devolve JWT com papel `CLIENTE`; localmente permanece disponível o login interno da aplicação |
 | `/clientes` | CRUD e listagem de clientes |
 | `/clientes/documento/{cpfCnpj}` | Consulta por documento |
 | `/clientes/{id}/veiculos` | Veículos de um cliente |
@@ -231,7 +234,7 @@ Mapeamento de branches:
 | Branch | Ambiente Terraform/SSM | GitHub Environment |
 | --- | --- | --- |
 | `homologacao` | `hom` | `homologacao` |
-| `main` ou `master` | `prod` | `producao` |
+| `main` | `prod` | `producao` |
 
 ### Configuração do GitHub
 
