@@ -155,13 +155,12 @@ $apiId = aws ssm get-parameter `
   --output text
 
 $baseUrl = "https://$apiId.execute-api.us-east-1.amazonaws.com"
-$senha = Read-Host "AUTH_PASSWORD"
 
 $login = Invoke-RestMethod `
   -Method Post `
   -Uri "$baseUrl/auth/login" `
   -ContentType application/json `
-  -Body (@{ login = "admin"; senha = $senha } | ConvertTo-Json)
+  -Body (@{ cpf = "003.619.370-40" } | ConvertTo-Json)
 
 $headers = @{ Authorization = "Bearer $($login.token)" }
 Invoke-RestMethod -Uri "$baseUrl/clientes" -Headers $headers |

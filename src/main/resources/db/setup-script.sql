@@ -16,6 +16,16 @@ create table cliente (
 alter table cliente
     add constraint uk_cliente_cpf_cnpj unique (cpf_cnpj);
 
+insert into cliente (id, nome, cpf_cnpj, telefone, email, ativo)
+values (
+    '00000000-0000-0000-0000-000000000001',
+    'Cliente Oficina',
+    '00361937040',
+    '11999999999',
+    'cliente@oficina.local',
+    true
+);
+
 create table veiculo (
     id uuid primary key default gen_random_uuid(),
     cliente_id uuid not null references cliente(id),

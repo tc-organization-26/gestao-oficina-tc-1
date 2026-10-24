@@ -86,7 +86,7 @@ O workflow lê do AWS Systems Manager Parameter Store o nome do cluster e os dad
 ## Ambientes
 
 - Push em `homologacao`: usa os parâmetros sob `/oficina/hom` e o environment `homologacao`.
-- Push em `main` ou `master`: usa os parâmetros sob `/oficina/prod` e o environment `producao`.
+- Push em `main`: usa os parâmetros sob `/oficina/prod` e o environment `producao`.
 
 ## Validação
 

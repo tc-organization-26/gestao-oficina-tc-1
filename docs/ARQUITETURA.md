@@ -103,6 +103,18 @@ Essa camada fica na borda porque tende a mudar com mais frequência.
 
 ## Organização dos pacotes
 
+A observabilidade segue essa separação: o gateway JPA de OS não emite logs nem
+conhece o Datadog. A configuração Spring compõe um decorador transacional com
+o acesso ao histórico e um publicador de logs independente. A publicação ocorre
+após o commit; rollback não publica transições. O domínio oferece apenas um tipo
+de dados para a transição, sem dependências de infraestrutura.
+
+Falhas dos casos de uso são observadas por proxies configurados em `frameworks`,
+inclusive em chamadas fora de HTTP. O filtro de requisições conhece somente HTTP.
+Testes ArchUnit verificam a independência de `domain` e `application`, e impedem
+dependências do pacote compartilhado no módulo de ordens de serviço. Os detalhes
+operacionais estão em [Observabilidade com Datadog](OBSERVABILIDADE-DATADOG.md).
+
 Cada módulo funcional segue a mesma separação:
 
 - `domain`: entidades, value objects, enums, eventos e exceções de negócio.
