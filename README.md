@@ -8,6 +8,9 @@ Este é um dos quatro repositórios da solução. Ele **não provisiona** VPC, E
 
 ## Fluxo de branches e promoção
 
+Para configurar APM, métricas Kubernetes, logs, dashboards e alertas, consulte
+[Observabilidade com Datadog](docs/OBSERVABILIDADE-DATADOG.md).
+
 O workflow `.github/workflows/promote.yml` usa o `GITHUB_TOKEN` nativo do GitHub para abrir os Pull Requests de promoção:
 
 ```text
@@ -299,3 +302,8 @@ Abra `http://localhost:18081/swagger-ui/index.html`.
 - [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md): organização interna e decisões de arquitetura;
 - [`docs/EXECUCAO.md`](docs/EXECUCAO.md): roteiro resumido de execução e implantação;
 - [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md): diagnóstico dos problemas mais comuns.
+
+A observabilidade também é instalada pelo CI/CD da API. Configure os Secrets e
+variáveis dos Environments conforme [o guia Datadog](docs/OBSERVABILIDADE-DATADOG.md).
+Para as alterações de observabilidade, promova primeiro a autenticação e depois
+a API; o cluster e a infraestrutura do banco existentes são reutilizados.
