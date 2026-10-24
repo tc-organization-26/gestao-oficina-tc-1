@@ -18,6 +18,45 @@ import org.springframework.http.HttpStatus;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private br.com.fiap.oficina.ordemservico.application.gateways.OrdemServicoGateway ordemServicoGateway;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.transaction.PlatformTransactionManager transactionManager;
+
+    @Test
+    void devePublicarTransicaoSomenteAposCommitENaoAposRollback() {
+        var clienteId = criarCliente();
+        var ordemId = criarOrdem(clienteId, criarVeiculo(clienteId));
+        var id = new br.com.fiap.oficina.ordemservico.domain.valueobjects.OrdemServicoId(UUID.fromString(ordemId));
+        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(
+                br.com.fiap.oficina.ordemservico.interfaceadapters.observability.TransicaoStatusLogPublisher.class);
+        var logs = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        logs.start();
+        logger.addAppender(logs);
+        var transactions = new org.springframework.transaction.support.TransactionTemplate(transactionManager);
+        try {
+            transactions.executeWithoutResult(tx -> {
+                var ordem = ordemServicoGateway.buscarPorId(id).orElseThrow();
+                ordem.iniciarDiagnostico();
+                ordemServicoGateway.salvar(ordem);
+                assertTrue(logs.list.isEmpty());
+                tx.setRollbackOnly();
+            });
+            assertTrue(logs.list.isEmpty());
+            assertEquals(1, jdbcTemplate.queryForObject("select count(*) from ordem_servico_status_historico where ordem_id = ?", Integer.class, id.value()));
+
+            transactions.executeWithoutResult(tx -> {
+                var ordem = ordemServicoGateway.buscarPorId(id).orElseThrow();
+                ordem.iniciarDiagnostico();
+                ordemServicoGateway.salvar(ordem);
+                assertTrue(logs.list.isEmpty());
+            });
+            assertEquals(2, logs.list.size()); // status_changed and status_duration, after commit only
+            assertEquals(2, jdbcTemplate.queryForObject("select count(*) from ordem_servico_status_historico where ordem_id = ?", Integer.class, id.value()));
+        } finally { logger.detachAppender(logs); logs.stop(); }
+    }
+
     private final ArrayList<String> clienteIds = new ArrayList<>();
     private final ArrayList<String> veiculoIds = new ArrayList<>();
     private final ArrayList<String> servicoIds = new ArrayList<>();
@@ -51,6 +90,39 @@ class OrdemServicoApiIntegrationTest extends AbstractApiIntegrationSupport {
     // ----------------------------------------------
     // CRIAÇÃO E CONSULTA
     // ----------------------------------------------
+
+    @Test
+    void devePersistirDuracaoEntreStatusSemDuplicarAtualizacaoIdempotente() {
+        var clienteId = criarCliente();
+        var ordemId = criarOrdem(clienteId, criarVeiculo(clienteId));
+        var id = UUID.fromString(ordemId);
+        jdbcTemplate.update("update ordem_servico_status_historico set entrou_em = clock_timestamp() - interval '2 minutes' where ordem_id = ?", id);
+
+        var alteracao = patchMap("/ordens-servico/" + ordemId + "/status", Map.of("status", "EM_DIAGNOSTICO"));
+        assertEquals(HttpStatus.OK, alteracao.getStatusCode());
+        assertNotNull(alteracao.getHeaders().getFirst("X-Request-ID"));
+        var historico = jdbcTemplate.queryForMap("select * from ordem_servico_status_historico where ordem_id = ? order by id desc limit 1", id);
+        assertEquals(0, ((Number) historico.get("status_anterior")).intValue());
+        assertEquals(1, ((Number) historico.get("status_atual")).intValue());
+        assertTrue(((Number) historico.get("duracao_anterior_ms")).longValue() >= 120000);
+
+        assertEquals(HttpStatus.OK, patchMap("/ordens-servico/" + ordemId + "/status", Map.of("status", "EM_DIAGNOSTICO")).getStatusCode());
+        assertEquals(2, jdbcTemplate.queryForObject("select count(*) from ordem_servico_status_historico where ordem_id = ?", Integer.class, id));
+    }
+
+    @Test
+    void deveReverterHistoricoJuntoComTransacao() {
+        var clienteId = criarCliente();
+        var ordemId = criarOrdem(clienteId, criarVeiculo(clienteId));
+        var id = UUID.fromString(ordemId);
+        var manager = new org.springframework.jdbc.datasource.DataSourceTransactionManager(jdbcTemplate.getDataSource());
+        new org.springframework.transaction.support.TransactionTemplate(manager).executeWithoutResult(tx -> {
+            jdbcTemplate.update("update ordem_servico set status_ordem_servico = 1 where id = ?", id);
+            assertEquals(2, jdbcTemplate.queryForObject("select count(*) from ordem_servico_status_historico where ordem_id = ?", Integer.class, id));
+            tx.setRollbackOnly();
+        });
+        assertEquals(1, jdbcTemplate.queryForObject("select count(*) from ordem_servico_status_historico where ordem_id = ?", Integer.class, id));
+    }
 
     @Test
     void deveCriarEConsultarOrdemServico() {

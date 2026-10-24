@@ -8,6 +8,9 @@ Este é um dos quatro repositórios da solução. Ele **não provisiona** VPC, E
 
 ## Fluxo de branches e promoção
 
+Para configurar APM, métricas Kubernetes, logs, dashboards e alertas, consulte
+[Observabilidade com Datadog](docs/OBSERVABILIDADE-DATADOG.md).
+
 O workflow `.github/workflows/promote.yml` usa o `GITHUB_TOKEN` nativo do GitHub para abrir os Pull Requests de promoção:
 
 ```text
@@ -25,7 +28,7 @@ Os merges são manuais e devem ocorrer somente depois da aprovação e dos check
 - Swagger local: [http://localhost:8081/swagger-ui/index.html](http://localhost:8081/swagger-ui/index.html).
 - OpenAPI local: [http://localhost:8081/v3/api-docs](http://localhost:8081/v3/api-docs).
 - Swagger publicado: use o link do deployment ativo e acrescente `/swagger-ui/index.html`.
-- [Collection Insomnia](src/main/resources/collection-insomnia.yaml), importável também no Postman.
+- [Collection Insomnia](src/main/docs/insomnia/collection.yaml), importável também no Postman.
 
 A URL AWS não é fixada no código porque o identificador do API Gateway muda entre contas e recriações. O workflow publica a URL efetivamente implantada no GitHub Deployment e no resumo da execução.
 
@@ -114,7 +117,7 @@ Como o ambiente ainda não possui cadastro de clientes, o schema inicial e a mig
 | `/ordens-servico/{id}/pagamento` | Registro do pagamento |
 | `/swagger-ui/index.html` | Interface Swagger |
 
-A collection para Insomnia está em [`src/main/resources/collection-insomnia.yaml`](src/main/resources/collection-insomnia.yaml).
+A collection para Insomnia está em [`src/main/docs/insomnia/collection.yaml`](src/main/docs/insomnia/collection.yaml).
 
 ## Tecnologias principais
 
@@ -299,3 +302,8 @@ Abra `http://localhost:18081/swagger-ui/index.html`.
 - [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md): organização interna e decisões de arquitetura;
 - [`docs/EXECUCAO.md`](docs/EXECUCAO.md): roteiro resumido de execução e implantação;
 - [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md): diagnóstico dos problemas mais comuns.
+
+A observabilidade também é instalada pelo CI/CD da API. Configure os Secrets e
+variáveis dos Environments conforme [o guia Datadog](docs/OBSERVABILIDADE-DATADOG.md).
+Para as alterações de observabilidade, promova primeiro a autenticação e depois
+a API; o cluster e a infraestrutura do banco existentes são reutilizados.
