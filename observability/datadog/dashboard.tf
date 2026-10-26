@@ -23,7 +23,7 @@ resource "datadog_dashboard_json" "oficina" {
       { definition = {
         type             = "note"
         content          = <<-EOT
-          **Como interpretar este dashboard**
+          **Glossário**
 
           - **Volume:** OS persistidas (`os.created`).
           - **Tempos médios:** tempo de permanência nos status encerrados, não a duração da chamada HTTP.
