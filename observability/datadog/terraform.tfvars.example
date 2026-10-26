@@ -2,6 +2,4 @@ environment         = "hom"
 datadog_api_url     = "https://api.datadoghq.com/"
 notification_target = "@seu-email@exemplo.com"
 latency_p95_ms       = 1000
-# Enable only if you choose Datadog Synthetics instead of Uptime.com.
-enable_synthetics = false
-public_health_url = ""
+# Uptime externo usa UptimeRobot; nao cria Datadog Synthetics.
