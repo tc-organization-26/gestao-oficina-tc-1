@@ -107,6 +107,8 @@ resource "datadog_monitor" "resources" {
   query   = each.value.query
   message = "${each.value.message} ${var.notification_target}"
   monitor_thresholds { critical = each.value.threshold }
+  # Give newly observed pods time to start before evaluating resource alerts.
+  new_group_delay     = 300
   require_full_window = false
   tags                = local.tags
 }
