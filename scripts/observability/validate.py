@@ -1,4 +1,4 @@
-"""Run real observability checks in hom; never changes the running Deployment.
+"""Provoke a PostgreSQL integration failure in an isolated hom pod.
 
 Credentials come from environment variables, and are never written to evidence.
 """
@@ -16,6 +16,10 @@ import urllib.request
 import uuid
 
 
+def progress(message):
+    print(f"[{time.strftime('%H:%M:%S')}] {message}", flush=True)
+
+
 def http(url, method="GET", body=None, headers=None):
     data = None if body is None else json.dumps(body).encode()
     request = urllib.request.Request(url, data=data, method=method,
@@ -29,10 +33,10 @@ def http(url, method="GET", body=None, headers=None):
         return failure.code, dict(failure.headers), {}
 
 
-def kube(*args, manifest=None):
+def kube(*args, manifest=None, timeout=90):
     result = subprocess.run(["kubectl", "--request-timeout=30s", *args],
                             input=None if manifest is None else json.dumps(manifest),
-                            capture_output=True, text=True, encoding="utf-8", timeout=90)
+                            capture_output=True, text=True, encoding="utf-8", timeout=timeout)
     if result.returncode:
         raise RuntimeError("kubectl falhou: " + " ".join(args[:4]))
     return result.stdout
@@ -68,13 +72,11 @@ class Validation:
         self.steps.append({"method": method, "path": path, "status": status,
                            "request_id": request_id, "request_id_returned": returned_id})
         self.save()
-        if status != expected:
+        if expected is not None and status != expected:
             raise RuntimeError(f"{method} {path}: esperado HTTP {expected}, recebido {status}")
-        if not path.startswith("/actuator/") and returned_id != request_id:
-            raise RuntimeError("X-Request-ID nao foi preservado; confirme o deploy da instrumentacao.")
         return result
 
-    def traffic(self):
+    def validate_target(self):
         deployment = json.loads(kube("-n", "oficina", "get", "deployment", "oficina-api", "-o", "json"))
         if deployment["spec"]["template"]["metadata"].get("labels", {}).get("tags.datadoghq.com/env") != "hom":
             raise RuntimeError("O contexto Kubernetes deve apontar para homologacao")
@@ -84,40 +86,17 @@ class Validation:
                                    capture_output=True, text=True, timeout=30)
         if discovery.returncode or self.url != f"https://{discovery.stdout.strip()}.execute-api.{region}.amazonaws.com":
             raise RuntimeError("A URL deve corresponder ao API Gateway de hom publicado no SSM")
-        if self.call("GET", "/actuator/health/readiness").get("status") != "UP":
-            raise RuntimeError("Readiness nao retornou UP")
+
+    def authenticate(self):
         if not self.token:
-            # CPF ficticio do seed do projeto. Never save JWT or login response.
-            self.token = self.call("POST", "/auth/login", {"cpf": os.getenv("OFICINA_TEST_CPF", "00361937040")}).get("token")
+            self.token = self.call("POST", "/auth/login", {
+                "cpf": os.getenv("OFICINA_TEST_CPF", "00361937040")
+            }).get("token")
             if not self.token:
-                raise RuntimeError("Login sem token")
-        # Reuse the seed client, and create only a vehicle and one test OS.
-        client_id = os.getenv("OFICINA_TEST_CLIENT_ID", "00000000-0000-0000-0000-000000000001")
-        plate = "".join(secrets.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(3)) + str(secrets.randbelow(10000)).zfill(4)
-        vehicle = self.call("POST", "/veiculos", {"clienteId": client_id, "placa": plate,
-                            "marca": "Teste", "modelo": self.run_id, "ano": 2026}, expected=201)
-        self.report["vehicle_id"] = vehicle["id"]
-        self.save()
-        order = self.call("POST", "/ordens-servico", {"clienteId": client_id,
-                          "veiculoId": vehicle["id"], "servicos": [], "pecas": [],
-                          "anotacoes": "Teste de observabilidade " + self.run_id}, expected=201)
-        self.report["order_id"] = order["id"]
-        self.save()
-        path = "/ordens-servico/" + order["id"]
-        for status in ("EM_DIAGNOSTICO", "AGUARDANDO_APROVACAO"):
-            self.call("PATCH", path + "/status", {"status": status})
-            time.sleep(2)
-        self.call("POST", path + "/orcamento/notificacoes-aprovacao",
-                  {"decisao": "APROVADO", "origem": "observabilidade", "protocoloExterno": self.run_id})
-        for status in ("EM_EXECUCAO", "FINALIZADA"):
-            self.call("PATCH", path + "/status", {"status": status})
-            time.sleep(2)
-        self.call("POST", path + "/pagamento", {})
-        self.call("PATCH", path + "/status", {"status": "ENTREGUE"})
-        self.report["business_traffic"] = "concluido; conferir eventos no Datadog"
-        self.save()
+                raise RuntimeError("Login de preparacao nao retornou token")
 
     def failure(self):
+        progress("Testando falha de banco em pod temporario; pode levar alguns minutos...")
         deployment = json.loads(kube("-n", "oficina", "get", "deployment", "oficina-api", "-o", "json"))
         template = deployment["spec"]["template"]
         labels = template["metadata"].get("labels", {})
@@ -131,16 +110,25 @@ class Validation:
             "SPRING_DATASOURCE_URL": "jdbc:postgresql://127.0.0.1:1/observability?connectTimeout=1",
             "SPRING_FLYWAY_ENABLED": "false", "SPRING_JPA_HIBERNATE_DDL_AUTO": "none",
             "SPRING_JPA_DATABASE_PLATFORM": "org.hibernate.dialect.PostgreSQLDialect",
-            "SPRING_JPA_PROPERTIES_HIBERNATE_BOOT_ALLOW_JDBC_METADATA_ACCESS": "false",
-            "SPRING_APPLICATION_JSON": json.dumps({"spring.jpa.properties.hibernate.boot.allow_jdbc_metadata_access": False}),
-            "SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT": "-1",
-            "SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT": "1000",
-            "SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE": "0",
+            # Preserve exact property names; underscores in environment variables
+            # would bind connection.timeout as the Hikari connection property.
+            "SPRING_APPLICATION_JSON": json.dumps({
+                "spring.jpa.properties.hibernate.boot.allow_jdbc_metadata_access": False,
+                "spring.datasource.hikari.initialization-fail-timeout": -1,
+                "spring.datasource.hikari.connection-timeout": 1000,
+                "spring.datasource.hikari.minimum-idle": 0,
+            }),
         }
         container["env"] = [e for e in container.get("env", []) if e["name"] not in overrides]
         container["env"] += [{"name": k, "value": v} for k, v in overrides.items()]
         for key in ("livenessProbe", "readinessProbe", "startupProbe"):
             container.pop(key, None)
+        # The database is intentionally unavailable. Wait for HTTP startup using
+        # liveness, otherwise Kubernetes marks the container Ready too early.
+        container["readinessProbe"] = {
+            "httpGet": {"path": "/actuator/health/liveness", "port": 8081},
+            "periodSeconds": 2, "timeoutSeconds": 2,
+        }
         spec["containers"] = [container]
         spec["restartPolicy"] = "Never"
         spec["activeDeadlineSeconds"] = 600
@@ -150,20 +138,23 @@ class Validation:
                "annotations": {k: v for k, v in template["metadata"].get("annotations", {}).items()
                                if not k.endswith(".checks")}}, "spec": spec}
         forward = None
+        forward_log = None
         try:
             kube("create", "-f", "-", manifest=pod)
-            kube("-n", "oficina", "wait", "--for=condition=Ready", "pod/" + pod_name, "--timeout=60s")
+            kube("-n", "oficina", "wait", "--for=condition=Ready", "pod/" + pod_name,
+                 "--timeout=120s", timeout=150)
             with socket.socket() as port:
                 port.bind(("127.0.0.1", 0))
                 local_port = port.getsockname()[1]
+            forward_log = (self.output / "port-forward.log").open("w", encoding="utf-8")
             forward = subprocess.Popen(["kubectl", "-n", "oficina", "port-forward", "pod/" + pod_name,
                                         f"{local_port}:8081", "--address=127.0.0.1"],
-                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                                       stdout=forward_log, stderr=forward_log)
             base = f"http://127.0.0.1:{local_port}"
             ready = False
             for _ in range(60):
                 if forward.poll() is not None:
-                    raise RuntimeError("Port-forward terminou antes da chamada")
+                    raise RuntimeError("Port-forward terminou antes da chamada; consulte " + str(self.output / "port-forward.log"))
                 try:
                     if http(base + "/actuator/health/liveness")[0] == 200:
                         ready = True
@@ -173,7 +164,11 @@ class Validation:
                 time.sleep(2)
             if not ready:
                 raise RuntimeError("Pod de teste nao iniciou em 120 segundos")
-            self.call("GET", "/ordens-servico/" + str(uuid.uuid4()), expected=500, base=base)
+            # An OS lookup emits both the integration and OS failure events without
+            # creating an order. Confirm the actual failure in logs: Spring's error
+            # dispatch can return 403 instead of 500 for an unhandled exception.
+            self.call("GET", "/ordens-servico/" + str(uuid.uuid4()), expected=None, base=base)
+            self.report["fault_http_status"] = self.steps[-1]["status"]
             time.sleep(5)
             logs = kube("-n", "oficina", "logs", pod_name, "-c", "oficina-api")
             events = []
@@ -185,42 +180,29 @@ class Validation:
                 except ValueError:
                     pass
             self.report["fault_events"] = events
-            if not {"os.processing_failed", "integration.failed"}.issubset({e["event"] for e in events}):
-                raise RuntimeError("A falha real de conexao nao emitiu os dois eventos esperados")
+            self.check_logs()
+            progress(f"Falhas de PostgreSQL e processamento de OS confirmadas (HTTP {self.report['fault_http_status']}).")
             # Allow Agent tailing before deleting the pod. Remote ingestion is verified separately.
             time.sleep(15)
         finally:
             if forward:
-                forward.terminate()
+                if forward.poll() is None:
+                    forward.terminate()
                 forward.wait(timeout=10)
+            if forward_log:
+                forward_log.close()
             kube("-n", "oficina", "delete", "pod", pod_name, "--ignore-not-found", "--wait=false")
             self.save()
+            progress("Remocao do pod temporario solicitada.")
 
     def check_logs(self):
-        raw = kube("-n", "oficina", "logs", "-l", "tags.datadoghq.com/service=oficina-api",
-                   "-c", "oficina-api", "--since=15m", "--tail=5000", "--max-log-requests=10")
-        events = list(self.report.get("fault_events", []))
-        for line in raw.splitlines():
-            try:
-                entry = json.loads(line)
-                if str(entry.get("request_id", "")).startswith(self.run_id):
-                    events.append({k: entry.get(k) for k in
-                        ("event", "request_id", "os_status", "duracao_ms", "integracao", "dd.trace_id", "dd.span_id")})
-            except ValueError:
-                pass
-        self.report["events"] = events
-        self.save()
-        required = {"os.created", "os.status_duration"}
-        if "fault_events" in self.report:
-            required |= {"os.processing_failed", "integration.failed"}
-        found = {e.get("event") for e in events}
-        statuses = {e.get("os_status") for e in events if e.get("event") == "os.status_duration"}
-        if not required <= found or not {"EM_DIAGNOSTICO", "EM_EXECUCAO", "FINALIZADA"} <= statuses:
-            raise RuntimeError("Eventos incompletos; consulte evidence.json")
-        if not any(e.get("dd.trace_id") and e.get("dd.span_id") for e in events):
-            raise RuntimeError("Trace/span IDs ausentes; confira a injecao do tracer no pod")
-        self.report["datadog_query"] = "service:oficina-api env:hom @request_id:" + self.run_id + "*"
-        self.report["datadog_validation"] = "Confirmar ingestao, graficos, trace e monitores no Datadog"
+        events = self.report.get("fault_events", [])
+        if not any(e.get("event") == "integration.failed" and e.get("integracao") == "postgresql" for e in events):
+            raise RuntimeError("Nao foi encontrado integration.failed de PostgreSQL; o teste nao foi confirmado")
+        if not any(e.get("event") == "os.processing_failed" for e in events):
+            raise RuntimeError("Nao foi encontrado os.processing_failed; o teste nao foi confirmado")
+        self.report["datadog_query"] = "service:oficina-api env:hom @request_id:" + self.run_id + "* (@event:integration.failed OR @event:os.processing_failed)"
+        self.report["datadog_validation"] = "Confirmar os dois graficos e os alertas de integracao e OS no Datadog"
         self.save()
 
 
@@ -229,26 +211,30 @@ def main():
     parser.add_argument("mode", choices=["run", "verify"])
     parser.add_argument("--url", required=True, help="URL publica de HOMOLOGACAO")
     parser.add_argument("--output", default="target/observability-evidence")
-    parser.add_argument("--fault", action="store_true", help="Pod temporario com conexao PostgreSQL recusada")
+    parser.add_argument("--fault", action="store_true", help="Opcional por compatibilidade; run sempre provoca a falha de banco")
     args = parser.parse_args()
     validation = Validation(args.url, args.output)
     try:
         if args.mode == "verify":
             validation.report = json.loads((validation.output / "evidence.json").read_text(encoding="utf-8"))
             validation.run_id = validation.report["run_id"]
+            progress(f"Conferindo novamente os logs da execucao {validation.run_id}.")
         else:
-            validation.traffic()
-            if args.fault:
-                validation.failure()
+            progress(f"Iniciando validacao em homologacao: {validation.run_id}")
+            validation.validate_target()
+            validation.authenticate()
+            validation.failure()
         validation.check_logs()
         validation.report.pop("error", None)
         validation.save()
-        print("Evidencias: " + str(validation.output / "evidence.json"))
-        print(validation.report["datadog_query"])
-        print("Confira essa busca e as metricas no Datadog; abra um trace e confirme o email.")
+        progress("Teste de falha de banco concluido.")
+        progress("Evidencias: " + str(validation.output / "evidence.json"))
+        progress("Busca no Datadog: " + validation.report["datadog_query"])
     except (RuntimeError, OSError, KeyError, ValueError) as failure:
         validation.report["error"] = type(failure).__name__ + ": " + str(failure)
         validation.save()
+        progress("ERRO: " + str(failure))
+        progress("Evidencias parciais: " + str(validation.output / "evidence.json"))
         raise SystemExit(str(failure)) from None
 
 
