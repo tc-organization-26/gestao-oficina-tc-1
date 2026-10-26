@@ -94,6 +94,9 @@ Configure o índice de logs na conta Datadog para reter `os.processing_failed` e
 `integration.failed`, sem exclusão ou amostragem. Os alertas e métricas dependem
 da chegada de novos eventos. Os limites iniciais são p95 de 1000 ms, CPU de
 0,45 core por dez minutos e memória de 680 MiB por dez minutos.
+Os monitores de CPU e memoria aguardam cinco minutos (`new_group_delay = 300`)
+antes de avaliar um novo grupo `pod_name`, reduzindo alertas durante a inicializacao.
+A media continua usando a janela dos ultimos dez minutos.
 
 ## 4. Uptime externo
 
