@@ -11,11 +11,11 @@ Este é um dos quatro repositórios da solução. Ele **não provisiona** VPC, E
 Para configurar APM, métricas Kubernetes, logs, dashboards e alertas, consulte
 [Observabilidade com Datadog](docs/OBSERVABILIDADE-DATADOG.md).
 
-O workflow `.github/workflows/promote.yml` usa o `GITHUB_TOKEN` nativo do GitHub para abrir os Pull Requests de promoção:
+O workflow `.github/workflows/cicd.yml` centraliza validação, deploy e promoção usando o `GITHUB_TOKEN` nativo do GitHub. Em `fase-3`, valida antes de abrir o PR para `homologacao`. Em `homologacao`, abre o PR para `main` somente após o deploy bem-sucedido, na mesma execução:
 
 ```text
-push em fase-3 → PR para homologacao
-merge em homologacao → PR para main
+push em fase-3 → validação → PR para homologacao
+merge em homologacao → validação → deploy em homologação → PR para main
 merge em main → implantação em produção
 ```
 
