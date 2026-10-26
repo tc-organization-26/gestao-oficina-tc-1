@@ -112,7 +112,7 @@ Isso cria um teste HTTP externo a cada cinco minutos em São Paulo, com alerta
 para o contato configurado. Synthetics é um produto adicional e vem desativado.
 O check interno do Agent continua útil, mas não comprova acesso pela internet.
 
-## 5. Validar a coleta
+## 5. Validar a coleta 
 
 1. Em Infrastructure/Kubernetes, localize o cluster e os pods `oficina-api`.
 2. Em APM, filtre `service:oficina-api env:hom` e execute chamadas autenticadas
