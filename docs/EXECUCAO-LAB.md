@@ -71,6 +71,8 @@ O workflow usa o `GITHUB_TOKEN` fornecido automaticamente pelo GitHub. Em **Sett
 
 O fluxo de promoção é:
 
+Nos quatro repositórios, o CI/CD executa por `push` em `fase-3`, `homologacao` ou `main`, ou por execução manual. Abrir ou atualizar um PR não dispara outra execução. O PR de promoção é criado ou mantido no final da execução bem-sucedida da branch de origem.
+
 ```text
 push em fase-3
   -> valida e abre ou mantém PR de fase-3 para homologacao
