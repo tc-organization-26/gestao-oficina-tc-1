@@ -176,8 +176,6 @@ jobs:
           TF_VAR_environment: ${{ env.DEPLOY_ENV }}
           TF_VAR_datadog_api_url: ${{ vars.DD_API_URL || 'https://api.datadoghq.com/' }}
           TF_VAR_notification_target: ${{ vars.DD_NOTIFICATION_TARGET }}
-          TF_VAR_enable_synthetics: ${{ vars.DD_ENABLE_SYNTHETICS || 'false' }}
-          TF_VAR_public_health_url: ${{ steps.endpoint.outputs.url }}/actuator/health/readiness
         run: |
           terraform init -input=false -lockfile=readonly \
             -backend-config="bucket=$TF_STATE_BUCKET" \
@@ -197,6 +195,7 @@ jobs:
       - name: Validar scripts e Terraform sem credenciais
         run: |
           bash -n scripts/ci/install-datadog.sh
+          python3 -m py_compile scripts/observability/validate.py
           terraform -chdir=observability/datadog fmt -check -recursive
           terraform -chdir=observability/datadog init -backend=false -input=false -lockfile=readonly
           terraform -chdir=observability/datadog validate

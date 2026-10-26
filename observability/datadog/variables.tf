@@ -22,13 +22,3 @@ variable "latency_p95_ms" {
   type    = number
   default = 1000
 }
-variable "enable_synthetics" {
-  type        = bool
-  default     = false
-  description = "Opcional: produto adicional para uptime externo se nao usar Uptime.com."
-}
-variable "public_health_url" {
-  type        = string
-  default     = ""
-  description = "URL HTTPS publica do /actuator/health/readiness (precisa retornar 200 sem JWT)."
-}

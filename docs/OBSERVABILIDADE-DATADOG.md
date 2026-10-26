@@ -11,7 +11,7 @@ o Agent coleta métricas do Kubernetes, logs JSON da API e traces do Java.
 | Latência das APIs Java | Tracer injetado pelo Operator; logs HTTP com rota, método, status e duração; métrica de distribuição para p95 |
 | CPU e memória | Agent e kube-state-metrics core; gráficos por pod e monitores de consumo |
 | Healthcheck | Actuator liveness/readiness, probes HTTP e check `http.can_connect` por pod |
-| Uptime externo | Uptime.com configurado manualmente ou Datadog Synthetics opcional |
+| Uptime externo | UptimeRobot gratuito, Keyword do readiness publico a cada 5 minutos |
 | Falhas de OS | Evento `os.processing_failed` para falhas tecnicas dos casos de uso de OS e orcamento, inclusive fora de HTTP; monitor de logs |
 | Logs correlacionados | JSON Logstash, `request_id` e, com o tracer ativo, `dd.trace_id`/`dd.span_id` |
 | Volume diário | `os.created` após persistência e commit; rollup diário UTC |
@@ -42,7 +42,6 @@ Mantenha os Secrets AWS e GHCR já usados pela esteira e adicione:
 | Variable | `DD_NOTIFICATION_TARGET` | Destino real, como `@voce@dominio.com` ou canal integrado |
 | Variable opcional | `DD_SITE` | Site da conta; padrão `datadoghq.com` (US1) |
 | Variable opcional | `DD_API_URL` | URL da API correspondente ao site; padrão `https://api.datadoghq.com/` |
-| Variable opcional | `DD_ENABLE_SYNTHETICS` | `false` por padrão; `true` habilita o produto adicional de uptime externo |
 
 `DD_SITE` e `DD_API_URL` devem apontar para a mesma região da conta Datadog.
 As credenciais AWS precisam do acesso já utilizado ao EKS/SSM/Secrets Manager e de
@@ -98,19 +97,22 @@ da chegada de novos eventos. Os limites iniciais são p95 de 1000 ms, CPU de
 
 ## 4. Uptime externo
 
-Se já usa Uptime.com, configure um check HTTP GET para a URL pública do API Gateway
-com o caminho `/actuator/health/readiness`, esperando HTTP 200 e status `UP`.
-Na integração Datadog do Uptime.com, configure as chaves e associe o perfil ao
-grupo de contatos. Instale a integração também no Datadog e verifique os eventos
-e métricas recebidos antes de criar o monitor externo específico dos seus checks.
-Essa integração não foi ativada automaticamente nem há um monitor Uptime.com
-versionado, pois os nomes dos checks e a conta não foram fornecidos.
+O uptime externo usa UptimeRobot gratuito, com monitor **Keyword** da URL publica
+atual do API Gateway + `/actuator/health/readiness`. A palavra-chave esperada e
+`"status":"UP"`; iniciar incidente quando ela **nao existir**. O intervalo e
+5 minutos, e o contato e `thssantosbarbosa@gmail.com`.
 
-Como alternativa, defina a variável `DD_ENABLE_SYNTHETICS=true` no Environment.
-A esteira obtém automaticamente a URL pública do API Gateway para o Terraform.
-Isso cria um teste HTTP externo a cada cinco minutos em São Paulo, com alerta
-para o contato configurado. Synthetics é um produto adicional e vem desativado.
-O check interno do Agent continua útil, mas não comprova acesso pela internet.
+Use Keyword para verificar o corpo JSON por GET. Na tela atual do plano gratuito,
+o monitor HTTP simples usa HEAD, enquanto as rotas publicas versionadas sao GET.
+O historico de uptime fica no UptimeRobot; nao ha sincronizacao automatica com o
+Datadog. Se o laboratorio recriar o API Gateway, atualize a URL do monitor.
+
+Synthetics foi removido deste Terraform. O proximo apply remove qualquer teste
+anterior gerenciado pelo mesmo state. Em 26/10/2026 o state de homologacao tinha
+zero testes Synthetics; `DD_ENABLE_SYNTHETICS` no GitHub foi alterada para `false`.
+Essa verificacao nao inclui testes manuais em outra conta/state.
+
+Veja o roteiro executavel em [VALIDACAO-OBSERVABILIDADE.md](VALIDACAO-OBSERVABILIDADE.md).
 
 ## 5. Validar a coleta 
 
@@ -148,15 +150,22 @@ O check interno do Agent continua útil, mas não comprova acesso pela internet.
 - A integração explicitamente identificada nos eventos de erro é PostgreSQL.
   Novas integrações precisam emitir `integration.failed` com `integracao` ao falhar.
   Os listeners de notificação atuais apenas escrevem logs; não enviam e-mail real.
-- As Lambdas de autenticação não receberam instrumentação APM nesta alteração.
-  O serviço monitorado aqui é a API Java no EKS; a rota de login Lambda tem seu
-  próprio runtime e precisa de instrumentação separada para aparecer no APM.
+- As Lambdas tem instrumentacao preparada em `oficina-auth-lambda`: layers oficiais,
+  logs JSON e servicos `oficina-login` e `oficina-authorizer`. A ativacao ocorre na
+  esteira ao encontrar o secret compartilhado `oficina-ENV/datadog`, alimentado
+  pela esteira da API com a **mesma DD_API_KEY existente**. Nao e preciso cadastrar
+  DD_API_KEY/DD_APP_KEY no repositorio Lambda. A LabRole precisa de acesso de leitura
+  ao secret; login precisa de saida HTTPS pelo NAT. Publique API e reexecute o deploy
+  Lambda para habilitar a instrumentacao. O dashboard inclui p95 das duas funcoes e
+  o monitor de integracoes inclui PostgreSQL/Secrets Manager das Lambdas.
+  Authorizer e API Java podem ter traces separados: nao ha chamada HTTP direta
+  instrumentada do authorizer para Java atraves da autorizacao do API Gateway.
 - O rollup de volume diário usa dias UTC, indicado no título do gráfico.
-- Não foram cadastradas credenciais nem executados deploys/apply no Datadog ou AWS.
+- Alteracoes locais dependem de promocao e deploy; nao comprovam por si so coleta no ambiente.
 
 ## Referências
 
 - [Datadog SSI no Kubernetes](https://docs.datadoghq.com/tracing/trace_collection/single-step-apm/kubernetes/)
 - [Logs estruturados no Spring Boot](https://docs.spring.io/spring-boot/reference/features/logging.html)
 - [Métricas derivadas de logs no provider Datadog](https://registry.terraform.io/providers/datadog/datadog/latest/docs/resources/logs_metric)
-- [Testes HTTP Synthetics no provider Datadog](https://registry.terraform.io/providers/datadog/datadog/latest/docs/resources/synthetics_test)
+- [Instrumentacao Python Lambda](https://docs.datadoghq.com/serverless/aws_lambda/instrumentation/python/)

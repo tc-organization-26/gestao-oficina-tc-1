@@ -1,7 +1,8 @@
 locals {
-  scope  = "service:oficina-api env:${var.environment}"
-  prefix = "oficina.${var.environment}"
-  tags   = ["service:oficina-api", "env:${var.environment}", "managed-by:terraform"]
+  scope               = "service:oficina-api env:${var.environment}"
+  observability_scope = "env:${var.environment} (service:oficina-api OR service:oficina-login OR service:oficina-authorizer)"
+  prefix              = "oficina.${var.environment}"
+  tags                = ["service:oficina-api", "env:${var.environment}", "managed-by:terraform"]
   metrics = {
     os_created = { name = "os.created", event = "os.created", aggregation = "count", path = null, groups = {} }
     status_duration = {
@@ -24,7 +25,7 @@ resource "datadog_logs_metric" "business" {
   for_each = local.metrics
   name     = "${local.prefix}.${each.value.name}"
   filter {
-    query = "${local.scope} @event:${each.value.event}"
+    query = "${each.key == "integration_errors" ? local.observability_scope : local.scope} @event:${each.value.event}"
   }
   compute {
     aggregation_type    = each.value.aggregation
@@ -54,8 +55,8 @@ resource "datadog_monitor" "os_failure" {
 resource "datadog_monitor" "integration_failure" {
   name    = "[${var.environment}] Falha em integracao"
   type    = "log alert"
-  query   = "logs(\"${local.scope} @event:integration.failed\").index(\"*\").rollup(\"count\").last(\"5m\") > 0"
-  message = "Falha em integracao. Verifique integracao, request_id e o trace JDBC. ${var.notification_target}"
+  query   = "logs(\"${local.observability_scope} @event:integration.failed\").index(\"*\").rollup(\"count\").last(\"5m\") > 0"
+  message = "Falha em integracao Java ou Lambda. Verifique integracao, request_id e o trace no log. ${var.notification_target}"
   monitor_thresholds { critical = 0 }
   enable_logs_sample = true
   on_missing_data    = "resolve"
@@ -108,38 +109,6 @@ resource "datadog_monitor" "resources" {
   monitor_thresholds { critical = each.value.threshold }
   require_full_window = false
   tags                = local.tags
-}
-
-resource "datadog_synthetics_test" "uptime" {
-  count     = var.enable_synthetics ? 1 : 0
-  name      = "[${var.environment}] Oficina uptime externo"
-  type      = "api"
-  subtype   = "http"
-  status    = "live"
-  locations = ["aws:sa-east-1"]
-  message   = "Healthcheck publico indisponivel. ${var.notification_target}"
-  tags      = local.tags
-  request_definition {
-    method = "GET"
-    url    = var.public_health_url
-  }
-  assertion {
-    type     = "statusCode"
-    operator = "is"
-    target   = "200"
-  }
-  assertion {
-    type     = "body"
-    operator = "contains"
-    target   = "\"status\":\"UP\""
-  }
-  options_list { tick_every = 300 }
-  lifecycle {
-    precondition {
-      condition     = startswith(var.public_health_url, "https://")
-      error_message = "Configure public_health_url com a URL HTTPS acessivel externamente."
-    }
-  }
 }
 
 output "dashboard_url" {

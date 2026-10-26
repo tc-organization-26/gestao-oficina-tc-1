@@ -8,6 +8,19 @@ set -euo pipefail
 : "${DD_OPERATOR_CHART_VERSION:?}"
 
 cluster_name="$(aws ssm get-parameter --name "/oficina/${DEPLOY_ENV}/eks/cluster-name" --query 'Parameter.Value' --output text)"
+# Lambda cannot read GitHub/Kubernetes secrets. Reuse the SAME key in one shared
+# runtime secret, without generating a key or including its value in Terraform state.
+secret_id="oficina-${DEPLOY_ENV}/datadog"
+if aws secretsmanager describe-secret --secret-id "$secret_id" >/dev/null 2>/tmp/datadog-secret-error; then
+  printf '%s' "$DD_API_KEY" | aws secretsmanager put-secret-value \
+    --secret-id "$secret_id" --secret-string file:///dev/stdin --query VersionId --output text >/dev/null
+elif grep -q ResourceNotFoundException /tmp/datadog-secret-error; then
+  printf '%s' "$DD_API_KEY" | aws secretsmanager create-secret \
+    --name "$secret_id" --secret-string file:///dev/stdin --query ARN --output text >/dev/null
+else
+  echo '::error::Nao foi possivel consultar o secret compartilhado Datadog.'
+  exit 1
+fi
 helm repo add datadog https://helm.datadoghq.com
 helm repo update datadog
 helm upgrade --install datadog-operator datadog/datadog-operator \

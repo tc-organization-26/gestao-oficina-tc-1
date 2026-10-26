@@ -7,6 +7,7 @@ locals {
     { title = "Falhas por integracao", query = "sum:${local.prefix}.integration.errors{*} by {integracao}.as_count()", display = "bars" },
     { title = "Falhas de processamento de OS", query = "sum:${local.prefix}.os.errors{*}.as_count()", display = "bars" },
     { title = "Latencia p95 por rota HTTP (ms)", query = "p95:${local.prefix}.http.duration_ms{*} by {http_route}", display = "line" },
+    { title = "Latencia p95 de login e authorizer (ms)", query = "p95:${local.prefix}.lambda.duration_ms{*} by {service}", display = "line" },
     { title = "CPU por pod (cores)", query = "avg:kubernetes.cpu.usage.total{kube_namespace:oficina,kube_container_name:oficina-api,env:${var.environment}} by {pod_name} / 1000000000", display = "line" },
     { title = "Memoria por pod (bytes)", query = "avg:kubernetes.memory.usage{kube_namespace:oficina,kube_container_name:oficina-api,env:${var.environment}} by {pod_name}", display = "line" },
     { title = "Healthcheck interno: tempo de resposta (s)", query = "avg:network.http.response_time{service:oficina-api,env:${var.environment}} by {pod_name}", display = "line" }
@@ -21,7 +22,7 @@ resource "datadog_dashboard_json" "oficina" {
     widgets = concat([
       { definition = {
         type             = "note"
-        content          = "Volume = OS persistidas (os.created). Medias = tempo no status encerrado, nao duracao da chamada HTTP. Dados a partir da instrumentacao. Para inspecionar dependencias, abra APM > oficina-api; para uptime publico, use Uptime.com ou o Synthetic opcional."
+        content          = "Volume = OS persistidas (os.created). Medias = tempo no status encerrado, nao duracao da chamada HTTP. Dados a partir da instrumentacao. Para inspecionar dependencias, abra APM > oficina-api; uptime publico monitorado separadamente no UptimeRobot."
         background_color = "white"
         font_size        = "14"
         text_align       = "left"

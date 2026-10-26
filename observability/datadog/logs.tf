@@ -1,7 +1,7 @@
 resource "datadog_logs_custom_pipeline" "java" {
-  name       = "Oficina ${var.environment} - Spring JSON"
+  name       = "Oficina ${var.environment} - JSON Java e Lambda"
   is_enabled = true
-  filter { query = local.scope }
+  filter { query = local.observability_scope }
   processor {
     status_remapper {
       name       = "Logback level"
