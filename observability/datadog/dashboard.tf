@@ -22,7 +22,15 @@ resource "datadog_dashboard_json" "oficina" {
     widgets = concat([
       { definition = {
         type             = "note"
-        content          = "Volume = OS persistidas (os.created). Medias = tempo no status encerrado, nao duracao da chamada HTTP. Dados a partir da instrumentacao. Para inspecionar dependencias, abra APM > oficina-api; uptime publico monitorado separadamente no UptimeRobot."
+        content          = <<-EOT
+          **Como interpretar este dashboard**
+
+          - **Volume:** OS persistidas (`os.created`).
+          - **Tempos médios:** tempo de permanência nos status encerrados, não a duração da chamada HTTP.
+          - **Histórico:** dados coletados a partir da instrumentação.
+          - **Dependências:** consulte **APM → oficina-api**.
+          - **Disponibilidade pública:** monitorada separadamente no **UptimeRobot**.
+        EOT
         background_color = "white"
         font_size        = "14"
         text_align       = "left"
