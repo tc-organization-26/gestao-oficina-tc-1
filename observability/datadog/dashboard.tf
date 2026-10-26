@@ -16,8 +16,12 @@ locals {
 
 resource "datadog_dashboard_json" "oficina" {
   dashboard = jsonencode({
-    title       = "Oficina - ${var.environment} - Operacao e ordens de servico"
-    description = "APM: service:oficina-api env:${var.environment}. Duracoes sao permanencia nos status concluidos; Finalizacao corresponde a FINALIZADA ate ENTREGUE. Volume diario em UTC. Historico anterior a V4 nao e reconstruido."
+    title       = "Oficina - ${var.environment} - Operação e ordens de serviço"
+    description = <<-EOT
+      Visão operacional da Oficina no ambiente **${var.environment}**, com volume de ordens de serviço, tempos por status, falhas, latência e saúde dos pods.
+
+      **Filtro APM:** `service:oficina-api env:${var.environment}`
+    EOT
     layout_type = "ordered"
     widgets = concat([
       { definition = {
@@ -25,9 +29,10 @@ resource "datadog_dashboard_json" "oficina" {
         content          = <<-EOT
           **Glossário**
 
-          - **Volume:** OS persistidas (`os.created`).
+          - **Volume:** OS persistidas (`os.created`), agrupadas por dia em UTC.
           - **Tempos médios:** tempo de permanência nos status encerrados, não a duração da chamada HTTP.
-          - **Histórico:** dados coletados a partir da instrumentação.
+          - **Finalização:** tempo entre FINALIZADA e ENTREGUE.
+          - **Histórico:** dados coletados a partir da instrumentação; dados anteriores à V4 não são reconstruídos.
           - **Dependências:** consulte **APM → oficina-api**.
           - **Disponibilidade pública:** monitorada separadamente no **UptimeRobot**.
         EOT
