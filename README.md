@@ -8,11 +8,14 @@ Este é um dos quatro repositórios da solução. Ele **não provisiona** VPC, E
 
 ## Fluxo de branches e promoção
 
-O workflow `.github/workflows/promote.yml` usa o `GITHUB_TOKEN` nativo do GitHub para abrir os Pull Requests de promoção:
+Para configurar APM, métricas Kubernetes, logs, dashboards e alertas, consulte
+[Observabilidade com Datadog](docs/OBSERVABILIDADE-DATADOG.md).
+
+O workflow `.github/workflows/cicd.yml` centraliza validação, deploy e promoção usando o `GITHUB_TOKEN` nativo do GitHub. Em `fase-3`, valida antes de abrir o PR para `homologacao`. Em `homologacao`, abre o PR para `main` somente após o deploy bem-sucedido, na mesma execução:
 
 ```text
-push em fase-3 → PR para homologacao
-merge em homologacao → PR para main
+push em fase-3 → validação → PR para homologacao
+merge em homologacao → validação → deploy em homologação → PR para main
 merge em main → implantação em produção
 ```
 
@@ -25,7 +28,7 @@ Os merges são manuais e devem ocorrer somente depois da aprovação e dos check
 - Swagger local: [http://localhost:8081/swagger-ui/index.html](http://localhost:8081/swagger-ui/index.html).
 - OpenAPI local: [http://localhost:8081/v3/api-docs](http://localhost:8081/v3/api-docs).
 - Swagger publicado: use o link do deployment ativo e acrescente `/swagger-ui/index.html`.
-- [Collection Insomnia](src/main/resources/collection-insomnia.yaml), importável também no Postman.
+- [Collection Insomnia](src/main/docs/insomnia/collection.yaml), importável também no Postman.
 
 A URL AWS não é fixada no código porque o identificador do API Gateway muda entre contas e recriações. O workflow publica a URL efetivamente implantada no GitHub Deployment e no resumo da execução.
 
@@ -49,14 +52,15 @@ O Dockerfile é aplicável neste repositório e está em [`Dockerfile`](Dockerfi
 | `gestao-oficina-tc-1` | Aplicação Spring Boot, Docker, GHCR e deploy no EKS |
 | `oficina-k8s-infra` | Bootstrap, backend Terraform, VPC, EKS, escalabilidade e API Gateway |
 | `oficina-db-infra` | Amazon RDS for PostgreSQL, rede do banco e credencial gerenciada |
-| `oficina-auth-lambda` | Login serverless, geração de JWT e Lambda Authorizer |
+| `oficina-auth-lambda` | Login por CPF, consulta de cliente ativo no RDS, geração de JWT e Lambda Authorizer |
 
 Na nuvem, o tráfego segue este caminho:
 
 ```text
 Cliente
   -> API Gateway
-     -> POST /auth/login -> Lambda de login
+     -> POST /auth/login { cpf } -> Lambda de login nas sub-redes privadas
+        -> valida CPF -> consulta cliente ativo no RDS -> emite JWT com papel CLIENTE
      -> demais rotas -> Lambda Authorizer -> VPC Link -> NLB privado
         -> Service NodePort 30081 -> Pods da Oficina API no EKS
            -> RDS PostgreSQL privado
@@ -64,9 +68,11 @@ Cliente
 
 O código da aplicação segue Clean Architecture. A organização dos pacotes está detalhada em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md).
 
+Como o ambiente ainda não possui cadastro de clientes, o schema inicial e a migration `V3__seed_cliente_autenticacao.sql` criam um cliente exclusivamente para teste com o CPF fictício `003.619.370-40`. Esse dado não pertence a um cliente real e deve ser usado somente em desenvolvimento e demonstrações. No banco, o documento é armazenado como `00361937040`, com UUID de teste e `ativo = true`.
+
 ![Clean Architecture](src/main/resources/clean-arq.png)
 
-![Arquitetura AWS](src/main/resources/arq-aws.png)
+![Arquitetura AWS com autenticação por CPF](src/main/resources/arq-aws-cpf.png)
 
 ## Funcionalidades
 
@@ -95,7 +101,7 @@ O código da aplicação segue Clean Architecture. A organização dos pacotes e
 
 | Rota | Finalidade |
 | --- | --- |
-| `POST /auth/login` | Login local da aplicação; na nuvem o API Gateway direciona esta rota à Lambda |
+| `POST /auth/login` | Na nuvem recebe `cpf`, valida o cliente ativo no RDS e devolve JWT com papel `CLIENTE`; localmente permanece disponível o login interno da aplicação |
 | `/clientes` | CRUD e listagem de clientes |
 | `/clientes/documento/{cpfCnpj}` | Consulta por documento |
 | `/clientes/{id}/veiculos` | Veículos de um cliente |
@@ -111,7 +117,7 @@ O código da aplicação segue Clean Architecture. A organização dos pacotes e
 | `/ordens-servico/{id}/pagamento` | Registro do pagamento |
 | `/swagger-ui/index.html` | Interface Swagger |
 
-A collection para Insomnia está em [`src/main/resources/collection-insomnia.yaml`](src/main/resources/collection-insomnia.yaml).
+A collection para Insomnia está em [`src/main/docs/insomnia/collection.yaml`](src/main/docs/insomnia/collection.yaml).
 
 ## Tecnologias principais
 
@@ -231,7 +237,7 @@ Mapeamento de branches:
 | Branch | Ambiente Terraform/SSM | GitHub Environment |
 | --- | --- | --- |
 | `homologacao` | `hom` | `homologacao` |
-| `main` ou `master` | `prod` | `producao` |
+| `main` | `prod` | `producao` |
 
 ### Configuração do GitHub
 
@@ -296,3 +302,8 @@ Abra `http://localhost:18081/swagger-ui/index.html`.
 - [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md): organização interna e decisões de arquitetura;
 - [`docs/EXECUCAO.md`](docs/EXECUCAO.md): roteiro resumido de execução e implantação;
 - [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md): diagnóstico dos problemas mais comuns.
+
+A observabilidade também é instalada pelo CI/CD da API. Configure os Secrets e
+variáveis dos Environments conforme [o guia Datadog](docs/OBSERVABILIDADE-DATADOG.md).
+Para as alterações de observabilidade, promova primeiro a autenticação e depois
+a API; o cluster e a infraestrutura do banco existentes são reutilizados.

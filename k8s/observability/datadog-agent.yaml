@@ -1,0 +1,37 @@
+apiVersion: datadoghq.com/v2alpha1
+kind: DatadogAgent
+metadata:
+  name: datadog
+  namespace: datadog
+spec:
+  override:
+    nodeAgent:
+      name: datadog-agent
+    clusterAgent:
+      name: datadog-cluster-agent
+  global:
+    # Replace per cluster. Site must match the Datadog account (US1 by default).
+    clusterName: oficina-hom
+    site: datadoghq.com
+    tags:
+      - env:hom
+      - project:oficina
+    credentials:
+      apiSecret:
+        secretName: datadog-secret
+        keyName: api-key
+  features:
+    kubeStateMetricsCore:
+      enabled: true
+    apm:
+      instrumentation:
+        enabled: true
+        enabledNamespaces:
+          - oficina
+    logCollection:
+      enabled: true
+      containerCollectAll: false
+    liveContainerCollection:
+      enabled: true
+    orchestratorExplorer:
+      enabled: true
