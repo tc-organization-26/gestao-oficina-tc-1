@@ -24,10 +24,29 @@ Essa configuração oferece mecanismos de escala e recuperação. O RDS usa `mul
 
 ## Navegação
 
+Os guias abaixo complementam este README com instruções de execução, configuração e diagnóstico.
+
+**Guias e documentos complementares**
+
+- [Instalação das ferramentas](docs/INSTALACAO-FERRAMENTAS.md) — instalar ferramentas e conferir o ambiente.
+- [Conta AWS comum](https://github.com/tc-organization-26/oficina-k8s-infra/blob/HEAD/docs/CONTA-AWS-COMUM.md) — preparar IAM, OIDC e adaptar a execução fora do Academy.
+- [Execução local](docs/EXECUCAO-LOCAL.md) — docker Compose, Java, testes e variáveis locais.
+- [Execução no laboratório AWS](docs/EXECUCAO-LAB-AWS.md) — checklist GitHub, ordem dos projetos, deploy e encerramento.
+- [Tecnologias e versões](docs/VERSOES.md) — tecnologias, bibliotecas, ferramentas utilizadas e versões.
+- [Referência da API](docs/API.md) — funcionalidades, métodos HTTP, rotas e autenticação.
+- [Validação do fluxo completo](docs/VALIDACAO-FLUXO.md) — preparação do Insomnia, Run folder e cenários de negócio.
+- [Arquitetura da solução](docs/ARQUITETURA-SOLUCAO.md) — componentes e sequências dos quatro projetos.
+- [Arquitetura interna](docs/ARQUITETURA-APLICACAO.md) — camadas e decisões Java.
+- [Arquitetura AWS](docs/architecture-diagram/README.md) — diagrama AWS, legenda e leitura dos componentes.
+- [Modelo relacional](docs/modelo-relacional/README.md) — tabelas, relações e evolução do schema.
+- [Observabilidade](docs/OBSERVABILIDADE.md) — métricas, logs, traces, alertas e validação da coleta.
+- [Troubleshooting](docs/TROUBLESHOOTING.md) — diagnóstico local e AWS, com guias dos quatro componentes.
+
+**Seções deste README**
+
 - [Fluxo de atendimento](#fluxo-de-atendimento)
 - [Status da ordem de serviço](#status-da-ordem-de-serviço)
 - [Valor gerado](#valor-gerado)
-- [Documentação e guias](#índice-da-documentação)
 - [Repositórios da solução](#repositórios-da-solução)
 - [Execução e deploy](#execução-e-deploy)
 - [Arquitetura](#arquitetura)
@@ -93,22 +112,6 @@ O orçamento possui estados próprios: `ABERTO`, `ENVIADO`, `APROVADO` e `RECUSA
 - construir a imagem pelo [`Dockerfile`](Dockerfile), usada no Compose e no EKS, e publicá-la no GitHub Container Registry (GHCR);
 - aplicar os manifests da API no EKS e acompanhar o rollout.
 
-## Índice da documentação
-
-| Assunto | Documento |
-| --- | --- |
-| Docker Compose, Java, testes e variáveis locais | [Execução local](docs/EXECUCAO-LOCAL.md) |
-| Checklist GitHub, ordem dos projetos, deploy e encerramento | [Execução na AWS](docs/EXECUCAO-AWS.md) |
-| Tecnologias, bibliotecas, ferramentas utilizadas e versões | [Tecnologias e versões](docs/VERSOES.md) |
-| Funcionalidades, métodos HTTP, rotas e autenticação | [Referência da API](docs/API.md) |
-| Preparação do Insomnia, Run folder e cenários de negócio | [Validação do fluxo completo](docs/VALIDACAO-FLUXO.md) |
-| Componentes e sequências dos quatro projetos | [Arquitetura da solução](docs/ARQUITETURA-SOLUCAO.md) |
-| Camadas e decisões Java | [Arquitetura interna](docs/ARQUITETURA-APLICACAO.md) |
-| Diagrama AWS, legenda e leitura dos componentes | [Arquitetura AWS](docs/architecture-diagram/README.md) |
-| Tabelas, relações e evolução do schema | [Modelo relacional](docs/modelo-relacional/README.md) |
-| Métricas, logs, traces, alertas e validação da coleta | [Observabilidade](docs/OBSERVABILIDADE.md) |
-| Diagnóstico local e AWS, com guias dos quatro componentes | [Troubleshooting](docs/TROUBLESHOOTING.md) |
-
 ## Repositórios da solução
 
 | Repositório | Responsabilidade |
@@ -124,9 +127,9 @@ O orçamento possui estados próprios: `ABERTO`, `ENVIADO`, `APROVADO` e `RECUSA
 
 Consulte o [guia de execução local](docs/EXECUCAO-LOCAL.md) para executar o projeto em sua máquina utilizando Docker.
 
-### Deploy e execução na AWS
+### Deploy e execução no laboratório AWS
 
-Prepare o [checklist de acessos e configurações](docs/EXECUCAO-AWS.md#checklist-inicial) e conclua as dependências na [ordem de implantação](docs/EXECUCAO-AWS.md#ordem-da-primeira-implantação). Em cada um dos repositórios, faça o merge para `homologacao` para disparar o deploy em `hom` e aguarde a conclusão.
+Prepare o [checklist de acessos e configurações](docs/EXECUCAO-LAB-AWS.md#checklist-inicial) e conclua as dependências na [ordem de implantação](docs/EXECUCAO-LAB-AWS.md#ordem-da-primeira-implantação). Em cada um dos repositórios, faça o merge para `homologacao` para disparar o deploy em `hom` e aguarde a conclusão.
 
 > O código contém adaptações educacionais de IAM e credenciais. Confira a observação do guia AWS antes de utilizá-lo em outra conta.
 
@@ -206,7 +209,7 @@ O deploy da API instala a observabilidade Datadog no EKS e configura dashboards 
 
 ### Fluxo de branches
 
-`fase-3` valida e abre PR para `homologacao`; `homologacao` faz deploy em `hom` e abre PR para `main`; `main` faz deploy em `prod`. Os merges são manuais. Executar manualmente em `fase-3` também só valida. Consulte [branches e ambientes](docs/EXECUCAO-AWS.md#branches-e-ambientes).
+`fase-3` valida e abre PR para `homologacao`; `homologacao` faz deploy em `hom` e abre PR para `main`; `main` faz deploy em `prod`. Os merges são manuais. Executar manualmente em `fase-3` também só valida. Consulte [branches e ambientes](docs/EXECUCAO-LAB-AWS.md#branches-e-ambientes).
 
 ## Troubleshooting
 

@@ -1,6 +1,6 @@
 # Troubleshooting — gestao-oficina-tc-1
 
-[README](../README.md) · [Execução local](EXECUCAO-LOCAL.md) · [Execução na AWS](EXECUCAO-AWS.md)
+[README](../README.md) · [Execução local](EXECUCAO-LOCAL.md) · [Execução no laboratório AWS](EXECUCAO-LAB-AWS.md)
 
 ## Troubleshooting de outros repositórios da solução
 
@@ -19,7 +19,7 @@ $env:AWS_DEFAULT_REGION = $oficinaRegion
 aws sts get-caller-identity
 ```
 
-Para produção, altere o ambiente para `prod` e confira a conta antes de prosseguir. As credenciais do GitHub não configuram o terminal; o [guia AWS](EXECUCAO-AWS.md#credenciais-e-ferramentas) explica os pré-requisitos de acesso. Ao compartilhar evidências, informe ambiente, horário, URL/caminho, status HTTP, ID do workflow e mensagem de erro. Remova tokens, senhas e valores de secrets dos trechos compartilhados.
+Para produção, altere o ambiente para `prod` e confira a conta antes de prosseguir. As credenciais do GitHub não configuram o terminal; o [guia AWS](EXECUCAO-LAB-AWS.md#credenciais-e-ferramentas) explica os pré-requisitos de acesso. Ao compartilhar evidências, informe ambiente, horário, URL/caminho, status HTTP, ID do workflow e mensagem de erro. Remova tokens, senhas e valores de secrets dos trechos compartilhados.
 
 ## Assuntos
 
@@ -358,7 +358,7 @@ Veja a etapa exata: o Terraform Datadog roda depois da atualização da API. Uma
 
 ### Environment sem DD_API_KEY, DD_APP_KEY ou destino de alertas
 
-Confira o [checklist AWS](EXECUCAO-AWS.md#checklist-inicial), o Environment selecionado e `TF_STATE_BUCKET`. O deploy atual exige esses valores. `DD_SITE` e `DD_API_URL` devem corresponder à mesma conta/região Datadog. Erros 401/403 do Datadog pedem verificar chaves, site e escopos da Application Key, não as credenciais AWS.
+Confira o [checklist AWS](EXECUCAO-LAB-AWS.md#checklist-inicial), o Environment selecionado e `TF_STATE_BUCKET`. O deploy atual exige esses valores. `DD_SITE` e `DD_API_URL` devem corresponder à mesma conta/região Datadog. Erros 401/403 do Datadog pedem verificar chaves, site e escopos da Application Key, não as credenciais AWS.
 
 ### Operator/Agent não sobe ou não há métricas, logs ou traces
 

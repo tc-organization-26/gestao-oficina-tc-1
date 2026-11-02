@@ -1,12 +1,12 @@
 # Validação do fluxo completo da oficina
 
-[README](../README.md) · [Contrato da API](API.md) · [Execução local](EXECUCAO-LOCAL.md) · [Execução AWS](EXECUCAO-AWS.md)
+[README](../README.md) · [Contrato da API](API.md) · [Execução local](EXECUCAO-LOCAL.md) · [Execução AWS](EXECUCAO-LAB-AWS.md)
 
 Este roteiro demonstra o atendimento da identificação do cliente à entrega do veículo. Use um ambiente de teste com dados fictícios. Ele complementa o readiness e o rollout com a verificação das operações de negócio.
 
 ## Preparar o ambiente
 
-1. Inicie API e PostgreSQL pelo [Docker Compose](EXECUCAO-LOCAL.md#api-e-banco-com-docker-compose) ou conclua a [implantação integrada na AWS](EXECUCAO-AWS.md#ordem-da-primeira-implantação).
+1. Inicie API e PostgreSQL pelo [Docker Compose](EXECUCAO-LOCAL.md#api-e-banco-com-docker-compose) ou conclua a [implantação integrada na AWS](EXECUCAO-LAB-AWS.md#ordem-da-primeira-implantação).
 2. Aguarde o Flyway e confirme `GET /actuator/health/readiness` com `status=UP`.
 3. Importe no Insomnia a [collection da API](../src/main/docs/insomnia/collection.yaml).
 4. Selecione o ambiente e revise os valores importados. A URL, o token e os UUIDs salvos na collection são exemplos de uma execução anterior; obtenha valores válidos para seu ambiente.

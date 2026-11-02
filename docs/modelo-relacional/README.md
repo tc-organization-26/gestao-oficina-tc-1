@@ -1,6 +1,6 @@
 # Modelo relacional do banco Oficina
 
-[README da API](../../README.md) · [Índice de documentação](../../README.md#índice-da-documentação)
+[README da API](../../README.md) · [Índice de documentação](../../README.md#navegação)
 
 Este documento descreve o schema PostgreSQL resultante das [migrations Flyway](../../src/main/resources/db/migration), executadas pela API na inicialização.
 

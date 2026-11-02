@@ -1,6 +1,6 @@
 # Sobre a API da Oficina
 
-[README](../README.md) · [Tecnologias e versões](VERSOES.md) · [Execução local](EXECUCAO-LOCAL.md) · [Execução na AWS](EXECUCAO-AWS.md)
+[README](../README.md) · [Tecnologias e versões](VERSOES.md) · [Execução local](EXECUCAO-LOCAL.md) · [Execução no laboratório AWS](EXECUCAO-LAB-AWS.md)
 
 ## Funcionalidades
 

@@ -1,6 +1,6 @@
 # Datadog
 
-[README](../README.md) · [Índice da documentação](../README.md#índice-da-documentação) · [Execução na AWS](EXECUCAO-AWS.md)
+[README](../README.md) · [Índice da documentação](../README.md#navegação) · [Execução no laboratório AWS](EXECUCAO-LAB-AWS.md)
 
 O Datadog foi integrado à aplicação para centralizar a coleta e a análise de métricas, logs e traces. Essa observabilidade permite acompanhar a saúde dos serviços, medir a latência das APIs, identificar falhas e analisar o consumo de recursos, facilitando o diagnóstico de problemas e o acompanhamento do ambiente em produção.
 
@@ -28,15 +28,15 @@ A esteira `.github/workflows/cicd.yml` faz a instalação completa da observabil
 
 ### Configuração e permissões
 
-Os nomes das configurações, os locais de cadastro e os valores padrão estão no [checklist do guia AWS](EXECUCAO-AWS.md#checklist-inicial). Durante o deploy, a esteira da API armazena a chave de API do Datadog no Secrets Manager, para que as funções Lambda do mesmo ambiente possam utilizá-la.
+Os nomes das configurações, os locais de cadastro e os valores padrão estão no [checklist do guia AWS](EXECUCAO-LAB-AWS.md#checklist-inicial). Durante o deploy, a esteira da API armazena a chave de API do Datadog no Secrets Manager, para que as funções Lambda do mesmo ambiente possam utilizá-la.
 
 As credenciais AWS precisam do acesso ao EKS/SSM/Secrets Manager e de leitura/escrita no state `oficina/observability/<hom|prod>.tfstate`, além de leitura/escrita/exclusão no arquivo `.tflock` correspondente. O acesso Kubernetes do runner deve permitir instalar o Operator, suas CRDs, RBAC e workloads.
 
 ### Ordem de promoção
 
-Na primeira instalação, siga a [ordem completa dos quatro projetos](EXECUCAO-AWS.md#ordem-da-primeira-implantação), incluindo a reexecução da autenticação após a API para habilitar suas layers Datadog.
+Na primeira instalação, siga a [ordem completa dos quatro projetos](EXECUCAO-LAB-AWS.md#ordem-da-primeira-implantação), incluindo a reexecução da autenticação após a API para habilitar suas layers Datadog.
 
-Implante a API e valide a coleta antes de promover para produção; repita o deploy Lambda se a instrumentação compartilhada tiver mudado. Rede e banco só precisam de nova implantação quando houver alterações nesses componentes. O [merge dispara o deploy automaticamente](EXECUCAO-AWS.md#primeiro-deploy-e-reexecuções).
+Implante a API e valide a coleta antes de promover para produção; repita o deploy Lambda se a instrumentação compartilhada tiver mudado. Rede e banco só precisam de nova implantação quando houver alterações nesses componentes. O [merge dispara o deploy automaticamente](EXECUCAO-LAB-AWS.md#primeiro-deploy-e-reexecuções).
 
 ### Etapas automáticas da inicialização
 

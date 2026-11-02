@@ -1,6 +1,6 @@
 # Diagrama integrado da arquitetura AWS
 
-[README da API](../../README.md) · [Índice de documentação](../../README.md#índice-da-documentação)
+[README da API](../../README.md) · [Índice de documentação](../../README.md#navegação)
 
 O diagrama a seguir foi construído com base nesta solução, que consiste em quatro repositórios. Representa os recursos e fluxos do projeto.
 
