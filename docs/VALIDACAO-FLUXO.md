@@ -8,7 +8,7 @@ Este roteiro demonstra o atendimento da identificação do cliente à entrega do
 
 1. Inicie API e PostgreSQL pelo [Docker Compose](EXECUCAO-LOCAL.md#api-e-banco-com-docker-compose) ou conclua a [implantação integrada na AWS](EXECUCAO-LAB-AWS.md#ordem-da-primeira-implantação).
 2. Aguarde o Flyway e confirme `GET /actuator/health/readiness` com `status=UP`.
-3. Importe no Insomnia a [collection da API](../src/main/docs/insomnia/collection.yaml).
+3. Importe no Insomnia a [collection da API](../src/main/resources/insomnia/collection.yaml).
 4. Selecione o ambiente e revise os valores importados. A URL, o token e os UUIDs salvos na collection são exemplos de uma execução anterior; obtenha valores válidos para seu ambiente.
 
 | Variável | Preparação |

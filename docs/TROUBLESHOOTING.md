@@ -232,7 +232,7 @@ Confira o status atual, pagamento, vínculos de cliente/veículo, códigos de ca
 
 ### Collection aponta para ambiente antigo ou usa IDs de outra execução
 
-Importe [a collection atual](../src/main/docs/insomnia/collection.yaml), selecione o ambiente e ajuste `BASE_URL`, `TOKEN` e IDs/códigos utilizados. URL do Gateway muda após recriação. Objetos cadastrados em um banco não existem automaticamente em outro. O login por CPF depende do primeiro startup com Flyway.
+Importe [a collection atual](../src/main/resources/insomnia/collection.yaml), selecione o ambiente e ajuste `BASE_URL`, `TOKEN` e IDs/códigos utilizados. URL do Gateway muda após recriação. Objetos cadastrados em um banco não existem automaticamente em outro. O login por CPF depende do primeiro startup com Flyway.
 
 ### Navegador acusa CORS, mas Insomnia funciona
 

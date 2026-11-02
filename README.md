@@ -160,7 +160,7 @@ A [arquitetura integrada](docs/ARQUITETURA-SOLUCAO.md) apresenta detalhes sobre 
 
 ## Acesso à API
 
-- [Collection Insomnia](src/main/docs/insomnia/collection.yaml): os logins usam CPF para AWS; configure `BASE_URL` e as variáveis do ambiente. Para execução local, adapte o login para `{login, senha}` conforme o [guia local](docs/EXECUCAO-LOCAL.md#login-e-chamada-protegida).
+- [Collection Insomnia](src/main/resources/insomnia/collection.yaml): os logins usam CPF para AWS; configure `BASE_URL` e as variáveis do ambiente. Para execução local, adapte o login para `{login, senha}` conforme o [guia local](docs/EXECUCAO-LOCAL.md#login-e-chamada-protegida).
 - Local: [Swagger](http://localhost:8081/swagger-ui/index.html) e [OpenAPI](http://localhost:8081/v3/api-docs).
 - AWS: consulte os [deployments](https://github.com/tc-organization-26/gestao-oficina-tc-1/deployments) ou o resumo da execução do workflow. A URL muda entre ambientes e recriações.
 - Swagger/OpenAPI no Gateway exigem JWT. Para abrir a interface diretamente no navegador, use o port-forward do guia AWS.
@@ -169,7 +169,7 @@ Mais sobre rotas e funcionalidades da API [aqui](docs/API.md).
 
 ## Validação do fluxo completo
 
-Importe a [collection Insomnia](src/main/docs/insomnia/collection.yaml), configure o ambiente e execute a pasta **FLUXO COMPLETO** com **Run folder**, respeitando a ordem apresentada no runner. O [roteiro de demonstração](docs/VALIDACAO-FLUXO.md) explica login local ou AWS, cliente inicial, códigos e placa únicos, variáveis atualizadas pelos scripts e resultados esperados de cada etapa.
+Importe a [collection Insomnia](src/main/resources/insomnia/collection.yaml), configure o ambiente e execute a pasta **FLUXO COMPLETO** com **Run folder**, respeitando a ordem apresentada no runner. O [roteiro de demonstração](docs/VALIDACAO-FLUXO.md) explica login local ou AWS, cliente inicial, códigos e placa únicos, variáveis atualizadas pelos scripts e resultados esperados de cada etapa.
 
 Além do caminho principal, o roteiro cobre recusa, revisão do orçamento, falta de peças e baixa de estoque como verificações separadas. O sucesso do deploy e do readiness deve ser complementado pela validação das operações de negócio.
 
