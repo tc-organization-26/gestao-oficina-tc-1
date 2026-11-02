@@ -57,6 +57,8 @@ Invoke-RestMethod -Uri "$baseUrl/clientes" -Headers $headers
 
 Também é possível usar **Authorize** no Swagger com o token retornado. O CPF fictício `003.619.370-40` é inserido pelo Flyway para o fluxo da Lambda, mas não substitui as credenciais do login Java.
 
+Para demonstrar o atendimento até pagamento e entrega, siga o [roteiro do fluxo completo no Insomnia](VALIDACAO-FLUXO.md). Ajuste o login da pasta **FLUXO COMPLETO** para o corpo Java antes de usar **Run folder** localmente.
+
 ## Java na máquina e banco no Docker
 
 Com `.env` preparado, suba somente o banco e defina as variáveis da aplicação no terminal. O comando Java não carrega `.env` automaticamente:

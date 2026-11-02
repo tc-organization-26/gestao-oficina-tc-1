@@ -153,3 +153,5 @@ No acesso direto, a configuração Spring libera `/swagger-ui.html`, `/swagger-u
 As criações de cliente, veículo, serviço, item de estoque e OS retornam `201 Created`; exclusões retornam `204 No Content`. Os demais handlers dos controllers retornam `200 OK` quando concluídos com sucesso. Os endpoints de saúde podem retornar outro status conforme o estado da aplicação e das dependências.
 
 Consulte os schemas de entrada e saída no [Swagger local](http://localhost:8081/swagger-ui/index.html) e a [collection Insomnia](../src/main/docs/insomnia/collection.yaml).
+
+O [roteiro de validação do fluxo completo](VALIDACAO-FLUXO.md) explica a preparação da collection, a execução com **Run folder**, os resultados esperados e os cenários de recusa, revisão de orçamento e movimentação de estoque.

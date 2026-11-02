@@ -2,6 +2,88 @@
 
 API REST de gestão de oficina em Java e Spring Boot. Este repositório mantém regras de negócio, migrations Flyway, imagem Docker e deploy da aplicação no EKS. Para desenvolver localmente, basta este repositório e possuir Docker; os outros três são necessários para a implantação integrada na AWS.
 
+## Contexto e problema do negócio
+
+A solução atende ao fluxo de uma oficina mecânica de médio porte, desde o primeiro atendimento até a retirada do veículo. Processos espalhados em anotações manuais e planilhas dificultam localizar clientes e veículos, preservar históricos, controlar peças e acompanhar a aprovação de orçamentos.
+
+O projeto centraliza essas informações em uma API: atendentes registram o atendimento, mecânicos informam diagnóstico e execução, e a gestão acompanha ordens de serviço, estoque e tempo médio de execução. Esses atores descrevem o processo de negócio; a autorização atual ainda não diferencia suas permissões por papel.
+
+## Objetivo da fase atual
+
+A evolução busca preparar a oficina para aumento de demanda, expansão do atendimento e horários de pico, com provisionamento reproduzível, entrega automatizada e visibilidade operacional. A implementação atual reúne:
+
+- monolito modular em Clean Architecture, com testes e migrations versionadas;
+- API no EKS, HPA de 2 a 6 réplicas e Cluster Autoscaler para capacidade dos nós;
+- PostgreSQL privado no RDS, com backups e credencial gerenciada;
+- login por CPF em Lambda, JWT e Authorizer no API Gateway;
+- infraestrutura Terraform separada em componentes e ambientes;
+- GitHub Actions para validação, publicação no GHCR e deploy;
+- Datadog para métricas, logs, traces e alertas, com monitoramento externo descrito no guia de observabilidade.
+
+Essa configuração oferece mecanismos de escala e recuperação. O RDS usa `multi_az=false` por padrão, e a rede usa um NAT Gateway. A expansão para novas unidades é uma motivação do projeto, sem cadastro ou isolamento por filial implementado.
+
+## Navegação
+
+- [Fluxo de atendimento](#fluxo-de-atendimento)
+- [Status da ordem de serviço](#status-da-ordem-de-serviço)
+- [Valor gerado](#valor-gerado)
+- [Documentação e guias](#índice-da-documentação)
+- [Repositórios da solução](#repositórios-da-solução)
+- [Execução e deploy](#execução-e-deploy)
+- [Arquitetura](#arquitetura)
+- [Recursos e acesso à API](#acesso-à-api)
+- [Validação do fluxo completo](#validação-do-fluxo-completo)
+- [Troubleshooting](#troubleshooting)
+
+## Fluxo de atendimento
+
+1. **Identificar o cliente.** O atendente consulta CPF/CNPJ e cadastra o cliente quando necessário. Consulta também os veículos vinculados e as ordens de serviço disponíveis para esse cliente.
+2. **Selecionar o veículo.** Localiza o veículo cadastrado ou cria o vínculo com o cliente.
+3. **Abrir a ordem de serviço.** Registra cliente, veículo, serviços, peças e anotações. A API gera UUID, número da OS e orçamento inicial, com status `RECEBIDA`. As listas de serviços e peças podem começar vazias.
+4. **Realizar o diagnóstico.** Altera a OS para `EM_DIAGNOSTICO`, registra a avaliação técnica e compõe o orçamento com códigos do catálogo de serviços e estoque.
+5. **Verificar peças.** Ao incluir peças no orçamento, o sistema consulta disponibilidade. A falta de peças publica um evento interno para acompanhamento, atualmente tratado por logs; essa etapa não reserva nem baixa estoque automaticamente.
+6. **Enviar para aprovação.** Altera a OS para `AGUARDANDO_APROVACAO`, fechando o orçamento para decisão. A API registra aprovação ou recusa; a recusa não inicia a execução.
+7. **Executar o serviço.** Com orçamento aprovado, altera a OS para `EM_EXECUCAO`. As retiradas de peças são registradas pela operação de baixa de estoque.
+8. **Tratar ajustes.** Se for necessário revisar um orçamento enquanto a OS aguarda aprovação ou está em execução, altera a OS para `EM_DIAGNOSTICO`, reabrindo o orçamento. A reabertura atual limpa os itens de serviço e mantém os de peça; confira a composição e recadastre os serviços necessários. Após os ajustes, envia novamente para aprovação antes de retomar a execução.
+9. **Finalizar e receber pagamento.** Altera a OS para `FINALIZADA` e registra o pagamento. O registro é uma confirmação interna; o projeto não integra uma adquirente ou processador de pagamentos.
+10. **Entregar o veículo.** Com a OS finalizada e paga, altera para `ENTREGUE`. A consulta individual permite acompanhar os dados da ordem; a API também oferece tempo médio de execução.
+
+```mermaid
+flowchart LR
+    recebida[Recebida] --> diagnostico[Em diagnóstico]
+    diagnostico --> aprovacao[Aguardando aprovação]
+    aprovacao -->|Orçamento aprovado e início solicitado| execucao[Em execução]
+    aprovacao -->|Ajuste| diagnostico
+    execucao -->|Ajuste| diagnostico
+    execucao --> finalizada[Finalizada]
+    finalizada -->|Pagamento registrado e entrega solicitada| entregue[Entregue]
+```
+
+As mudanças de etapa são chamadas explícitas à API. Aprovar o orçamento não inicia a execução automaticamente, e registrar pagamento não entrega o veículo. As notificações atuais são eventos internos com listeners de log, sem envio integrado de e-mail ou SMS. Os métodos, corpos e caminhos estão na [referência da API](docs/API.md).
+
+## Status da ordem de serviço
+
+| Status da API | Significado no atendimento |
+| --- | --- |
+| `RECEBIDA` | Atendimento e OS registrados |
+| `EM_DIAGNOSTICO` | Avaliação técnica ou revisão de orçamento |
+| `AGUARDANDO_APROVACAO` | Orçamento enviado, aguardando decisão |
+| `EM_EXECUCAO` | Serviços em andamento após aprovação |
+| `FINALIZADA` | Serviços concluídos, antes da entrega |
+| `ENTREGUE` | Entrega registrada após confirmação de pagamento |
+
+O orçamento possui estados próprios: `ABERTO`, `ENVIADO`, `APROVADO` e `RECUSADO`. Consulte o [modelo relacional e histórico de status](docs/modelo-relacional/README.md) para persistência e rastreabilidade.
+
+## Valor gerado
+
+- centralização de clientes, veículos, diagnósticos, orçamentos e ordens de serviço;
+- rastreabilidade das mudanças de status e das peças incluídas nos atendimentos;
+- controle explícito de aprovação, execução, pagamento e entrega;
+- consulta e movimentação do estoque, com sinalização interna de indisponibilidade;
+- acompanhamento do tempo médio de execução para apoiar a gestão;
+- reprodução dos ambientes e redução de passos manuais de implantação;
+- diagnóstico de falhas com logs, métricas, traces e alertas.
+
 ## Responsabilidades deste repositório
 
 - implementar os casos de uso de clientes, veículos, serviços, estoque e ordens de serviço;
@@ -19,6 +101,7 @@ API REST de gestão de oficina em Java e Spring Boot. Este repositório mantém 
 | Checklist GitHub, ordem dos projetos, deploy e encerramento | [Execução na AWS](docs/EXECUCAO-AWS.md) |
 | Tecnologias, bibliotecas, ferramentas utilizadas e versões | [Tecnologias e versões](docs/VERSOES.md) |
 | Funcionalidades, métodos HTTP, rotas e autenticação | [Referência da API](docs/API.md) |
+| Preparação do Insomnia, Run folder e cenários de negócio | [Validação do fluxo completo](docs/VALIDACAO-FLUXO.md) |
 | Componentes e sequências dos quatro projetos | [Arquitetura da solução](docs/ARQUITETURA-SOLUCAO.md) |
 | Camadas e decisões Java | [Arquitetura interna](docs/ARQUITETURA-APLICACAO.md) |
 | Diagrama AWS, legenda e leitura dos componentes | [Arquitetura AWS](docs/architecture-diagram/README.md) |
@@ -78,6 +161,12 @@ A [arquitetura integrada](docs/ARQUITETURA-SOLUCAO.md) apresenta detalhes sobre 
 - Swagger/OpenAPI no Gateway exigem JWT. Para abrir a interface diretamente no navegador, use o port-forward do guia AWS.
 
 Mais sobre rotas e funcionalidades da API [aqui](docs/API.md).
+
+## Validação do fluxo completo
+
+Importe a [collection Insomnia](src/main/docs/insomnia/collection.yaml), configure o ambiente e execute a pasta **FLUXO COMPLETO** com **Run folder**, respeitando a ordem apresentada no runner. O [roteiro de demonstração](docs/VALIDACAO-FLUXO.md) explica login local ou AWS, cliente inicial, códigos e placa únicos, variáveis atualizadas pelos scripts e resultados esperados de cada etapa.
+
+Além do caminho principal, o roteiro cobre recusa, revisão do orçamento, falta de peças e baixa de estoque como verificações separadas. O sucesso do deploy e do readiness deve ser complementado pela validação das operações de negócio.
 
 ## Banco e migrations
 
