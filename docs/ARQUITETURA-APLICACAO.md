@@ -10,6 +10,10 @@ As [funcionalidades e rotas](API.md#funcionalidades) estão na referência técn
 
 ## Clean Architecture
 
+![Diagrama conceitual das camadas de Clean Architecture](../src/main/resources/clean-arq.png)
+
+A imagem apresenta a referência conceitual usada no projeto. Na API, as quatro camadas correspondem aos pacotes `domain`, `application`, `interfaceadapters` e `frameworks`, detalhados abaixo.
+
 O projeto foi implementado como um monolito modular utilizando Clean Architecture. A ideia principal é proteger o domínio do negócio contra mudanças externas, como por exemplo tecnologias utilizadas no client ou no banco de dados.
 
 No contexto desta API, regras como criação de ordem de serviço, aprovação de orçamento, baixa de estoque, cadastro de cliente e controle de veículos não dependem diretamente de HTTP, banco de dados, Spring, JWT ou JPA.

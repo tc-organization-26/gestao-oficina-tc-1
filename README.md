@@ -36,7 +36,7 @@ Os guias abaixo complementam este README com instruções de execução, configu
 - [Referência da API](docs/API.md) — funcionalidades, métodos HTTP, rotas e autenticação.
 - [Validação do fluxo completo](docs/VALIDACAO-FLUXO.md) — preparação do Insomnia, Run folder e cenários de negócio.
 - [Arquitetura da solução](docs/ARQUITETURA-SOLUCAO.md) — componentes e sequências dos quatro projetos.
-- [Arquitetura interna](docs/ARQUITETURA-APLICACAO.md) — camadas e decisões Java.
+- [Arquitetura da aplicação](docs/ARQUITETURA-APLICACAO.md) — Clean Architecture, diagrama das camadas e decisões Java.
 - [Arquitetura AWS](docs/architecture-diagram/README.md) — diagrama AWS, legenda e leitura dos componentes.
 - [Modelo relacional](docs/modelo-relacional/README.md) — tabelas, relações e evolução do schema.
 - [Observabilidade](docs/OBSERVABILIDADE.md) — métricas, logs, traces, alertas e validação da coleta.
@@ -134,6 +134,8 @@ Prepare o [checklist de acessos e configurações](docs/EXECUCAO-LAB-AWS.md#chec
 > O código contém adaptações educacionais de IAM e credenciais. Confira a observação do guia AWS antes de utilizá-lo em outra conta.
 
 ## Arquitetura
+
+### Componentes da aplicação
 
 ```mermaid
 flowchart LR
