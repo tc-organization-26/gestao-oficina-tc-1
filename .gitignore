@@ -45,3 +45,6 @@ tfplan
 !terraform.tfvars.example
 
 __pycache__/
+
+### Arquivos temporários locais ###
+/tmp/
