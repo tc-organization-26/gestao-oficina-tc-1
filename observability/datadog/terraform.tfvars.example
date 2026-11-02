@@ -1,0 +1,5 @@
+environment         = "hom"
+datadog_api_url     = "https://api.datadoghq.com/"
+notification_target = "@seu-email@exemplo.com"
+latency_p95_ms       = 1000
+# Uptime externo usa UptimeRobot; nao cria Datadog Synthetics.

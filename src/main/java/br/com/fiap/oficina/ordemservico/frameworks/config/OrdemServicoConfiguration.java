@@ -15,6 +15,11 @@ import br.com.fiap.oficina.ordemservico.application.usecases.interactors.Orcamen
 import br.com.fiap.oficina.ordemservico.application.usecases.interactors.OrdemServicoApplicationService;
 import br.com.fiap.oficina.servico.application.gateways.ServicoGateway;
 import jakarta.persistence.EntityManager;
+import br.com.fiap.oficina.ordemservico.frameworks.observability.OrdemServicoComHistoricoGateway;
+import br.com.fiap.oficina.ordemservico.frameworks.persistence.jpa.HistoricoStatusOrdemServicoJpa;
+import br.com.fiap.oficina.ordemservico.interfaceadapters.observability.TransicaoStatusLogPublisher;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,8 +65,10 @@ public class OrdemServicoConfiguration {
     public OrdemServicoGateway ordemServicoGateway(
             SpringDataOrdemServicoRepository springDataRepository,
             OrcamentoSpringDataRepository orcamentoSpringDataRepository,
-            EntityManager entityManager) {
-        return new OrdemServicoJpaGateway(springDataRepository, orcamentoSpringDataRepository, entityManager);
+            EntityManager entityManager, PlatformTransactionManager transactionManager) {
+        var persistence = new OrdemServicoJpaGateway(springDataRepository, orcamentoSpringDataRepository, entityManager);
+        return new OrdemServicoComHistoricoGateway(persistence, new HistoricoStatusOrdemServicoJpa(entityManager),
+                new TransicaoStatusLogPublisher(), new TransactionTemplate(transactionManager));
     }
 
     @Bean
