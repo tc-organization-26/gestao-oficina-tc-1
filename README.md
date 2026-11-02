@@ -31,7 +31,7 @@ Os guias abaixo complementam este README com instruções de execução, configu
 - [Instalação das ferramentas](docs/INSTALACAO-FERRAMENTAS.md) — instalar ferramentas e conferir o ambiente.
 - [Conta AWS comum](https://github.com/tc-organization-26/oficina-k8s-infra/blob/HEAD/docs/CONTA-AWS-COMUM.md) — preparar IAM, OIDC e adaptar a execução fora do Academy.
 - [Execução local](docs/EXECUCAO-LOCAL.md) — docker Compose, Java, testes e variáveis locais.
-- [Execução no laboratório AWS](docs/EXECUCAO-LAB-AWS.md) — checklist GitHub, ordem dos projetos, deploy e encerramento.
+- [Execução no laboratório AWS](docs/EXECUCAO-LAB-AWS.md) — checklist GitHub, ordem dos projetos, deploy e destroy.
 - [Tecnologias e versões](docs/VERSOES.md) — tecnologias, bibliotecas, ferramentas utilizadas e versões.
 - [Referência da API](docs/API.md) — funcionalidades, métodos HTTP, rotas e autenticação.
 - [Validação do fluxo completo](docs/VALIDACAO-FLUXO.md) — preparação do Insomnia, Run folder e cenários de negócio.

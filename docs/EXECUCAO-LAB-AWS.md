@@ -128,7 +128,7 @@ Abra `http://localhost:18081/swagger-ui/index.html`. O port-forward não passa p
 
 Consulte o [troubleshooting deste repositório](TROUBLESHOOTING.md) para credenciais, branches, dependências e falhas do componente.
 
-## Encerramento do ambiente
+## Executando destroy
 
 Remova os workloads da API antes das dependências. Os manifests estão em `k8s/cloud/`; não exclua um namespace compartilhado sem conferir os recursos existentes. A observabilidade mantém state próprio em `oficina/observability/ENV.tfstate`: remova os recursos Datadog com esse mesmo state e desinstale Agents/Operator antes do EKS. UptimeRobot é externo e precisa de remoção/atualização manual.
 
