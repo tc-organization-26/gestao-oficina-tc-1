@@ -87,7 +87,7 @@ terraform version
 
 Se houver várias instalações, ajuste a prioridade no `Path`. O diretório `.terraform` de cada repositório contém providers e módulos baixados pelo `terraform init`; ele não é a instalação da CLI.
 
-Para validar, siga o guia de cada componente. Na plataforma atual, a sequência inclui `terraform init -backend=false`, o patch educacional via `pwsh` e `terraform validate`. Na adaptação para conta comum, retire o patch conforme o [guia de preparação AWS](https://github.com/tc-organization-26/oficina-k8s-infra/blob/HEAD/docs/CONTA-AWS-COMUM.md).
+Para validar, siga o guia de cada componente. Na plataforma atual, a sequência inclui `terraform init -backend=false`, o patch educacional via `pwsh` e `terraform validate`. Na adaptação para conta comum, retire o patch conforme o [guia de preparação AWS](https://github.com/tc-organization-26/oficina-k8s-infra/blob/main/docs/CONTA-AWS-COMUM.md).
 
 ## AWS CLI v2
 
@@ -97,7 +97,7 @@ Instale a CLI v2 usando o MSI indicado na [documentação AWS para Windows](http
 aws --version
 ```
 
-O resultado deve começar com `aws-cli/2`. Instalar a ferramenta não configura a identidade. Use as credenciais temporárias do Academy conforme os guias atuais ou configure um perfil federado conforme o [roteiro de conta comum](https://github.com/tc-organization-26/oficina-k8s-infra/blob/HEAD/docs/CONTA-AWS-COMUM.md#identidade-humana-e-perfil-local).
+O resultado deve começar com `aws-cli/2`. Instalar a ferramenta não configura a identidade. Use as credenciais temporárias do Academy conforme os guias atuais ou configure um perfil federado conforme o [roteiro de conta comum](https://github.com/tc-organization-26/oficina-k8s-infra/blob/main/docs/CONTA-AWS-COMUM.md#identidade-humana-e-perfil-local).
 
 ## kubectl e Helm
 

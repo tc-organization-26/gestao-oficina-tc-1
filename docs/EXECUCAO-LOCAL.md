@@ -2,7 +2,7 @@
 
 [README](../README.md) · [AWS](EXECUCAO-LAB-AWS.md) · [Problemas comuns](TROUBLESHOOTING.md)
 
-Para preparar o computador, consulte a [instalação das ferramentas](INSTALACAO-FERRAMENTAS.md). Para executar fora do Academy/Vocareum, siga a [preparação de conta AWS comum](https://github.com/tc-organization-26/oficina-k8s-infra/blob/HEAD/docs/CONTA-AWS-COMUM.md), incluindo as adaptações de IAM, Terraform e workflows.
+Para preparar o computador, consulte a [instalação das ferramentas](INSTALACAO-FERRAMENTAS.md). Para executar fora do Academy/Vocareum, siga a [preparação de conta AWS comum](https://github.com/tc-organization-26/oficina-k8s-infra/blob/main/docs/CONTA-AWS-COMUM.md), incluindo as adaptações de IAM, Terraform e workflows.
 
 Execute os comandos na raiz deste repositório. Os exemplos usam PowerShell no Windows; em Linux/macOS, use `cp .env.example .env` e `./mvnw` no lugar de `./mvnw.cmd`.
 

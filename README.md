@@ -29,7 +29,7 @@ Os guias abaixo complementam este README com instruções de execução, configu
 **Guias e documentos complementares**
 
 - [Instalação das ferramentas](docs/INSTALACAO-FERRAMENTAS.md) — instalar ferramentas e conferir o ambiente.
-- [Conta AWS comum](https://github.com/tc-organization-26/oficina-k8s-infra/blob/HEAD/docs/CONTA-AWS-COMUM.md) — preparar IAM, OIDC e adaptar a execução fora do Academy.
+- [Conta AWS comum](https://github.com/tc-organization-26/oficina-k8s-infra/blob/main/docs/CONTA-AWS-COMUM.md) — preparar IAM, OIDC e adaptar a execução fora do Academy.
 - [Execução local](docs/EXECUCAO-LOCAL.md) — docker Compose, Java, testes e variáveis locais.
 - [Execução no laboratório AWS](docs/EXECUCAO-LAB-AWS.md) — checklist GitHub, ordem dos projetos, deploy e destroy.
 - [Tecnologias e versões](docs/VERSOES.md) — tecnologias, bibliotecas, ferramentas utilizadas e versões.
@@ -37,6 +37,7 @@ Os guias abaixo complementam este README com instruções de execução, configu
 - [Validação do fluxo completo](docs/VALIDACAO-FLUXO.md) — preparação do Insomnia, Run folder e cenários de negócio.
 - [Arquitetura da solução](docs/ARQUITETURA-SOLUCAO.md) — componentes e sequências dos quatro projetos.
 - [Arquitetura da aplicação](docs/ARQUITETURA-APLICACAO.md) — Clean Architecture, diagrama das camadas e decisões Java.
+- [Decisões técnicas e arquiteturais](docs/decisions/README.md) — RFCs e ADRs com contexto, escolhas e consequências.
 - [Arquitetura AWS](docs/architecture-diagram/README.md) — diagrama AWS, legenda e leitura dos componentes.
 - [Modelo relacional](docs/modelo-relacional/README.md) — tabelas, relações e evolução do schema.
 - [Observabilidade](docs/OBSERVABILIDADE.md) — métricas, logs, traces, alertas e validação da coleta.
@@ -50,6 +51,7 @@ Os guias abaixo complementam este README com instruções de execução, configu
 - [Repositórios da solução](#repositórios-da-solução)
 - [Execução e deploy](#execução-e-deploy)
 - [Arquitetura](#arquitetura)
+- [Decisões técnicas e arquiteturais](#decisões-técnicas-e-arquiteturais)
 - [Recursos e acesso à API](#acesso-à-api)
 - [Validação do fluxo completo](#validação-do-fluxo-completo)
 - [Troubleshooting](#troubleshooting)
@@ -158,11 +160,17 @@ flowchart LR
 
 A [arquitetura integrada](docs/ARQUITETURA-SOLUCAO.md) apresenta detalhes sobre os quatro componentes e suas sequências.
 
+## Decisões técnicas e arquiteturais
+
+As [RFCs](docs/decisions/rfcs) descrevem as propostas técnicas, alternativas e impactos esperados. Os [ADRs](docs/decisions/adrs) registram o contexto, as decisões arquiteturais adotadas e suas consequências.
+
+Consulte o [índice de decisões](docs/decisions/README.md) para acessar os documentos sobre AWS, PostgreSQL no RDS, autenticação com Lambda e JWT, comunicação HTTP/REST, EKS, HPA, rede privada, Flyway, separação de repositórios e states Terraform e observabilidade com Datadog.
+
 ## Acesso à API
 
 - [Collection Insomnia](src/main/resources/insomnia/collection.yaml): inclui o login por CPF da Lambda (`POST /auth/login`) e os fluxos de negócio da API; configure `BASE_URL` e as variáveis do ambiente. Para execução local, adapte o login para `{login, senha}` conforme o [guia local](docs/EXECUCAO-LOCAL.md#login-e-chamada-protegida).
 - Local: [Swagger](http://localhost:8081/swagger-ui/index.html) e [OpenAPI](http://localhost:8081/v3/api-docs).
-- AWS: consulte os [deployments](https://github.com/tc-organization-26/gestao-oficina-tc-1/deployments) ou o resumo da execução do workflow. A URL muda entre ambientes e recriações.
+- AWS: consulte o resumo da execução de deploy no [histórico do workflow](https://github.com/tc-organization-26/gestao-oficina-tc-1/actions/workflows/cicd.yml). A URL muda entre ambientes e recriações.
 - Swagger/OpenAPI no Gateway exigem JWT. Para abrir a interface diretamente no navegador, use o port-forward do guia AWS.
 
 Mais sobre rotas e funcionalidades da API [aqui](docs/API.md).
@@ -220,6 +228,6 @@ Os guias reúnem sintomas, comandos de diagnóstico e correções por assunto. C
 | Componente | Guia de diagnóstico |
 | --- | --- |
 | Aplicação | [Troubleshooting da Oficina API](docs/TROUBLESHOOTING.md) |
-| Plataforma | [Bootstrap, EKS, rede, NLB e API Gateway](https://github.com/tc-organization-26/oficina-k8s-infra/blob/HEAD/docs/TROUBLESHOOTING.md) |
-| Banco | [RDS, conectividade, credenciais, backups e snapshots](https://github.com/tc-organization-26/oficina-db-infra/blob/HEAD/docs/TROUBLESHOOTING.md) |
-| Autenticação | [Python, Lambda, login por CPF e Authorizer](https://github.com/tc-organization-26/oficina-auth-lambda/blob/HEAD/docs/TROUBLESHOOTING.md) |
+| Plataforma | [Bootstrap, EKS, rede, NLB e API Gateway](https://github.com/tc-organization-26/oficina-k8s-infra/blob/main/docs/TROUBLESHOOTING.md) |
+| Banco | [RDS, conectividade, credenciais, backups e snapshots](https://github.com/tc-organization-26/oficina-db-infra/blob/main/docs/TROUBLESHOOTING.md) |
+| Autenticação | [Python, Lambda, login por CPF e Authorizer](https://github.com/tc-organization-26/oficina-auth-lambda/blob/main/docs/TROUBLESHOOTING.md) |
