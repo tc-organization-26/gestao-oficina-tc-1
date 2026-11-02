@@ -162,7 +162,7 @@ sequenceDiagram
         API-->>Rede: 201 Created, Location e {id, numero}
         Rede-->>Gateway: Resposta HTTP
         Gateway-->>Cliente: 201 Created
-        API-->>Obs: Log HTTP com status, duração e request_id; trace quando ativo
+        API-->>Obs: Log HTTP com status, duração e request_id, com trace quando ativo
     end
 ```
 
