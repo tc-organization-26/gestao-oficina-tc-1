@@ -6,19 +6,7 @@
 
 A oficina precisa de um sistema back-end para organizar o fluxo de atendimento, diagnóstico, orçamento, execução e entrega dos veículos. O objetivo do MVP é oferecer uma base funcional, segura e documentada para que clientes, atendentes, mecânicos e gestores acompanhem o ciclo completo de uma ordem de serviço.
 
-O sistema contempla:
-
-- Gestão de clientes.
-- Gestão de veículos.
-- Gestão de serviços.
-- Gestão de peças e insumos com controle de estoque.
-- Criação e acompanhamento de ordens de serviço.
-- Orçamentos com serviços e peças.
-- Aprovação, recusa e ajustes de orçamento.
-- Acompanhamento do status da OS.
-- Autenticação com JWT para APIs administrativas.
-- Documentação da API com Swagger.
-- Execução local e deploy em Kubernetes.
+As [funcionalidades e rotas](API.md#funcionalidades) estão na referência técnica. A [arquitetura da solução](ARQUITETURA-SOLUCAO.md) mostra as conexões com infraestrutura, banco e autenticação; este documento explica as camadas Java.
 
 ## Clean Architecture
 
@@ -113,7 +101,7 @@ Falhas dos casos de uso são observadas por proxies configurados em `frameworks`
 inclusive em chamadas fora de HTTP. O filtro de requisições conhece somente HTTP.
 Testes ArchUnit verificam a independência de `domain` e `application`, e impedem
 dependências do pacote compartilhado no módulo de ordens de serviço. Os detalhes
-operacionais estão em [Observabilidade com Datadog](OBSERVABILIDADE-DATADOG.md).
+operacionais estão em [Observabilidade com Datadog](OBSERVABILIDADE.md).
 
 Cada módulo funcional segue a mesma separação:
 
@@ -151,18 +139,14 @@ Módulos principais:
 
 Esse fluxo mantém controllers focados em HTTP, casos de uso focados na intenção da aplicação, entidades focadas nas regras essenciais e frameworks focados nos detalhes técnicos.
 
-## Por que PostgreSQL
+## Por que a utilização de banco de dados relacional?
 
-O PostgreSQL foi escolhido por ser um banco relacional robusto e adequado para sistemas transacionais.
-
-A escolha faz sentido porque:
+A escolha de um banco relacional robusto faz sentido porque:
 
 - O domínio possui entidades fortemente relacionadas, como cliente, veículo, OS, serviços, peças e orçamentos.
 - O banco oferece integridade referencial para proteger esses relacionamentos.
 - Transações ajudam a manter consistência em operações como aprovar orçamento, baixar estoque e atualizar status da OS.
 - Possui bom suporte no ecossistema Spring Data JPA e Hibernate.
 - Funciona bem com Flyway para versionamento e evolução controlada do schema.
-- É fácil de executar com Docker e Kubernetes.
+- O mesmo mecanismo de migrations atende ao PostgreSQL local no Docker e ao RDS na AWS.
 - É uma opção sólida para evoluir do MVP para ambientes mais próximos de produção.
-
-[Voltar ao README principal](../README.md)
