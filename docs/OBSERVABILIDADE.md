@@ -42,7 +42,7 @@ Implante a API e valide a coleta antes de promover para produção; repita o dep
 
 1. Executar testes Java e validar sintaxe Bash, formato e configuração Terraform.
 2. Publicar a imagem no GHCR.
-3. Verificar a configuração obrigatória do Environment, conectar ao EKS e atualizar ConfigMap e Secrets da API.
+3. Verificar os secrets e variables obrigatórios do repositório, conectar ao EKS e atualizar ConfigMap e Secrets da API.
 4. Instalar/atualizar o Operator pelo Helm (chart fixado em `2.31.0`), criar o Secret Datadog e aplicar o Agent com o nome real do cluster e a tag do ambiente. Aguardar os workloads do Agent e Cluster Agent antes do rollout da API.
 5. Publicar o Deployment da API com probes HTTP e tags de ambiente/versão. O Flyway executa as migrations no banco existente durante a inicialização.
 6. Verificar pela URL pública que o readiness responde HTTP 200 e status `UP`.
@@ -60,16 +60,18 @@ Os monitores de CPU e memória aguardam cinco minutos (`new_group_delay = 300`) 
 
 ## Validar a coleta
 
+Repita as verificações em homologação e produção, selecionando o cluster, a URL e o dashboard do ambiente correspondente. Use `env:hom` para homologação e `env:prod` para produção; os monitores correspondentes têm prefixos `[hom]` e `[prod]`. O teste de falha da próxima seção é exclusivo de homologação.
+
 1. Em Infrastructure/Kubernetes, localize o cluster e os pods `oficina-api`.
-2. Em APM, filtre `service:oficina-api env:hom` e execute chamadas autenticadas para gerar tráfego; confirme a latência por endpoint e os spans JDBC.
-3. Em Logs Explorer, use `service:oficina-api env:hom`. Confira JSON, `request_id`, `dd.trace_id` e `dd.span_id`; abra o trace pelo log. Sem tracer ativo, os IDs Datadog não existem, mas `request_id` continua funcionando.
+2. Em APM, filtre `service:oficina-api env:hom` em homologação ou `service:oficina-api env:prod` em produção e execute chamadas autenticadas para gerar tráfego; confirme a latência por endpoint e os spans JDBC.
+3. Em Logs Explorer, use `service:oficina-api env:hom` em homologação ou `service:oficina-api env:prod` em produção. Confira JSON, `request_id`, `dd.trace_id` e `dd.span_id`; abra o trace pelo log. Sem tracer ativo, os IDs Datadog não existem, mas `request_id` continua funcionando.
 4. Envie `X-Request-ID: teste-observabilidade-001` em uma requisição e confirme o mesmo valor na resposta e nos logs. IDs ausentes ou inválidos são substituídos por UUID. Esse identificador não é automaticamente propagado para outros serviços; a propagação distribuída fica a cargo do tracer.
 5. Crie uma OS e avance os status pelo fluxo normal. Procure `@event:os.created` e `@event:os.status_duration`. O segundo traz `ordem_id`, `os_status` e `duracao_ms`.
 6. Confira o dashboard retornado pelo Terraform e teste as notificações dos monitores. Para verificar falhas de banco em homologação, use o teste a seguir, que cria um pod temporário isolado da aplicação.
 
 ### Como provocar falha no banco implantado para validar a coleta
 
-Este script testa uma falha de postgres no ambiente AWS.
+Este script testa uma falha de PostgreSQL exclusivamente em homologação na AWS. Em produção, valide a coleta pelo tráfego normal, readiness, logs, traces e monitores do ambiente, sem executar este teste de falha.
 
 Com Python 3, AWS CLI e kubectl autenticados em homologação, execute:
 
@@ -104,7 +106,7 @@ O resultado do teste fica em target/observability-evidence/evidence.json. Em cas
 
 ## Uptime externo
 
-O uptime externo usa UptimeRobot gratuito, com monitor **Keyword** da URL pública atual do API Gateway + `/actuator/health/readiness`. A palavra-chave esperada é `"status":"UP"`; iniciar incidente quando ela **não existir**. O intervalo é 5 minutos. Configure o contato responsável pelo ambiente.
+O uptime externo usa UptimeRobot gratuito, com monitor **Keyword** da URL pública atual do API Gateway + `/actuator/health/readiness`. A palavra-chave esperada é `"status":"UP"`; iniciar incidente quando ela **não existir**. O intervalo é 5 minutos. Crie um monitor separado para `hom` e outro para `prod`, cada um com a URL do respectivo API Gateway. Configure o contato responsável pelo ambiente.
 
 Configure o monitor para verificar o corpo JSON por GET. As rotas públicas de saúde versionadas são GET; uma verificação por HEAD pode ser recusada pelo Gateway. O histórico de uptime fica no UptimeRobot; não há sincronização automática com o Datadog. Se o API Gateway for recriado, atualize a URL do monitor.
 

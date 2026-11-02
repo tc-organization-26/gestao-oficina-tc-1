@@ -244,7 +244,7 @@ Compare a chamada e o preflight do navegador. Não há configuração CORS expl�
 
 Renove juntos `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` e `AWS_SESSION_TOKEN` na organização (com acesso ao repositório) ou nos Repository secrets. Atualize também o terminal utilizado. Verifique espaços acidentais e relógio da máquina se houver erro de assinatura/tempo. Repita `aws sts get-caller-identity`; ele precisa identificar a conta esperada antes de um novo deploy.
 
-Se o erro persistir no Actions, confira se um secret do Environment está sobrescrevendo o valor renovado da organização. Reinicie a execução após corrigir; não é necessário refazer o bootstrap só para renovar credenciais.
+Se o erro persistir no Actions, confira se um Repository secret está sobrescrevendo o valor renovado da organização ou se há um secret de Environment sobrescrevendo a configuração compartilhada. Reinicie a execução após corrigir; não é necessário refazer o bootstrap só para renovar credenciais.
 
 ### ParameterNotFound, ResourceNotFound ou recursos do ambiente errado
 
@@ -356,9 +356,9 @@ O HPA usa CPU/memória e limita réplicas entre 2 e 6; porcentagens dependem dos
 
 Veja a etapa exata: o Terraform Datadog roda depois da atualização da API. Uma falha de dashboard/monitor não desfaz o rollout já concluído. Confira o estado da aplicação e corrija a configuração Datadog antes da reexecução; não considere o deploy automaticamente revertido.
 
-### Environment sem DD_API_KEY, DD_APP_KEY ou destino de alertas
+### Configuração sem DD_API_KEY, DD_APP_KEY ou destino de alertas
 
-Confira o [checklist AWS](EXECUCAO-LAB-AWS.md#checklist-inicial), o Environment selecionado e `TF_STATE_BUCKET`. O deploy atual exige esses valores. `DD_SITE` e `DD_API_URL` devem corresponder à mesma conta/região Datadog. Erros 401/403 do Datadog pedem verificar chaves, site e escopos da Application Key, não as credenciais AWS.
+Confira o [checklist AWS](EXECUCAO-LAB-AWS.md#checklist-inicial), os Actions secrets/variables do repositório e `TF_STATE_BUCKET`. O deploy atual exige esses valores. `DD_SITE` e `DD_API_URL` devem corresponder à mesma conta/região Datadog. Erros 401/403 do Datadog pedem verificar chaves, site e escopos da Application Key, não as credenciais AWS.
 
 ### Operator/Agent não sobe ou não há métricas, logs ou traces
 

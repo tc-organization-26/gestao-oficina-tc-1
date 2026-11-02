@@ -131,7 +131,7 @@ Consulte o [guia de execução local](docs/EXECUCAO-LOCAL.md) para executar o pr
 
 ### Deploy e execução no laboratório AWS
 
-Prepare o [checklist de acessos e configurações](docs/EXECUCAO-LAB-AWS.md#checklist-inicial) e conclua as dependências na [ordem de implantação](docs/EXECUCAO-LAB-AWS.md#ordem-da-primeira-implantação). Em cada um dos repositórios, faça o merge para `homologacao` para disparar o deploy em `hom` e aguarde a conclusão.
+Prepare o [checklist de acessos e configurações](docs/EXECUCAO-LAB-AWS.md#checklist-inicial) e conclua as dependências na [ordem de implantação](docs/EXECUCAO-LAB-AWS.md#ordem-da-primeira-implantação). Em cada um dos repositórios, faça o merge para `homologacao` para disparar o deploy em `hom` e aguarde a conclusão. Após validar homologação, faça merge para `main` em cada repositório, na mesma ordem dos componentes, para implantar `prod`.
 
 > O código contém adaptações educacionais de IAM e credenciais. Confira a observação do guia AWS antes de utilizá-lo em outra conta.
 
@@ -210,7 +210,7 @@ O cluster, o Metrics Server e o Cluster Autoscaler são criados pelo repositóri
 
 ## Observabilidade
 
-O deploy da API instala a observabilidade Datadog no EKS e configura dashboards e alertas. O [guia de observabilidade](docs/OBSERVABILIDADE.md) descreve a coleta de métricas, logs e traces, o monitoramento externo e o [teste de validação em homologação](docs/OBSERVABILIDADE.md#validar-a-coleta).
+O deploy da API instala a observabilidade Datadog no EKS e configura dashboards e alertas. O [guia de observabilidade](docs/OBSERVABILIDADE.md) descreve a coleta de métricas, logs e traces, o monitoramento externo, a validação da coleta em `hom` e `prod` e o [teste de falha em homologação](docs/OBSERVABILIDADE.md#validar-a-coleta).
 
 ## Workflow
 
