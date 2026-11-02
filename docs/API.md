@@ -41,7 +41,7 @@ Fonte: [AuthController](../src/main/java/br/com/fiap/oficina/autenticacao/interf
 | --- | --- | --- |
 | `POST` | `/auth/login` | Gerar JWT. Diretamente no Java, recebe `login` e `senha`; pelo Gateway AWS, a Lambda recebe `cpf`, consulta o cliente ativo no RDS e emite o token. |
 
-O [guia local](EXECUCAO-LOCAL.md#login-e-chamada-protegida) contém o login Java. O [contrato da autenticação AWS](https://github.com/tc-organization-26/oficina-auth-lambda/blob/HEAD/docs/REFERENCIA.md#contrato-da-api) descreve o login por CPF, seus erros e a collection Insomnia correspondente.
+O [guia local](EXECUCAO-LOCAL.md#login-e-chamada-protegida) contém o login Java. O [contrato da autenticação AWS](https://github.com/tc-organization-26/oficina-auth-lambda/blob/HEAD/README.md#acesso-à-api) descreve o login por CPF, seus erros e a collection Insomnia correspondente.
 
 ### Clientes
 

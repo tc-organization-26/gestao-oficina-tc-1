@@ -8,7 +8,7 @@ A documentação fica neste repositório porque ele mantém o schema; o [oficina
 
 Os diagramas representam o modelo relacional. São 11 tabelas de negócio; a tabela técnica `flyway_schema_history`, mantida pelo Flyway, não aparecerá nos diagramas.
 
-O PostgreSQL em nuvem é um RDS privado, compartilhado pela API e pela Lambda de login, com armazenamento criptografado, backups e senha gerenciada no Secrets Manager. Esse provisionamento pertence ao `oficina-db-infra`; a criação/evolução das tabelas continua sob responsabilidade do Flyway da API. Consulte a [referência de infraestrutura](https://github.com/tc-organization-26/oficina-db-infra/blob/HEAD/docs/REFERENCIA.md#recursos-criados) para os parâmetros operacionais.
+O PostgreSQL em nuvem é um RDS privado, compartilhado pela API e pela Lambda de login, com armazenamento criptografado, backups e senha gerenciada no Secrets Manager. Esse provisionamento pertence ao `oficina-db-infra`; a criação/evolução das tabelas continua sob responsabilidade do Flyway da API. Consulte a [referência de infraestrutura](https://github.com/tc-organization-26/oficina-db-infra/blob/HEAD/README.md#recursos-principais) para os parâmetros operacionais.
 
 Observação: Na V4, cada OS passa a ter um histórico persistente para calcular o tempo em cada status e alimentar a observabilidade. Não são recriados clientes, veículos, orçamentos ou ordens existentes, nem preenchidos tempos históricos anteriores à migration.
 

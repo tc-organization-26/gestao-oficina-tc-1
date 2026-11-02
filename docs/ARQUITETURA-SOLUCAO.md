@@ -112,7 +112,7 @@ sequenceDiagram
     Note over Login,DB: Falhas inesperadas de dependência retornam 500 e geram logs de erro.
 ```
 
-Contrato completo e exemplos de erros estão na [referência da autenticação](https://github.com/tc-organization-26/oficina-auth-lambda/blob/HEAD/docs/REFERENCIA.md#contrato-da-api). Neste repositório, `POST /auth/login` é atendido pelo Java e recebe `{login, senha}`; a Lambda por CPF é a integração usada na nuvem.
+Contrato completo e exemplos de erros estão na [referência da autenticação](https://github.com/tc-organization-26/oficina-auth-lambda/blob/HEAD/README.md#acesso-à-api). Neste repositório, `POST /auth/login` é atendido pelo Java e recebe `{login, senha}`; a Lambda por CPF é a integração usada na nuvem.
 
 ## Sequência de abertura de ordem de serviço
 

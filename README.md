@@ -47,17 +47,6 @@ Prepare o [checklist de acessos e configurações](docs/EXECUCAO-AWS.md#checklis
 
 > O código contém adaptações educacionais de IAM e credenciais. Confira a observação do guia AWS antes de utilizá-lo em outra conta.
 
-## Troubleshooting
-
-Os guias reúnem sintomas, comandos de diagnóstico e correções por assunto. Consulte o componente que apresenta a falha:
-
-| Componente | Guia de diagnóstico |
-| --- | --- |
-| Aplicação | [Troubleshooting da Oficina API](docs/TROUBLESHOOTING.md) |
-| Plataforma | [Bootstrap, EKS, rede, NLB e API Gateway](https://github.com/tc-organization-26/oficina-k8s-infra/blob/HEAD/docs/TROUBLESHOOTING.md) |
-| Banco | [RDS, conectividade, credenciais, backups e snapshots](https://github.com/tc-organization-26/oficina-db-infra/blob/HEAD/docs/TROUBLESHOOTING.md) |
-| Autenticação | [Python, Lambda, login por CPF e Authorizer](https://github.com/tc-organization-26/oficina-auth-lambda/blob/HEAD/docs/TROUBLESHOOTING.md) |
-
 ## Arquitetura
 
 ```mermaid
@@ -129,3 +118,14 @@ O deploy da API instala a observabilidade Datadog no EKS e configura dashboards 
 ### Fluxo de branches
 
 `fase-3` valida e abre PR para `homologacao`; `homologacao` faz deploy em `hom` e abre PR para `main`; `main` faz deploy em `prod`. Os merges são manuais. Executar manualmente em `fase-3` também só valida. Consulte [branches e ambientes](docs/EXECUCAO-AWS.md#branches-e-ambientes).
+
+## Troubleshooting
+
+Os guias reúnem sintomas, comandos de diagnóstico e correções por assunto. Consulte o componente que apresenta a falha:
+
+| Componente | Guia de diagnóstico |
+| --- | --- |
+| Aplicação | [Troubleshooting da Oficina API](docs/TROUBLESHOOTING.md) |
+| Plataforma | [Bootstrap, EKS, rede, NLB e API Gateway](https://github.com/tc-organization-26/oficina-k8s-infra/blob/HEAD/docs/TROUBLESHOOTING.md) |
+| Banco | [RDS, conectividade, credenciais, backups e snapshots](https://github.com/tc-organization-26/oficina-db-infra/blob/HEAD/docs/TROUBLESHOOTING.md) |
+| Autenticação | [Python, Lambda, login por CPF e Authorizer](https://github.com/tc-organization-26/oficina-auth-lambda/blob/HEAD/docs/TROUBLESHOOTING.md) |
