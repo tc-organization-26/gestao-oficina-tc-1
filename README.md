@@ -160,7 +160,7 @@ A [arquitetura integrada](docs/ARQUITETURA-SOLUCAO.md) apresenta detalhes sobre 
 
 ## Acesso à API
 
-- [Collection Insomnia](src/main/resources/insomnia/collection.yaml): os logins usam CPF para AWS; configure `BASE_URL` e as variáveis do ambiente. Para execução local, adapte o login para `{login, senha}` conforme o [guia local](docs/EXECUCAO-LOCAL.md#login-e-chamada-protegida).
+- [Collection Insomnia](src/main/resources/insomnia/collection.yaml): inclui o login por CPF da Lambda (`POST /auth/login`) e os fluxos de negócio da API; configure `BASE_URL` e as variáveis do ambiente. Para execução local, adapte o login para `{login, senha}` conforme o [guia local](docs/EXECUCAO-LOCAL.md#login-e-chamada-protegida).
 - Local: [Swagger](http://localhost:8081/swagger-ui/index.html) e [OpenAPI](http://localhost:8081/v3/api-docs).
 - AWS: consulte os [deployments](https://github.com/tc-organization-26/gestao-oficina-tc-1/deployments) ou o resumo da execução do workflow. A URL muda entre ambientes e recriações.
 - Swagger/OpenAPI no Gateway exigem JWT. Para abrir a interface diretamente no navegador, use o port-forward do guia AWS.
