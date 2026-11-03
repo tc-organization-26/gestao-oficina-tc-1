@@ -8,19 +8,28 @@ A solução atende ao fluxo de uma oficina mecânica de médio porte, desde o pr
 
 O projeto centraliza essas informações em uma API: atendentes registram o atendimento, mecânicos informam diagnóstico e execução, e a gestão acompanha ordens de serviço, estoque e tempo médio de execução. Esses atores descrevem o processo de negócio; a autorização atual ainda não diferencia suas permissões por papel.
 
+Com a expansão para múltiplas unidades e o crescimento da base de clientes, a oficina precisa de segurança no controle de acessos, escalabilidade, alta disponibilidade e visibilidade sobre o funcionamento do sistema. 
+
+O desafio desta fase inclui monitorar o ambiente e identificar gargalos em tempo real, adotar soluções serverless para autenticação e notificações, organizar os componentes em repositórios com CI/CD e evoluir e documentar a modelagem do banco para garantir consistência e apoiar o desempenho.
+
 ## Objetivo da fase atual
 
-A evolução busca preparar a oficina para aumento de demanda, expansão do atendimento e horários de pico, com provisionamento reproduzível, entrega automatizada e visibilidade operacional. A implementação atual reúne:
+A evolução busca elevar a aplicação a um nível de operação corporativa, com práticas de cloud, infraestrutura como código, segurança e observabilidade. 
+
+Isso prepara a oficina para aumento de demanda, expansão do atendimento e horários de pico, com provisionamento reproduzível, entrega automatizada e visibilidade operacional. A implementação atual reúne:
 
 - monolito modular em Clean Architecture, com testes e migrations versionadas;
 - API no EKS, HPA de 2 a 6 réplicas e Cluster Autoscaler para capacidade dos nós;
 - PostgreSQL privado no RDS, com backups e credencial gerenciada;
+- modelo relacional documentado, com relacionamentos, restrições de integridade e evolução do schema por migrations Flyway;
 - login por CPF em Lambda, JWT e Authorizer no API Gateway;
 - infraestrutura Terraform separada em componentes e ambientes;
 - GitHub Actions para validação, publicação no GHCR e deploy;
 - Datadog para métricas, logs, traces e alertas, com monitoramento externo descrito no guia de observabilidade.
 
 Essa configuração oferece mecanismos de escala e recuperação. O RDS usa `multi_az=false` por padrão, e a rede usa um NAT Gateway. A expansão para novas unidades é uma motivação do projeto, sem cadastro ou isolamento por filial implementado.
+
+A autenticação serverless é realizada pelas Lambdas de login e autorização.
 
 ## Navegação
 
