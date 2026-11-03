@@ -1,4 +1,4 @@
-"""Provoke a PostgreSQL integration failure in an isolated hom pod.
+"""Provoke a PostgreSQL integration failure in an isolated pod in the selected environment.
 
 Credentials come from environment variables, and are never written to evidence.
 """
@@ -43,17 +43,20 @@ def kube(*args, manifest=None, timeout=90):
 
 
 class Validation:
-    def __init__(self, url, output):
+    def __init__(self, url, output, environment="hom"):
+        if environment not in ("hom", "prod"):
+            raise ValueError("O ambiente deve ser hom ou prod.")
+        self.environment = environment
         parsed = urllib.parse.urlparse(url)
         if parsed.scheme != "https" or not parsed.netloc or parsed.username or parsed.password:
-            raise ValueError("Informe a URL HTTPS publica de homologacao, sem credenciais.")
+            raise ValueError("Informe a URL HTTPS publica do ambiente selecionado, sem credenciais.")
         self.url = url.rstrip("/")
         self.output = Path(output)
         self.output.mkdir(parents=True, exist_ok=True)
         self.run_id = "obs-" + uuid.uuid4().hex[:16]
         self.token = os.getenv("OFICINA_TOKEN")
         self.steps = []
-        self.report = {"environment": "hom", "run_id": self.run_id, "started": int(time.time()),
+        self.report = {"environment": self.environment, "run_id": self.run_id, "started": int(time.time()),
                        "steps": self.steps, "notification_receipt": "confirmar no email do contato"}
 
     def save(self):
@@ -78,14 +81,14 @@ class Validation:
 
     def validate_target(self):
         deployment = json.loads(kube("-n", "oficina", "get", "deployment", "oficina-api", "-o", "json"))
-        if deployment["spec"]["template"]["metadata"].get("labels", {}).get("tags.datadoghq.com/env") != "hom":
-            raise RuntimeError("O contexto Kubernetes deve apontar para homologacao")
+        if deployment["spec"]["template"]["metadata"].get("labels", {}).get("tags.datadoghq.com/env") != self.environment:
+            raise RuntimeError(f"O contexto Kubernetes deve apontar para {self.environment}")
         region = os.getenv("AWS_REGION", "us-east-1")
-        discovery = subprocess.run(["aws", "ssm", "get-parameter", "--name", "/oficina/hom/edge/http-api-id",
+        discovery = subprocess.run(["aws", "ssm", "get-parameter", "--name", f"/oficina/{self.environment}/edge/http-api-id",
                                     "--region", region, "--query", "Parameter.Value", "--output", "text"],
                                    capture_output=True, text=True, timeout=30)
         if discovery.returncode or self.url != f"https://{discovery.stdout.strip()}.execute-api.{region}.amazonaws.com":
-            raise RuntimeError("A URL deve corresponder ao API Gateway de hom publicado no SSM")
+            raise RuntimeError(f"A URL deve corresponder ao API Gateway de {self.environment} publicado no SSM")
 
     def authenticate(self):
         if not self.token:
@@ -100,8 +103,8 @@ class Validation:
         deployment = json.loads(kube("-n", "oficina", "get", "deployment", "oficina-api", "-o", "json"))
         template = deployment["spec"]["template"]
         labels = template["metadata"].get("labels", {})
-        if labels.get("tags.datadoghq.com/env") != "hom":
-            raise RuntimeError("O Deployment deve estar identificado com env:hom.")
+        if labels.get("tags.datadoghq.com/env") != self.environment:
+            raise RuntimeError(f"O Deployment deve estar identificado com env:{self.environment}.")
         # This independent pod has no app=oficina-api label, so the Service never routes to it.
         pod_name = self.run_id + "-fault"
         spec = template["spec"]
@@ -134,7 +137,8 @@ class Validation:
         spec["activeDeadlineSeconds"] = 600
         spec.pop("initContainers", None)  # Let SSI inject fresh init containers for this pod.
         pod = {"apiVersion": "v1", "kind": "Pod", "metadata": {"name": pod_name, "namespace": "oficina",
-               "labels": {k: v for k, v in labels.items() if k.startswith("tags.datadoghq.com/")},
+               "labels": {**{k: v for k, v in labels.items() if k.startswith("tags.datadoghq.com/")},
+                          "admission.datadoghq.com/enabled": "true"},
                "annotations": {k: v for k, v in template["metadata"].get("annotations", {}).items()
                                if not k.endswith(".checks")}}, "spec": spec}
         forward = None
@@ -201,7 +205,7 @@ class Validation:
             raise RuntimeError("Nao foi encontrado integration.failed de PostgreSQL; o teste nao foi confirmado")
         if not any(e.get("event") == "os.processing_failed" for e in events):
             raise RuntimeError("Nao foi encontrado os.processing_failed; o teste nao foi confirmado")
-        self.report["datadog_query"] = "service:oficina-api env:hom @request_id:" + self.run_id + "* (@event:integration.failed OR @event:os.processing_failed)"
+        self.report["datadog_query"] = f"service:oficina-api env:{self.environment} @request_id:" + self.run_id + "* (@event:integration.failed OR @event:os.processing_failed)"
         self.report["datadog_validation"] = "Confirmar os dois graficos e os alertas de integracao e OS no Datadog"
         self.save()
 
@@ -209,18 +213,22 @@ class Validation:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=["run", "verify"])
-    parser.add_argument("--url", required=True, help="URL publica de HOMOLOGACAO")
+    parser.add_argument("--url", required=True, help="URL publica do ambiente selecionado")
+    parser.add_argument("--environment", choices=["hom", "prod"], default="hom",
+                        help="Ambiente do cluster e da URL (padrao: hom)")
     parser.add_argument("--output", default="target/observability-evidence")
     parser.add_argument("--fault", action="store_true", help="Opcional por compatibilidade; run sempre provoca a falha de banco")
     args = parser.parse_args()
-    validation = Validation(args.url, args.output)
+    validation = Validation(args.url, args.output, args.environment)
     try:
         if args.mode == "verify":
             validation.report = json.loads((validation.output / "evidence.json").read_text(encoding="utf-8"))
+            if validation.report.get("environment") != validation.environment:
+                raise RuntimeError("As evidencias pertencem a outro ambiente; confira --environment e --output.")
             validation.run_id = validation.report["run_id"]
             progress(f"Conferindo novamente os logs da execucao {validation.run_id}.")
         else:
-            progress(f"Iniciando validacao em homologacao: {validation.run_id}")
+            progress(f"Iniciando validacao em {validation.environment}: {validation.run_id}")
             validation.validate_target()
             validation.authenticate()
             validation.failure()

@@ -57,7 +57,30 @@ $headers = @{ Authorization = "Bearer $($login.token)" }
 Invoke-RestMethod -Uri "$baseUrl/clientes" -Headers $headers
 ```
 
-Também é possível usar **Authorize** no Swagger com o token retornado. O CPF fictício `003.619.370-40` é inserido pelo Flyway para o fluxo da Lambda, mas não substitui as credenciais do login Java.
+O CPF fictício `003.619.370-40` é inserido pelo Flyway para o fluxo da Lambda, mas não substitui as credenciais do login Java.
+
+### Usar o Swagger local
+
+Com a API iniciada, abra [Swagger local](http://localhost:8081/swagger-ui/index.html). Para consultar os veículos:
+
+1. Expanda `POST /auth/login`, clique em **Try it out** e preencha o corpo:
+
+   ```json
+   {
+     "login": "admin",
+     "senha": "ad@456"
+   }
+   ```
+
+2. Clique em **Execute**. Na resposta de sucesso, copie apenas o valor do campo `token`, sem aspas.
+3. Clique em **Authorize**, cole o token no campo `bearerAuth`, sem o prefixo `Bearer`, e confirme em **Authorize**. Feche a janela com **Close**.
+4. Expanda `GET /veiculos`, clique em **Try it out** e depois em **Execute**. A resposta esperada é `200` com a lista de veículos, que pode estar vazia.
+
+O login não preenche a autorização automaticamente. Depois de autorizar, o Swagger adiciona `Authorization: Bearer <token>` às chamadas protegidas. Se o token expirar, faça login novamente e substitua o token em **Authorize**. Ao trocar de ambiente, use o token gerado no ambiente de destino.
+
+Se **Authorize** não aparecer, confirme que a aplicação está executando a versão com `OpenApiConfiguration` e recarregue a página. No Compose, reconstrua a aplicação com `docker compose up --build -d app`. Se o GET retornar `403`, confira no comando Curl exibido pelo Swagger se o cabeçalho `Authorization` foi enviado, se o token foi colado sem aspas e sem duplicar `Bearer`, e gere um novo token no mesmo ambiente.
+
+Para abrir no computador o Swagger de uma API executando na AWS, siga o [acesso por túnel a HOM e PROD](EXECUCAO-LAB-AWS.md#swagger-e-diagnóstico). Nesse caso, a porta local será `18081`.
 
 Para demonstrar o atendimento até pagamento e entrega, siga o [roteiro do fluxo completo no Insomnia](VALIDACAO-FLUXO.md). Ajuste o login da pasta **FLUXO COMPLETO** para o corpo Java antes de usar **Run folder** localmente.
 
