@@ -66,8 +66,9 @@ A sequência abaixo descreve homologação. Após validá-la, implante produçã
 1. `oficina-k8s-infra`: executar `bootstrap.yml` para preparar o backend e as variables.
 2. `oficina-k8s-infra`: fazer merge para `homologacao` e aguardar `terraform.yml` criar rede, EKS e entrada HTTP.
 3. `oficina-db-infra`: fazer merge para `homologacao` e aguardar `terraform.yml` criar o RDS.
-4. `oficina-auth-lambda`: fazer merge para `homologacao` e aguardar `cicd.yml` publicar funções, chave JWT e rotas e habilitar Datadog.
+4. `oficina-auth-lambda`: fazer merge para `homologacao` e aguardar `cicd.yml` publicar funções, chave JWT e rotas.
 5. `gestao-oficina-tc-1`: fazer merge para `homologacao` e aguardar `cicd.yml` publicar a API, aplicar Flyway e instalar observabilidade.
+6. `oficina-auth-lambda`: reexecutar o deploy para habilitar Datadog com o secret compartilhado criado pela API.
 
 Execute os passos em sequência e no mesmo ambiente. As esteiras são independentes: uma não dispara a próxima. O passo 4 pode ser implantado antes das tabelas; o teste de login só deve ocorrer após o Flyway do passo 5.
 
@@ -122,13 +123,46 @@ O login AWS recebe o CPF fictício. Não publique o token nos logs.
 
 ### Swagger e diagnóstico
 
-Swagger/OpenAPI sob o Gateway também exigem JWT; abrir a URL diretamente no navegador pode retornar rejeição de acesso. Para acesso administrativo à interface:
+Swagger/OpenAPI sob o Gateway também exigem JWT; abrir a URL diretamente no navegador pode retornar rejeição de acesso antes de carregar a interface. Para acesso administrativo pelo computador, use AWS CLI e kubectl instalados, credenciais AWS válidas e permissão de acesso ao cluster e de port-forward no Kubernetes.
+
+O contexto do kubectl reúne o cluster e a configuração de autenticação usados nos comandos. Liste os contextos e confira o selecionado:
 
 ```powershell
+kubectl config get-contexts
+kubectl config current-context
+```
+
+Para acessar homologação primeiro, configure e selecione o contexto pelo nome do cluster publicado no SSM:
+
+```powershell
+$oficinaEnv = "hom"
+$cluster = aws ssm get-parameter --name "/oficina/$oficinaEnv/eks/cluster-name" --region us-east-1 --query Parameter.Value --output text
+aws eks update-kubeconfig --name $cluster --region us-east-1 --alias oficina-hom
+kubectl config use-context oficina-hom
+kubectl config current-context
 kubectl port-forward -n oficina service/oficina-api 18081:8081
 ```
 
-Abra `http://localhost:18081/swagger-ui/index.html`. O port-forward não passa pelo Gateway/Authorizer; chamadas de negócio continuam sujeitas ao Spring Security.
+O `update-kubeconfig` registra a conexão no arquivo de configuração do kubectl e seleciona o contexto. O comando usa a identidade AWS configurada no terminal; não concede permissões adicionais no cluster.
+
+Abra [Swagger pelo túnel](http://localhost:18081/swagger-ui/index.html) e mantenha o terminal aberto. A porta `18081` pertence ao seu computador e encaminha as chamadas à aplicação na porta `8081` de um Pod atendido pelo Service `oficina-api`. O tráfego passa pela conexão autenticada com a API do Kubernetes, sem passar pelo Gateway/Authorizer; as chamadas de negócio continuam sujeitas ao Spring Security.
+
+Dentro desse Swagger, `POST /auth/login` é atendido pelo Java e recebe `{"login":"admin","senha":"ad@456"}`, inclusive em HOM e PROD. O corpo com `cpf` é usado somente no login pelo Gateway/Lambda. Siga os [passos de login, Authorize e GET /veiculos](EXECUCAO-LOCAL.md#usar-o-swagger-local), usando a URL do túnel na porta `18081`.
+
+Para trocar para produção, encerre o túnel de HOM com `Ctrl+C` e execute:
+
+```powershell
+$oficinaEnv = "prod"
+$cluster = aws ssm get-parameter --name "/oficina/$oficinaEnv/eks/cluster-name" --region us-east-1 --query Parameter.Value --output text
+aws eks update-kubeconfig --name $cluster --region us-east-1 --alias oficina-prod
+kubectl config use-context oficina-prod
+kubectl config current-context
+kubectl port-forward -n oficina service/oficina-api 18081:8081
+```
+
+Abra novamente [Swagger pelo túnel](http://localhost:18081/swagger-ui/index.html), agora conectado a PROD, e faça login e autorização nesse ambiente. Trocar o contexto não muda o destino de um túnel já aberto; encerre e inicie o port-forward novamente. Para voltar a HOM após configurar ambos os contextos, use `kubectl config use-context oficina-hom` antes de abrir outro túnel.
+
+Se `18081` estiver ocupada, use `18082:8081` e abra `http://localhost:18082/swagger-ui/index.html`. Se o túnel encerrar, execute novamente o port-forward. Se **Authorize** não aparecer, confirme que a versão com a configuração Bearer do Swagger foi publicada no ambiente selecionado e recarregue a página.
 
 ## Problemas comuns
 

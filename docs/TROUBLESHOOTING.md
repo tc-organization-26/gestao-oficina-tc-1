@@ -375,11 +375,15 @@ Confira CRDs/RBAC, secret `datadog-secret`, tags `service/env/version`, saída H
 
 ### Sem dd.trace_id, gráfico de OS vazio ou alerta sem notificação
 
+Se os pods não tiverem init containers Datadog e o Cluster Agent registrar `Admission Controller Unreachable` ou timeout do webhook, confira TCP 8000 do security group do control plane para o security group dos nós. 
+
+Essa comunicação é declarada no Terraform e implantada pelo workflow EKS antes do deploy da API; consulte [como funciona a injeção do tracer](OBSERVABILIDADE.md#injeção-do-tracer). `DD_LOGS_INJECTION=true` sozinho não ativa o tracer.
+
 Sem tracer ativo, `request_id` continua disponível, mas IDs de trace podem não existir. Histórico de status só produz duração após sair da etapa; ordens anteriores à V4 não têm tempos retroativos. Eventos dependem de commits, chegada dos logs, filtros e janela UTC; sua entrega não é exatamente uma vez. Confira o destino real de notificação e integrações da conta. Os listeners Java de domínio apenas registram logs; não enviam email.
 
 ### Teste de falha de banco não confirma coleta
 
-O [roteiro de observabilidade](OBSERVABILIDADE.md#validar-a-coleta) cria um Pod temporário em `hom`; um status HTTP de erro sozinho não confirma o teste. Confira `integration.failed` e `os.processing_failed` nos logs e depois a ingestão no Datadog. Evidências ficam em `target/observability-evidence`; falha de túnel fica em `port-forward.log`. A verificação local não confirma a entrega de email remoto. Não aponte esse teste a produção.
+O [roteiro de observabilidade](OBSERVABILIDADE.md#validar-a-coleta) cria um Pod temporário em `hom` por padrão ou em `prod` com `--environment prod`; um status HTTP de erro sozinho não confirma o teste. Confira `integration.failed` e `os.processing_failed` nos logs e depois a ingestão no Datadog. Evidências ficam em `target/observability-evidence`; falha de túnel fica em `port-forward.log`. A verificação local não confirma a entrega de email remoto. Em produção, selecione explicitamente `--environment prod`, a URL e o contexto Kubernetes de produção; use `--output target/observability-evidence-prod` para separar as evidências.
 
 ### UptimeRobot em erro após recriar o ambiente
 

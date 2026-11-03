@@ -11,6 +11,7 @@ spec:
     metadata:
       labels:
         app: oficina-api
+        admission.datadoghq.com/enabled: "true"
         tags.datadoghq.com/service: oficina-api
       annotations:
         ad.datadoghq.com/oficina-api.logs: '[{"source":"java","service":"oficina-api"}]'

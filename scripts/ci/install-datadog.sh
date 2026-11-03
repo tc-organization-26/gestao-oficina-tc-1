@@ -55,3 +55,18 @@ for resource in deployment/datadog-cluster-agent daemonset/datadog-agent; do
   fi
   kubectl -n datadog rollout status "$resource" --timeout=300s
 done
+
+# A ready Cluster Agent does not guarantee that the EKS control plane can reach
+# its admission webhook. Exercise admission without creating a persistent pod.
+probe="$(kubectl create --dry-run=client -f k8s/cloud/deployment.yaml -o json \
+  | jq --arg env "$DEPLOY_ENV" '{apiVersion:"v1",kind:"Pod",metadata:{name:"datadog-instrumentation-check",namespace:"oficina",labels:(.spec.template.metadata.labels + {"tags.datadoghq.com/env":$env})},spec:.spec.template.spec}')"
+for ((attempt=0; attempt<12; attempt++)); do
+  if injected="$(printf '%s' "$probe" | kubectl create --dry-run=server --request-timeout=30s -f - -o json)" \
+    && jq -e '[.spec.initContainers[]?.name | select(startswith("datadog"))] | length > 0' <<< "$injected" >/dev/null; then
+    echo 'Webhook Datadog acessivel; injecao do tracer confirmada por dry-run.'
+    exit 0
+  fi
+  sleep 5
+done
+echo '::error::Tracer Datadog nao foi injetado. Confira TCP 8000 do security group do control plane para os nos antes de reexecutar o deploy.'
+exit 1
