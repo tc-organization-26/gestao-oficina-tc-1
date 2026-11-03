@@ -10,7 +10,7 @@ A implementação usa o tracer Java nativo do Datadog via Single Step Instrument
 
 | Requisito | Implementação |
 | --- | --- |
-| Latência das APIs Java | Tracer injetado pelo Operator; logs HTTP com rota, método, status e duração; métrica de distribuição para p95 |
+| Latência das APIs Java | Tracer injetado pelo Admission Controller do Datadog; logs HTTP com rota, método, status e duração; métrica de distribuição para p95 |
 | CPU e memória | Agent e kube-state-metrics core; gráficos por pod e monitores de consumo |
 | Healthcheck | Actuator liveness/readiness, probes HTTP e check `http.can_connect` por pod |
 | Uptime externo | UptimeRobot gratuito, Keyword do readiness público a cada 5 minutos |
@@ -38,12 +38,25 @@ Na primeira instalação, siga a [ordem completa dos quatro projetos](EXECUCAO-L
 
 Implante a API e valide a coleta antes de promover para produção; repita o deploy Lambda se a instrumentação compartilhada tiver mudado. Rede e banco só precisam de nova implantação quando houver alterações nesses componentes. O [merge dispara o deploy automaticamente](EXECUCAO-LAB-AWS.md#primeiro-deploy-e-reexecuções).
 
+### Injeção do tracer
+
+O tracer Java registra a duração e o contexto das requisições e chamadas JDBC para consulta no APM. No projeto, ele é carregado automaticamente pela Single Step Instrumentation (SSI): ao criar um Pod, o Admission Controller do Datadog adiciona init containers, volumes e configurações que iniciam o Java com o tracer. Os traces seguem pelo Datadog Agent até o Datadog.
+
+A configuração está nos seguintes arquivos:
+
+- `k8s/observability/datadog-agent.yaml`: habilita a instrumentação no namespace `oficina`.
+- `k8s/cloud/deployment.yaml`: habilita a admissão com `admission.datadoghq.com/enabled: "true"`, define serviço, ambiente e versão e ativa correlação de logs e métricas de runtime.
+- `main.tf` de `oficina-k8s-infra`: permite TCP 8000 do control plane para os nós, dando acesso ao webhook.
+- `scripts/ci/install-datadog.sh`: instala o Operator, configura os Agents e valida a injeção com `--dry-run=server`, conferindo os init containers Datadog sem criar um Pod persistente. Se essa validação falhar, o rollout da API não prossegue.
+
+Implante a infraestrutura antes da API. A injeção ocorre na criação dos Pods; Pods existentes precisam de rollout. Após o deploy, gere chamadas autenticadas e confira os traces no APM e `dd.trace_id`/`dd.span_id` nos logs do ambiente (`env:hom` ou `env:prod`).
+
 ### Etapas automáticas da inicialização
 
 1. Executar testes Java e validar sintaxe Bash, formato e configuração Terraform.
 2. Publicar a imagem no GHCR.
 3. Verificar os secrets e variables obrigatórios do repositório, conectar ao EKS e atualizar ConfigMap e Secrets da API.
-4. Instalar/atualizar o Operator pelo Helm (chart fixado em `2.31.0`), criar o Secret Datadog e aplicar o Agent com o nome real do cluster e a tag do ambiente. Aguardar os workloads do Agent e Cluster Agent antes do rollout da API.
+4. Instalar/atualizar o Operator pelo Helm (chart fixado em `2.31.0`), criar o Secret Datadog e aplicar o Agent com o nome real do cluster e a tag do ambiente. Aguardar os workloads do Agent e Cluster Agent e confirmar a injeção do tracer em um pod em dry-run antes do rollout da API.
 5. Publicar o Deployment da API com probes HTTP e tags de ambiente/versão. O Flyway executa as migrations no banco existente durante a inicialização.
 6. Verificar pela URL pública que o readiness responde HTTP 200 e status `UP`.
 7. Executar Terraform plan e aplicar esse plano para criar/atualizar os recursos do Datadog. O link do dashboard fica no resumo da execução.
@@ -60,18 +73,18 @@ Os monitores de CPU e memória aguardam cinco minutos (`new_group_delay = 300`) 
 
 ## Validar a coleta
 
-Repita as verificações em homologação e produção, selecionando o cluster, a URL e o dashboard do ambiente correspondente. Use `env:hom` para homologação e `env:prod` para produção; os monitores correspondentes têm prefixos `[hom]` e `[prod]`. O teste de falha da próxima seção é exclusivo de homologação.
+Repita as verificações em homologação e produção, selecionando o cluster, a URL e o dashboard do ambiente correspondente. Use `env:hom` para homologação e `env:prod` para produção; os monitores correspondentes têm prefixos `[hom]` e `[prod]`. O teste de falha da próxima seção usa `hom` por padrão; para produção, selecione explicitamente `--environment prod` e o cluster correspondente.
 
 1. Em Infrastructure/Kubernetes, localize o cluster e os pods `oficina-api`.
 2. Em APM, filtre `service:oficina-api env:hom` em homologação ou `service:oficina-api env:prod` em produção e execute chamadas autenticadas para gerar tráfego; confirme a latência por endpoint e os spans JDBC.
 3. Em Logs Explorer, use `service:oficina-api env:hom` em homologação ou `service:oficina-api env:prod` em produção. Confira JSON, `request_id`, `dd.trace_id` e `dd.span_id`; abra o trace pelo log. Sem tracer ativo, os IDs Datadog não existem, mas `request_id` continua funcionando.
 4. Envie `X-Request-ID: teste-observabilidade-001` em uma requisição e confirme o mesmo valor na resposta e nos logs. IDs ausentes ou inválidos são substituídos por UUID. Esse identificador não é automaticamente propagado para outros serviços; a propagação distribuída fica a cargo do tracer.
 5. Crie uma OS e avance os status pelo fluxo normal. Procure `@event:os.created` e `@event:os.status_duration`. O segundo traz `ordem_id`, `os_status` e `duracao_ms`.
-6. Confira o dashboard retornado pelo Terraform e teste as notificações dos monitores. Para verificar falhas de banco em homologação, use o teste a seguir, que cria um pod temporário isolado da aplicação.
+6. Confira o dashboard retornado pelo Terraform e teste as notificações dos monitores. Para verificar falhas de banco no ambiente selecionado, use o teste a seguir, que cria um pod temporário isolado da aplicação.
 
 ### Como provocar falha no banco implantado para validar a coleta
 
-Este script testa uma falha de PostgreSQL exclusivamente em homologação na AWS. Em produção, valide a coleta pelo tráfego normal, readiness, logs, traces e monitores do ambiente, sem executar este teste de falha.
+Este script testa uma falha de PostgreSQL em um pod temporário isolado na AWS. O ambiente padrão é homologação; produção exige `--environment prod`. O pod aponta para `127.0.0.1:1`, sem modificar o RDS ou o Deployment da API. A falha gera logs e pode disparar os alertas do ambiente selecionado.
 
 Com Python 3, AWS CLI e kubectl autenticados em homologação, execute:
 
@@ -79,7 +92,17 @@ Com Python 3, AWS CLI e kubectl autenticados em homologação, execute:
 python scripts/observability/validate.py run --url https://API-ID.execute-api.us-east-1.amazonaws.com --fault
 ```
 
-O modo run sempre testa a falha de banco; --fault continua aceito por compatibilidade. O script confere env:hom e a URL publicada no SSM, cria um único pod temporário com banco apontando para 127.0.0.1:1 e aguarda o liveness responder antes do port-forward. Flyway, metadados Hibernate e inicialização Hikari são ajustados somente nesse pod para a aplicação iniciar sem o banco.
+Para produção, conecte o kubectl ao cluster publicado em `/oficina/prod/eks/cluster-name` e execute:
+
+```powershell
+$cluster = aws ssm get-parameter --name /oficina/prod/eks/cluster-name --region us-east-1 --query Parameter.Value --output text
+aws eks update-kubeconfig --name $cluster --region us-east-1
+python scripts/observability/validate.py run --environment prod --url https://API-ID-PROD.execute-api.us-east-1.amazonaws.com --output target/observability-evidence-prod --fault
+```
+
+Use a URL real de produção. O diretório de saída separado preserva as evidências de homologação. Para conferir novamente essas evidências com `verify`, use os mesmos `--environment prod` e `--output target/observability-evidence-prod`.
+
+O modo run sempre testa a falha de banco; --fault continua aceito por compatibilidade. O script confere a tag `env` do ambiente selecionado e sua URL publicada no SSM, cria um único pod temporário com banco apontando para 127.0.0.1:1 e aguarda o liveness responder antes do port-forward. Flyway, metadados Hibernate e inicialização Hikari são ajustados somente nesse pod para a aplicação iniciar sem o banco.
 
 O script obtém um token pelo login público usando o cliente fictício. Depois faz somente uma consulta de OS no pod com banco inválido, sem criar nenhuma OS. A mesma falha emite `integration.failed` com `integracao:postgresql` e `os.processing_failed`.
 
@@ -91,7 +114,7 @@ O resultado do teste fica em target/observability-evidence/evidence.json. Em cas
 
 1. Copie datadog_query do arquivo e procure no Logs Explorer.
 2. Confirme `integration.failed` com `integracao:postgresql` e `os.processing_failed`. Confira aumento nos gráficos `Falhas por integracao` e `Falhas de processamento de OS`.
-3. Confira os monitores `[hom] Falha em integracao` e `[hom] Falha no processamento de OS` em Alert e os emails recebidos.
+3. Confira os monitores `Falha em integracao` e `Falha no processamento de OS` com o prefixo do ambiente (`[hom]` ou `[prod]`) em Alert e os emails recebidos.
 
 ## Observações importantes e limites
 

@@ -5,6 +5,7 @@ import br.com.fiap.oficina.autenticacao.interfaceadapters.presenters.rest.respon
 import br.com.fiap.oficina.autenticacao.application.dtos.AutenticarUsuarioCommand;
 import br.com.fiap.oficina.autenticacao.application.usecases.AutenticarUsuarioUseCase;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @SecurityRequirements
     public AutenticacaoResponse autenticar(@Valid @RequestBody AutenticarUsuarioRequest request) {
         var token = autenticarUsuarioUseCase.autenticar(new AutenticarUsuarioCommand(request.login(), request.senha()));
         return new AutenticacaoResponse(token);

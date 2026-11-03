@@ -138,6 +138,8 @@ No acesso direto à aplicação, os endpoints de saúde são públicos; `/actuat
 
 ### Swagger e OpenAPI
 
+Para executar chamadas protegidas pela Swagger UI, faça `POST /auth/login`, copie o valor de `token` e clique em **Authorize**. Cole apenas o token, sem aspas e sem o prefixo `Bearer`, confirme e execute, por exemplo, `GET /veiculos`. A interface adiciona o cabeçalho `Authorization: Bearer <token>` às chamadas protegidas. O login não exige autorização prévia. Use um token do mesmo ambiente e repita o login quando ele expirar.
+
 | Método | Caminho | Finalidade |
 | --- | --- | --- |
 | `GET` | `/swagger-ui.html` | Entrada alternativa para a interface Swagger. |

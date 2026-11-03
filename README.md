@@ -171,7 +171,7 @@ Consulte o [índice de decisões](docs/decisions/README.md) para acessar os docu
 - [Collection Insomnia](src/main/resources/insomnia/collection.yaml): inclui o login por CPF da Lambda (`POST /auth/login`) e os fluxos de negócio da API; configure `BASE_URL` e as variáveis do ambiente. Para execução local, adapte o login para `{login, senha}` conforme o [guia local](docs/EXECUCAO-LOCAL.md#login-e-chamada-protegida).
 - Local: [Swagger](http://localhost:8081/swagger-ui/index.html) e [OpenAPI](http://localhost:8081/v3/api-docs).
 - AWS: consulte o resumo da execução de deploy no [histórico do workflow](https://github.com/tc-organization-26/gestao-oficina-tc-1/actions/workflows/cicd.yml). A URL muda entre ambientes e recriações.
-- Swagger/OpenAPI no Gateway exigem JWT. Para abrir a interface diretamente no navegador, use o port-forward do guia AWS.
+- Swagger/OpenAPI no Gateway exigem JWT. Para abrir a interface no navegador, siga o [acesso por túnel a HOM e PROD](docs/EXECUCAO-LAB-AWS.md#swagger-e-diagnóstico). Veja também os [passos de login, Authorize e GET /veiculos](docs/EXECUCAO-LOCAL.md#usar-o-swagger-local).
 
 Mais sobre rotas e funcionalidades da API [aqui](docs/API.md).
 
@@ -210,7 +210,7 @@ O cluster, o Metrics Server e o Cluster Autoscaler são criados pelo repositóri
 
 ## Observabilidade
 
-O deploy da API instala a observabilidade Datadog no EKS e configura dashboards e alertas. O [guia de observabilidade](docs/OBSERVABILIDADE.md) descreve a coleta de métricas, logs e traces, o monitoramento externo, a validação da coleta em `hom` e `prod` e o [teste de falha em homologação](docs/OBSERVABILIDADE.md#validar-a-coleta).
+O deploy da API instala a observabilidade Datadog no EKS e configura dashboards e alertas. O [guia de observabilidade](docs/OBSERVABILIDADE.md) descreve a coleta de métricas, logs e traces, o monitoramento externo, a validação da coleta em `hom` e `prod` e o [teste de falha em pod temporário](docs/OBSERVABILIDADE.md#validar-a-coleta).
 
 ## Workflow
 
